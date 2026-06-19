@@ -17,9 +17,9 @@ export default function CTA() {
       <ContactForm />
 
       <p className="contact-alt">
-        Prefer email or a call? <a href="mailto:hello@dolese.tech">hello@dolese.tech</a>
+        Prefer email or a call? <a href="mailto:support@dolese.tech">support@dolese.tech</a>
         {" · "}
-        <a href="tel:+15551234567">+1 (555) 123-4567</a>
+        <a href="tel:+255710611384">+255710611384</a>
       </p>
     </section>
   );

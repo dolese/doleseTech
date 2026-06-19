@@ -37,7 +37,8 @@ export default function Footer() {
         </div>
         <div className="footer-col">
           <h4>Connect</h4>
-          <a href="mailto:hello@dolese.tech">hello@dolese.tech</a>
+          <a href="mailto:support@dolese.tech">support@dolese.tech</a>
+          <a href="tel:+255710611384">+255710611384</a>
           <a href="#">LinkedIn</a>
           <a href="#">GitHub</a>
           <a href="#">Twitter</a>

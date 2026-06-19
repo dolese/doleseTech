@@ -14,7 +14,7 @@ export async function sendLeadNotification(lead: Lead): Promise<boolean> {
   if (!apiKey) return false;
 
   const from = process.env.CONTACT_FROM?.trim() || "Dolese Tech <onboarding@resend.dev>";
-  const to = process.env.CONTACT_TO?.trim() || "hello@dolese.tech";
+  const to = process.env.CONTACT_TO?.trim() || "support@dolese.tech";
 
   const subject = `New inquiry from ${lead.name}${lead.company ? ` (${lead.company})` : ""}`;
   const text = [
