@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { SUBJECTS, MATERIAL_TYPES, type Level } from "@/lib/education";
+import { SUBJECTS, MATERIAL_TYPES, subjectSlug, type Level } from "@/lib/education";
 
 type Filter = "All" | Level;
 const FILTERS: Filter[] = ["All", "O-Level", "A-Level"];
@@ -78,7 +78,7 @@ export default function ResourceLibrary() {
                   </li>
                 ))}
               </ul>
-              <a href="#samples" className="subj-link">
+              <a href={`/education/${subjectSlug(s)}`} className="subj-link">
                 View materials →
               </a>
             </article>
