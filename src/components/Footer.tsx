@@ -21,6 +21,7 @@ export default function Footer() {
           <a href="/#services">Cybersecurity</a>
           <a href="/#services">Data &amp; Analytics</a>
           <a href="/#services">AI &amp; Automation</a>
+          <a href="https://sokoplus.co.tz">MarketPlace</a>
         </div>
         <div className="footer-col">
           <h4>Education</h4>
