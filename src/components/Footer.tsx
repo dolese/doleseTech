@@ -3,7 +3,7 @@ export default function Footer() {
     <footer>
       <div className="footer-top">
         <div>
-          <a href="#" className="footer-wordmark">
+          <a href="/" className="footer-wordmark">
             <span className="fw-navy">DOLESE</span>
             <span className="fw-green">TECH</span>
           </a>
@@ -16,19 +16,26 @@ export default function Footer() {
         </div>
         <div className="footer-col">
           <h4>Services</h4>
-          <a href="#services">Software Dev</a>
-          <a href="#services">Cloud &amp; Infra</a>
-          <a href="#services">Cybersecurity</a>
-          <a href="#services">Data &amp; Analytics</a>
-          <a href="#services">AI &amp; Automation</a>
+          <a href="/#services">Software Dev</a>
+          <a href="/#services">Cloud &amp; Infra</a>
+          <a href="/#services">Cybersecurity</a>
+          <a href="/#services">Data &amp; Analytics</a>
+          <a href="/#services">AI &amp; Automation</a>
+          <a href="/education">Education</a>
+        </div>
+        <div className="footer-col">
+          <h4>Education</h4>
+          <a href="/education">Browse subjects</a>
+          <a href="/education#samples">Schemes of Work</a>
+          <a href="/education#samples">Lesson Plans</a>
+          <a href="/education#samples">Lesson Notes</a>
         </div>
         <div className="footer-col">
           <h4>Company</h4>
-          <a href="#about">About</a>
-          <a href="#team">Team</a>
-          <a href="#cta">Careers</a>
-          <a href="#">Case Studies</a>
-          <a href="#">Blog</a>
+          <a href="/#about">About</a>
+          <a href="/#team">Team</a>
+          <a href="/#cta">Careers</a>
+          <a href="/education">Education</a>
         </div>
         <div className="footer-col">
           <h4>Connect</h4>
