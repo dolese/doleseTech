@@ -1,19 +1,22 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --cream:      #F5F4F0;
-  --cream-dark: #EDE9E1;
+  /* Dolese Tech brand: deep navy + signal green */
+  --cream:      #F4F7FB;  /* page background (cool off-white) */
+  --cream-dark: #E7EDF6;
   --white:      #FFFFFF;
-  --orange:     #D97756;
-  --orange-lt:  #F0E6DF;
-  --orange-mid: #E8C5B4;
-  --text:       #1A1816;
-  --text-mid:   #4A4642;
-  --text-muted: #8A8480;
-  --border:     #E0DAD2;
-  --border-lt:  #EDE9E3;
-  --shadow:     0 1px 3px rgba(30,20,10,.06), 0 4px 16px rgba(30,20,10,.05);
-  --shadow-md:  0 2px 8px rgba(30,20,10,.07), 0 12px 40px rgba(30,20,10,.08);
+  --green:      #1E9E48;  /* primary accent (buttons, links) */
+  --green-lt:   #E4F5EA;  /* tints / icon backgrounds */
+  --green-mid:  #A9DEBB;
+  --navy:       #16235B;  /* brand navy */
+  --navy-deep:  #0F1A45;  /* darkest panels */
+  --text:       #16235B;  /* headings + dark sections read navy */
+  --text-mid:   #41506E;
+  --text-muted: #7B879C;
+  --border:     #DBE2EC;
+  --border-lt:  #EAEFF6;
+  --shadow:     0 1px 3px rgba(15,26,69,.06), 0 4px 16px rgba(15,26,69,.06);
+  --shadow-md:  0 2px 8px rgba(15,26,69,.08), 0 12px 40px rgba(15,26,69,.09);
 }
 
 html { scroll-behavior: smooth; }
@@ -43,10 +46,12 @@ nav {
 }
 .nav-logo-mark {
   width: 30px; height: 30px;
-  background: var(--orange);
+  background: var(--green);
   border-radius: 50% 50% 50% 30% / 50% 50% 30% 50%;
   flex-shrink: 0;
 }
+/* Brand logo image (light backgrounds — nav) */
+.nav-logo-img { height: 40px; width: auto; display: block; }
 .nav-logo-text {
   font-size: .95rem; font-weight: 600;
   color: var(--text); letter-spacing: -.01em;
@@ -90,7 +95,7 @@ nav {
   content: '';
   position: absolute; top: 0; left: 50%; transform: translateX(-50%);
   width: 900px; height: 600px;
-  background: radial-gradient(ellipse at 50% 0%, rgba(217,119,86,.13) 0%, transparent 65%);
+  background: radial-gradient(ellipse at 50% 0%, rgba(30,158,72,.11) 0%, transparent 65%);
   pointer-events: none;
 }
 .hero-badge {
@@ -103,7 +108,7 @@ nav {
 }
 .hero-badge-dot {
   width: 8px; height: 8px; border-radius: 50%;
-  background: var(--orange);
+  background: var(--green);
 }
 .hero h1 {
   font-size: clamp(2.6rem, 5vw, 4.4rem);
@@ -124,14 +129,14 @@ nav {
   display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
 }
 .btn-filled {
-  background: var(--orange); color: #fff;
+  background: var(--green); color: #fff;
   padding: 12px 28px; border-radius: 10px;
   font-size: .95rem; font-weight: 500;
   text-decoration: none;
   transition: opacity .15s, box-shadow .15s;
-  box-shadow: 0 1px 2px rgba(217,119,86,.3), 0 4px 16px rgba(217,119,86,.2);
+  box-shadow: 0 1px 2px rgba(30,158,72,.3), 0 4px 16px rgba(30,158,72,.22);
 }
-.btn-filled:hover { opacity: .9; box-shadow: 0 2px 4px rgba(217,119,86,.3), 0 8px 24px rgba(217,119,86,.25); }
+.btn-filled:hover { opacity: .9; box-shadow: 0 2px 4px rgba(30,158,72,.3), 0 8px 24px rgba(30,158,72,.28); }
 .btn-outline {
   background: var(--white); color: var(--text-mid);
   padding: 12px 28px; border-radius: 10px;
@@ -171,8 +176,8 @@ nav {
   display: flex; align-items: center; justify-content: center;
 }
 .hcard-icon svg { width: 18px; height: 18px; }
-.ic-orange { background: var(--orange-lt); }
-.ic-orange svg { stroke: var(--orange); fill: none; stroke-width: 1.75; }
+.ic-orange { background: var(--green-lt); }
+.ic-orange svg { stroke: var(--green); fill: none; stroke-width: 1.75; }
 .ic-slate  { background: #EBF0F5; }
 .ic-slate svg { stroke: #4A7090; fill: none; stroke-width: 1.75; }
 .ic-green  { background: #EAF4EE; }
@@ -181,7 +186,7 @@ nav {
 .hcard-value { font-size: 1.3rem; font-weight: 600; color: var(--text); letter-spacing: -.02em; }
 .hcard-sub { font-size: .78rem; color: var(--text-muted); margin-top: 4px; }
 .hcard-bar { height: 4px; background: var(--cream-dark); border-radius: 4px; margin-top: 14px; overflow: hidden; }
-.hcard-bar-fill { height: 100%; border-radius: 4px; background: var(--orange); }
+.hcard-bar-fill { height: 100%; border-radius: 4px; background: var(--green); }
 
 /* ── LOGOS ─────────────────────────────────── */
 .logos-bar {
@@ -211,7 +216,7 @@ nav {
 section { padding: 96px 64px; }
 .tag {
   display: inline-block;
-  background: var(--orange-lt); color: var(--orange);
+  background: var(--green-lt); color: var(--green);
   font-size: .75rem; font-weight: 600; letter-spacing: .06em;
   text-transform: uppercase; padding: 4px 12px; border-radius: 100px;
   margin-bottom: 18px;
@@ -246,7 +251,7 @@ h2.section-title strong { font-weight: 600; }
   cursor: default;
 }
 .svc-card:hover {
-  border-color: var(--orange-mid);
+  border-color: var(--green-mid);
   box-shadow: var(--shadow-md);
   transform: translateY(-2px);
 }
@@ -258,7 +263,7 @@ h2.section-title strong { font-weight: 600; }
   box-shadow: var(--shadow);
 }
 .svc-icon svg { width: 18px; height: 18px; stroke: var(--text-mid); fill: none; stroke-width: 1.75; }
-.svc-card:hover .svc-icon svg { stroke: var(--orange); }
+.svc-card:hover .svc-icon svg { stroke: var(--green); }
 .svc-card h3 {
   font-size: 1rem; font-weight: 600; letter-spacing: -.01em;
   margin-bottom: 10px;
@@ -267,7 +272,7 @@ h2.section-title strong { font-weight: 600; }
 .svc-link {
   display: inline-flex; align-items: center; gap: 4px;
   margin-top: 18px; font-size: .8rem; font-weight: 500;
-  color: var(--orange); text-decoration: none;
+  color: var(--green); text-decoration: none;
   opacity: 0; transition: opacity .2s;
 }
 .svc-card:hover .svc-link { opacity: 1; }
@@ -289,7 +294,7 @@ h2.section-title strong { font-weight: 600; }
 .pillar:last-child { border-bottom: none; }
 .pillar-dot {
   width: 8px; height: 8px; border-radius: 50%;
-  background: var(--orange); margin-top: 7px; flex-shrink: 0;
+  background: var(--green); margin-top: 7px; flex-shrink: 0;
 }
 .pillar-title { font-size: .95rem; font-weight: 600; margin-bottom: 3px; }
 .pillar-desc { font-size: .875rem; color: var(--text-muted); line-height: 1.6; }
@@ -302,7 +307,7 @@ h2.section-title strong { font-weight: 600; }
   box-shadow: var(--shadow-md);
 }
 .about-panel-header {
-  background: var(--orange);
+  background: var(--green);
   padding: 28px 32px;
 }
 .about-panel-header p {
@@ -387,7 +392,7 @@ h2.section-title strong { font-weight: 600; }
   color: #fff;
   text-align: center;
 }
-#cta .tag { background: rgba(217,119,86,.2); color: #F0A888; }
+#cta .tag { background: rgba(43,178,76,.18); color: #7FD89A; }
 #cta h2.section-title { color: #fff; max-width: 540px; margin: 0 auto 16px; }
 #cta p.cta-sub { color: rgba(255,255,255,.55); max-width: 400px; margin: 0 auto 40px; }
 #cta .btn-filled { box-shadow: none; }
@@ -420,11 +425,11 @@ h2.section-title strong { font-weight: 600; }
 .field input::placeholder, .field textarea::placeholder { color: rgba(255,255,255,.3); }
 .field input:focus, .field textarea:focus {
   outline: none;
-  border-color: var(--orange);
+  border-color: var(--green);
   background: rgba(255,255,255,.06);
 }
 .field textarea { resize: vertical; min-height: 120px; }
-.field-error { font-size: .75rem; color: #F0A888; }
+.field-error { font-size: .75rem; color: #F2A99E; }
 /* Honeypot — visually hidden, kept in DOM for bots. */
 .hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 .contact-submit {
@@ -440,8 +445,8 @@ h2.section-title strong { font-weight: 600; }
   border: 1px solid rgba(58,138,82,.3);
 }
 .form-status.error {
-  background: rgba(217,119,86,.15); color: #F0A888;
-  border: 1px solid rgba(217,119,86,.3);
+  background: rgba(220,90,70,.15); color: #F2A99E;
+  border: 1px solid rgba(220,90,70,.3);
 }
 .contact-alt {
   margin-top: 28px; font-size: .85rem; color: rgba(255,255,255,.4);
@@ -458,8 +463,24 @@ footer {
   display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
   gap: 56px; margin-bottom: 56px;
 }
+/* Footer wordmark — styled text so it stays legible on the dark panel */
+.footer-wordmark {
+  display: inline-flex; align-items: baseline;
+  font-size: 1.4rem; font-weight: 700; letter-spacing: .02em;
+}
+.footer-wordmark .fw-navy { color: #fff; }
+.footer-wordmark .fw-green { color: var(--green); margin-left: .35ch; }
+.footer-tagline {
+  margin-top: 14px; font-size: .95rem; font-weight: 500;
+  color: rgba(255,255,255,.82);
+}
+.footer-cats {
+  margin-top: 6px; font-size: .72rem; font-weight: 500;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: rgba(255,255,255,.4);
+}
 .footer-brand-desc {
-  margin-top: 14px; font-size: .875rem;
+  margin-top: 16px; font-size: .875rem;
   color: rgba(255,255,255,.38); line-height: 1.7;
   max-width: 260px;
 }

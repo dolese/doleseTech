@@ -1,0 +1,5 @@
+Save the Dolese Tech logo here as:  dolese-logo.png
+
+It is referenced by the nav at  /dolese-logo.png  (src/components/Nav.tsx).
+A transparent-background PNG or SVG sized for a ~40px-tall nav looks best.
+If you save an SVG instead, update the src in Nav.tsx to /dolese-logo.svg.

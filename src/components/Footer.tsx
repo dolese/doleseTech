@@ -3,12 +3,12 @@ export default function Footer() {
     <footer>
       <div className="footer-top">
         <div>
-          <a href="#" className="nav-logo">
-            <div className="nav-logo-mark" />
-            <span className="nav-logo-text" style={{ color: "rgba(255,255,255,.75)" }}>
-              Dolese Tech
-            </span>
+          <a href="#" className="footer-wordmark">
+            <span className="fw-navy">DOLESE</span>
+            <span className="fw-green">TECH</span>
           </a>
+          <p className="footer-tagline">Your Marketplace. Your World.</p>
+          <p className="footer-cats">Goods · Services · Technology</p>
           <p className="footer-brand-desc">
             Building reliable, scalable technology for organizations that
             can&apos;t afford to get it wrong.

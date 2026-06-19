@@ -2,8 +2,8 @@ export default function Nav() {
   return (
     <nav>
       <a href="#" className="nav-logo">
-        <div className="nav-logo-mark" />
-        <span className="nav-logo-text">Dolese Tech</span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/dolese-logo.png" alt="Dolese Tech — Your Marketplace. Your World." className="nav-logo-img" />
       </a>
       <div className="nav-links">
         <a href="#services">Services</a>
