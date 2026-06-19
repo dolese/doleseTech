@@ -21,7 +21,6 @@ export default function Footer() {
           <a href="/#services">Cybersecurity</a>
           <a href="/#services">Data &amp; Analytics</a>
           <a href="/#services">AI &amp; Automation</a>
-          <a href="/education">Education</a>
         </div>
         <div className="footer-col">
           <h4>Education</h4>
@@ -35,7 +34,6 @@ export default function Footer() {
           <a href="/#about">About</a>
           <a href="/#team">Team</a>
           <a href="/#cta">Careers</a>
-          <a href="/education">Education</a>
         </div>
         <div className="footer-col">
           <h4>Connect</h4>
