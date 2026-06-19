@@ -891,3 +891,14 @@ table.sow-table, table.lp-table { width: 100%; border-collapse: collapse; backgr
   body { background: #fff !important; }
   .sow-table th, .lp-table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
+/* Competence-based scheme of work (wide) + lesson-plan extras */
+.sow-cb { min-width: 1500px; font-size: .76rem; }
+.sow-cb th, .sow-cb td { padding: 8px 10px; }
+.cell-list { margin: 0; padding-left: 15px; }
+.cell-list li { margin-bottom: 3px; line-height: 1.45; }
+.cell-muted { color: var(--text-muted); }
+.lp-evaluation { margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--border); font-size: .88rem; color: var(--text-mid); }
+@media print {
+  .sow-cb { min-width: 0; font-size: .62rem; }
+}

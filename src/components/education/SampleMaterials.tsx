@@ -1,6 +1,7 @@
 /**
- * Fully-written sample materials so the library isn't just placeholders.
- * Content follows the standard Tanzanian (TIE) document formats.
+ * Fully-written showcase samples in Tanzania's 2023 competence-based (TIE)
+ * formats: a competence-based Scheme of Work, an IDDR Lesson Plan, and
+ * structured Lesson Notes.
  */
 export default function SampleMaterials() {
   return (
@@ -11,106 +12,84 @@ export default function SampleMaterials() {
           Ready-to-use <strong>sample materials</strong>
         </h2>
         <p className="section-sub">
-          Three complete documents in the standard Tanzanian format — adapt the structure to any
-          subject, form, or term.
+          Three complete documents in Tanzania&apos;s competence-based (TIE) format — the Scheme of
+          Work and the IDDR Lesson Plan — ready to adapt for any subject, form or term.
         </p>
       </div>
 
-      {/* ── SAMPLE 1 — SCHEME OF WORK ─────────────────────────── */}
+      {/* ── SAMPLE 1 — COMPETENCE-BASED SCHEME OF WORK ─────────── */}
       <article className="sample-doc">
         <header className="doc-head">
-          <span className="doc-kind">Scheme of Work</span>
-          <h3>Basic Mathematics — Form I, Term I</h3>
-          <p className="doc-sub">Mwaka wa Masomo · 40-minute periods · 8 periods per week</p>
+          <span className="doc-kind">Scheme of Work · competence-based</span>
+          <h3>Basic Mathematics — Form I</h3>
+          <p className="doc-sub">School: …… · Term I · Year: …… · Periods/week: 8 · TIE syllabus</p>
         </header>
         <div className="table-scroll">
-          <table className="sow-table">
+          <table className="sow-table sow-cb">
             <thead>
               <tr>
-                <th>Week</th>
-                <th>Topic</th>
-                <th>Sub-topic</th>
-                <th>Specific Objectives</th>
-                <th>Teaching &amp; Learning Activities</th>
-                <th>Resources</th>
-                <th>Assessment</th>
+                <th>Month</th><th>Week</th><th>Main Competence</th><th>Specific Competences</th>
+                <th>Topic</th><th>Sub-topic</th><th>Teaching &amp; Learning Activities</th>
+                <th>Methods</th><th>Resources</th><th>Assessment</th><th>Periods</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td>1</td>
-                <td>Numbers (Base Ten)</td>
-                <td>Base ten numeration</td>
-                <td>Read and write numbers in base ten; identify place values.</td>
-                <td>Guided discussion; place-value charts; group exercises.</td>
-                <td>Place-value chart, counters</td>
-                <td>Oral questions, exercise</td>
+                <td>January</td><td>1–2</td>
+                <td>Use numbers and number operations to solve problems in daily life.</td>
+                <td><ul className="cell-list"><li>Read, write and order numbers in base ten.</li><li>Perform the four operations on whole numbers.</li></ul></td>
+                <td>Numbers</td><td>Base ten numeration</td>
+                <td>In groups, learners model place value with charts and present examples from daily life.</td>
+                <td>Group work, demonstration, Q&amp;A</td><td>Place-value chart, counters</td>
+                <td>Oral questions, exercise</td><td>8</td>
               </tr>
               <tr>
-                <td>2–3</td>
-                <td>Numbers</td>
-                <td>Operations on whole numbers</td>
-                <td>Add, subtract, multiply and divide whole numbers.</td>
-                <td>Worked examples; pair drills; number-line work.</td>
-                <td>Number line, textbooks</td>
-                <td>Class exercise</td>
+                <td>February</td><td>3–4</td>
+                <td>Apply fractions to solve real-life quantity problems.</td>
+                <td><ul className="cell-list"><li>Simplify and compare fractions.</li><li>Operate on fractions.</li></ul></td>
+                <td>Fractions</td><td>Operations on fractions</td>
+                <td>Learners share objects to model fractions, then solve and discuss problems.</td>
+                <td>Practical, discussion</td><td>Fraction board, charts</td>
+                <td>Short test, observation</td><td>8</td>
               </tr>
               <tr>
-                <td>4–5</td>
-                <td>Fractions</td>
-                <td>Operations on fractions</td>
-                <td>Simplify and perform operations on fractions.</td>
-                <td>Fraction charts; practical sharing activities.</td>
-                <td>Fraction board, charts</td>
-                <td>Short test</td>
+                <td>February</td><td>5</td>
+                <td>Use decimals and percentages in measurement and money.</td>
+                <td><ul className="cell-list"><li>Convert between fractions, decimals and percentage.</li><li>Solve percentage problems.</li></ul></td>
+                <td>Decimals &amp; Percentage</td><td>Conversions &amp; applications</td>
+                <td>Real-life tasks using prices and measurements; learners present solutions.</td>
+                <td>Activity-based, Q&amp;A</td><td>Price lists, calculators</td>
+                <td>Exercise, portfolio</td><td>4</td>
               </tr>
               <tr>
-                <td>6</td>
-                <td>Decimals</td>
-                <td>Conversion &amp; operations</td>
-                <td>Convert between fractions and decimals; operate on decimals.</td>
-                <td>Demonstration; individual practice.</td>
-                <td>Calculators, charts</td>
-                <td>Homework</td>
-              </tr>
-              <tr>
-                <td>7</td>
-                <td>Percentage</td>
-                <td>Percentage of a quantity</td>
-                <td>Express quantities as percentages and solve problems.</td>
-                <td>Real-life examples (markets, prices); group tasks.</td>
-                <td>Price lists, charts</td>
-                <td>Exercise &amp; quiz</td>
-              </tr>
-              <tr>
-                <td>8</td>
-                <td colSpan={6}>Mid-term assessment &amp; revision</td>
+                <td>March</td><td>6</td>
+                <td colSpan={10}>Mid-term assessment &amp; remedial work</td>
               </tr>
             </tbody>
           </table>
         </div>
       </article>
 
-      {/* ── SAMPLE 2 — LESSON PLAN ────────────────────────────── */}
+      {/* ── SAMPLE 2 — IDDR LESSON PLAN ────────────────────────── */}
       <article className="sample-doc">
         <header className="doc-head">
-          <span className="doc-kind">Lesson Plan</span>
+          <span className="doc-kind">Lesson Plan · IDDR</span>
           <h3>Biology — Form II</h3>
-          <p className="doc-sub">Topic: Movement of Materials In and Out of the Cell · Sub-topic: Diffusion</p>
+          <p className="doc-sub">Topic: Movement of Materials In &amp; Out of the Cell · Sub-topic: Diffusion</p>
         </header>
 
         <dl className="lp-meta">
           <div><dt>Class</dt><dd>Form II</dd></div>
-          <div><dt>Period / Time</dt><dd>Single · 40 minutes</dd></div>
+          <div><dt>Time</dt><dd>80 minutes</dd></div>
+          <div><dt>Periods</dt><dd>1</dd></div>
           <div><dt>No. of Students</dt><dd>45</dd></div>
-          <div><dt>Date</dt><dd>……………………</dd></div>
           <div className="lp-wide">
-            <dt>Competence</dt>
-            <dd>The student should be able to relate diffusion to processes that occur in living organisms.</dd>
+            <dt>Main Competence</dt>
+            <dd>Relate the movement of materials in and out of the cell to life processes in organisms.</dd>
           </div>
           <div className="lp-wide">
-            <dt>Specific Objectives</dt>
-            <dd>By the end of the lesson, the student should be able to: (a) define diffusion; (b) mention examples of diffusion in daily life; (c) demonstrate diffusion using a simple experiment.</dd>
+            <dt>Specific Competence</dt>
+            <dd>Investigate diffusion and relate it to processes such as gaseous exchange and absorption.</dd>
           </div>
           <div className="lp-wide">
             <dt>Teaching / Learning Resources</dt>
@@ -122,39 +101,44 @@ export default function SampleMaterials() {
           <table className="lp-table">
             <thead>
               <tr>
-                <th>Stage</th>
-                <th>Time</th>
-                <th>Teacher’s Activities</th>
-                <th>Student’s Activities</th>
+                <th>Stage (IDDR)</th><th>Time</th><th>Teacher’s Activities</th>
+                <th>Students’ Activities</th><th>Assessment</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td>Introduction</td>
-                <td>5 min</td>
-                <td>Asks what happens when perfume is sprayed in a corner of the room.</td>
-                <td>Respond from experience; the smell spreads across the room.</td>
-              </tr>
-              <tr>
-                <td>New Knowledge</td>
-                <td>20 min</td>
-                <td>Defines diffusion; drops permanganate into water and guides observation.</td>
-                <td>Observe the colour spreading; take notes; ask questions.</td>
-              </tr>
-              <tr>
-                <td>Reinforcement</td>
+                <td><strong>Introduction</strong><br /><span className="cell-muted">Utangulizi</span></td>
                 <td>10 min</td>
-                <td>Guides students to list examples of diffusion in living things.</td>
-                <td>Give examples: gaseous exchange, absorption in the small intestine.</td>
+                <td>Sprays perfume in a corner and asks what learners notice.</td>
+                <td>Observe and explain that the smell spreads across the room.</td>
+                <td>Oral questions on prior knowledge.</td>
               </tr>
               <tr>
-                <td>Conclusion</td>
-                <td>5 min</td>
-                <td>Summarises key points; gives a short exercise.</td>
-                <td>Answer questions; copy the summary and assignment.</td>
+                <td><strong>Competence Development</strong><br /><span className="cell-muted">Kuendeleza umahiri</span></td>
+                <td>30 min</td>
+                <td>Drops permanganate into water; guides groups to observe and define diffusion.</td>
+                <td>Observe, record, define diffusion and discuss in groups.</td>
+                <td>Observation of group work.</td>
+              </tr>
+              <tr>
+                <td><strong>Design / Application</strong><br /><span className="cell-muted">Kubuni</span></td>
+                <td>25 min</td>
+                <td>Sets a task to relate diffusion to gaseous exchange and absorption in the gut.</td>
+                <td>Apply the concept and present real-life examples.</td>
+                <td>Assessment of the task against criteria.</td>
+              </tr>
+              <tr>
+                <td><strong>Realisation</strong><br /><span className="cell-muted">Kutathmini</span></td>
+                <td>15 min</td>
+                <td>Summarises, gives feedback and a short exercise.</td>
+                <td>Answer the exercise; self- and peer-assessment.</td>
+                <td>Written exercise.</td>
               </tr>
             </tbody>
           </table>
+        </div>
+        <div className="lp-evaluation">
+          <strong>Teacher&apos;s Self-Evaluation:</strong> ………………………………………………………………………………………
         </div>
       </article>
 

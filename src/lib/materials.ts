@@ -1,7 +1,12 @@
 /**
- * Generates full teaching-material content from the subject topic outlines.
- * Pure data (no rendering / no docx dependency) so it can be shared by the
- * React material pages and the DOCX download route.
+ * Generates full teaching-material content from the subject topic outlines,
+ * following Tanzania's 2023 Competence-Based Curriculum (TIE) formats:
+ *   - Scheme of Work: competence-based 13-column layout.
+ *   - Lesson Plan: the IDDR framework (Introduction · Development · Design ·
+ *     Realisation) with a competence-based header.
+ *
+ * Pure data (no rendering / no docx dependency) so it is shared by the React
+ * material pages and the DOCX download route.
  */
 import { SUBJECT_TOPICS } from "./education";
 
@@ -25,81 +30,143 @@ export function hasContent(slug: string): boolean {
   return Boolean(SUBJECT_TOPICS[slug]?.length);
 }
 
-// ── Scheme of Work ──────────────────────────────────────────────
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October"];
+
+function competencesFor(topic: string) {
+  return {
+    main: `Apply the principles of ${topic} in everyday life and further learning.`,
+    specifics: [
+      `Explain the key concepts and terms used in ${topic}.`,
+      `Use ${topic} to solve problems in real and contrived situations.`,
+    ],
+  };
+}
+
+const STANDARD_METHODS = "Brainstorming, guided discussion, demonstration, group work, question & answer.";
+const STANDARD_ASSESSMENT = "Oral questions, written exercises, practical tasks, observation and portfolio.";
+
+// ── Scheme of Work (competence-based, 13 columns) ───────────────
 export interface SowRow {
+  month: string;
   week: string;
+  mainCompetence: string;
+  specificCompetences: string[];
   topic: string;
   subTopic: string;
-  objectives: string;
   activities: string;
+  methods: string;
   resources: string;
   assessment: string;
+  periods: string;
+  references: string;
+  remarks: string;
 }
 export interface SowSection {
   form: string;
   rows: SowRow[];
 }
 
-export function buildSchemeOfWork(slug: string): SowSection[] {
+export function buildSchemeOfWork(slug: string, subjectName = "the subject"): SowSection[] {
   const outline = SUBJECT_TOPICS[slug] ?? [];
   return outline.map((f) => {
     let week = 1;
     const rows: SowRow[] = f.topics.map((topic) => {
       const span = 2; // ~2 weeks per topic
-      const label = `${week}–${week + span - 1}`;
+      const weekLabel = `${week}–${week + span - 1}`;
+      const month = MONTHS[Math.min(Math.floor((week - 1) / 4), MONTHS.length - 1)];
       week += span;
+      const c = competencesFor(topic);
       return {
-        week: label,
+        month,
+        week: weekLabel,
+        mainCompetence: c.main,
+        specificCompetences: c.specifics,
         topic,
         subTopic: "Key concepts and applications",
-        objectives: `Explain the key concepts of ${topic} and apply them to solve related problems.`,
-        activities: `Guided discussion, demonstrations and group exercises on ${topic}.`,
-        resources: "Textbooks, charts, real objects, chalkboard.",
-        assessment: "Oral questions, written exercises and short tests.",
+        activities: `In groups, learners explore ${topic} through examples, then present and discuss their findings; the teacher guides and consolidates.`,
+        methods: STANDARD_METHODS,
+        resources: "Textbooks, charts, real objects, chalkboard, digital content.",
+        assessment: STANDARD_ASSESSMENT,
+        periods: String(span * 2),
+        references: `${subjectName} syllabus (TIE); approved ${subjectName} textbook.`,
+        remarks: "",
       };
     });
     return { form: f.form, rows };
   });
 }
 
-// ── Lesson Plans ────────────────────────────────────────────────
+// ── Lesson Plan (IDDR framework) ────────────────────────────────
 export interface LessonStage {
   stage: string;
+  swahili: string;
   time: string;
   teacher: string;
   student: string;
+  assessment: string;
 }
 export interface LessonPlan {
   form: string;
   topic: string;
   subTopic: string;
-  competence: string;
-  objectives: string[];
+  mainCompetence: string;
+  specificCompetence: string;
+  periods: string;
+  duration: string;
   resources: string;
+  references: string;
   stages: LessonStage[];
 }
 
-export function buildLessonPlans(slug: string): LessonPlan[] {
+export function buildLessonPlans(slug: string, subjectName = "the subject"): LessonPlan[] {
   const outline = SUBJECT_TOPICS[slug] ?? [];
   const plans: LessonPlan[] = [];
   outline.forEach((f) => {
     f.topics.slice(0, 2).forEach((topic) => {
+      const c = competencesFor(topic);
       plans.push({
         form: f.form,
         topic,
-        subTopic: topic,
-        competence: `The student should be able to apply knowledge of ${topic} in real-life contexts.`,
-        objectives: [
-          `define the key terms used in ${topic}`,
-          `explain the main ideas of ${topic}`,
-          `apply ${topic} to solve simple problems`,
-        ],
-        resources: "Chalkboard, textbook, charts and relevant real objects.",
+        subTopic: "Key concepts and applications",
+        mainCompetence: c.main,
+        specificCompetence: `Demonstrate understanding of ${topic} and apply it to real-life situations.`,
+        periods: "1",
+        duration: "80 minutes (double period)",
+        resources: "Chalkboard, textbook, charts, real objects and relevant digital content.",
+        references: `${subjectName} syllabus (TIE); approved ${subjectName} textbook.`,
         stages: [
-          { stage: "Introduction", time: "5 min", teacher: `Reviews the previous lesson and introduces ${topic} through guiding questions.`, student: "Respond to questions and recall prior knowledge." },
-          { stage: "New Knowledge", time: "20 min", teacher: `Explains the concepts of ${topic} using examples and demonstrations.`, student: "Listen, take notes, and ask and answer questions." },
-          { stage: "Reinforcement", time: "10 min", teacher: `Guides group and individual exercises on ${topic}.`, student: "Work in groups, solve exercises and present findings." },
-          { stage: "Conclusion", time: "5 min", teacher: "Summarises the key points and gives an assignment.", student: "Copy the summary and assignment; ask final questions." },
+          {
+            stage: "Introduction",
+            swahili: "Utangulizi",
+            time: "10 min",
+            teacher: `Reviews the previous lesson and uses guiding questions and a real-life scenario to introduce ${topic}.`,
+            student: "Respond to questions and relate the scenario to their experience.",
+            assessment: "Oral questions to gauge prior knowledge.",
+          },
+          {
+            stage: "Competence Development",
+            swahili: "Kuendeleza umahiri",
+            time: "30 min",
+            teacher: `Facilitates group activities and demonstrations through which learners build understanding of ${topic}.`,
+            student: "Work in groups, investigate, take notes and discuss findings.",
+            assessment: "Observation of participation; checking group work.",
+          },
+          {
+            stage: "Design / Application",
+            swahili: "Kubuni",
+            time: "25 min",
+            teacher: `Sets a real-world task requiring learners to apply ${topic} and guides them as they work.`,
+            student: "Apply the concept to solve the task and present their solutions.",
+            assessment: "Assessment of the task/product against criteria.",
+          },
+          {
+            stage: "Realisation",
+            swahili: "Kutathmini",
+            time: "15 min",
+            teacher: "Summarises key points, gives feedback and a short exercise/assignment.",
+            student: "Reflect, answer the exercise and note the assignment.",
+            assessment: "Written exercise; self- and peer-assessment.",
+          },
         ],
       });
     });
@@ -124,7 +191,7 @@ export function buildLessonNotes(slug: string): NoteSection[] {
     form: f.form,
     topics: f.topics.map((topic) => ({
       topic,
-      intro: `${topic} is a key area in this form. The points below outline what a student should master.`,
+      intro: `${topic} is a key area in this form. The points below outline what a learner should master.`,
       points: [
         `Meaning and key terms used in ${topic}.`,
         `Main principles and explanations of ${topic}.`,

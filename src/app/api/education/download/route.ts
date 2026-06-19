@@ -10,6 +10,7 @@ import {
   TableCell,
   WidthType,
   AlignmentType,
+  PageOrientation,
 } from "docx";
 import { getSubjectBySlug } from "@/lib/education";
 import {
@@ -27,15 +28,26 @@ export const runtime = "nodejs";
 const NAVY = "16235B";
 const GREEN = "1E9E48";
 
-function cell(text: string, opts: { header?: boolean; width?: number } = {}): TableCell {
+function cell(text: string | string[], opts: { header?: boolean } = {}): TableCell {
+  const lines = Array.isArray(text) ? text : [text];
   return new TableCell({
-    width: opts.width ? { size: opts.width, type: WidthType.PERCENTAGE } : undefined,
     shading: opts.header ? { fill: NAVY } : undefined,
-    children: [
-      new Paragraph({
-        children: [new TextRun({ text, bold: opts.header, color: opts.header ? "FFFFFF" : "1A1A1A", size: 18 })],
-      }),
-    ],
+    children: lines.map(
+      (line) =>
+        new Paragraph({
+          bullet: !opts.header && lines.length > 1 ? { level: 0 } : undefined,
+          children: [
+            new TextRun({ text: line, bold: opts.header, color: opts.header ? "FFFFFF" : "1A1A1A", size: 16 }),
+          ],
+        }),
+    ),
+  });
+}
+
+function field(label: string, value: string) {
+  return new Paragraph({
+    spacing: { after: 40 },
+    children: [new TextRun({ text: `${label}: `, bold: true }), new TextRun({ text: value })],
   });
 }
 
@@ -70,48 +82,54 @@ function buildChildren(subject: ReturnType<typeof getSubjectBySlug>, slug: strin
   ];
 
   if (material === "scheme-of-work") {
-    for (const section of buildSchemeOfWork(slug)) {
-      children.push(heading(section.form, HeadingLevel.HEADING_2, GREEN));
-      const header = new TableRow({
-        tableHeader: true,
-        children: ["Week", "Topic", "Sub-topic", "Objectives", "Activities", "Resources", "Assessment"].map((h) =>
-          cell(h, { header: true }),
-        ),
-      });
+    for (const section of buildSchemeOfWork(slug, subject.name)) {
+      children.push(heading(`${section.form} — Scheme of Work (competence-based)`, HeadingLevel.HEADING_2, GREEN));
+      const cols = ["Month", "Week", "Main Competence", "Specific Competences", "Topic", "Sub-topic", "Teaching & Learning Activities", "Methods", "Resources", "Assessment", "Periods", "References", "Remarks"];
+      const header = new TableRow({ tableHeader: true, children: cols.map((h) => cell(h, { header: true })) });
       const rows = section.rows.map(
         (r) =>
           new TableRow({
-            children: [r.week, r.topic, r.subTopic, r.objectives, r.activities, r.resources, r.assessment].map((t) =>
-              cell(t),
-            ),
+            children: [
+              cell(r.month), cell(r.week), cell(r.mainCompetence), cell(r.specificCompetences),
+              cell(r.topic), cell(r.subTopic), cell(r.activities), cell(r.methods), cell(r.resources),
+              cell(r.assessment), cell(r.periods), cell(r.references), cell("—"),
+            ],
           }),
       );
       children.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: [header, ...rows] }));
     }
   } else if (material === "lesson-plans") {
-    for (const plan of buildLessonPlans(slug)) {
-      children.push(heading(`${plan.form}: ${plan.topic}`, HeadingLevel.HEADING_2, GREEN));
-      children.push(
-        new Paragraph({ children: [new TextRun({ text: "Competence: ", bold: true }), new TextRun(plan.competence)] }),
-      );
-      children.push(new Paragraph({ children: [new TextRun({ text: "Specific Objectives:", bold: true })] }));
-      plan.objectives.forEach((o) =>
-        children.push(new Paragraph({ bullet: { level: 0 }, children: [new TextRun(o)] })),
-      );
-      children.push(
-        new Paragraph({
-          spacing: { after: 120 },
-          children: [new TextRun({ text: "Resources: ", bold: true }), new TextRun(plan.resources)],
-        }),
-      );
+    for (const plan of buildLessonPlans(slug, subject.name)) {
+      children.push(heading(`${plan.form}: ${plan.topic} (IDDR)`, HeadingLevel.HEADING_2, GREEN));
+      children.push(field("School", "………………………………"));
+      children.push(field("Class", plan.form));
+      children.push(field("Time", plan.duration));
+      children.push(field("No. of Periods", plan.periods));
+      children.push(field("No. of Students", "……"));
+      children.push(field("Main Competence", plan.mainCompetence));
+      children.push(field("Specific Competence", plan.specificCompetence));
+      children.push(field("Sub-topic", plan.subTopic));
+      children.push(field("Teaching / Learning Resources", plan.resources));
+      children.push(field("References", plan.references));
       const header = new TableRow({
         tableHeader: true,
-        children: ["Stage", "Time", "Teacher's Activities", "Student's Activities"].map((h) => cell(h, { header: true })),
+        children: ["Stage (IDDR)", "Time", "Teacher's Activities", "Students' Activities", "Assessment"].map((h) =>
+          cell(h, { header: true }),
+        ),
       });
       const rows = plan.stages.map(
-        (s) => new TableRow({ children: [s.stage, s.time, s.teacher, s.student].map((t) => cell(t)) }),
+        (s) =>
+          new TableRow({
+            children: [`${s.stage} (${s.swahili})`, s.time, s.teacher, s.student, s.assessment].map((t) => cell(t)),
+          }),
       );
       children.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: [header, ...rows] }));
+      children.push(
+        new Paragraph({
+          spacing: { before: 160, after: 240 },
+          children: [new TextRun({ text: "Teacher's Self-Evaluation: ", bold: true }), new TextRun("……………………………………………………")],
+        }),
+      );
     }
   } else {
     for (const section of buildLessonNotes(slug)) {
@@ -149,7 +167,10 @@ export async function GET(req: NextRequest) {
     },
     sections: [
       {
-        properties: {},
+        properties:
+          material === "scheme-of-work"
+            ? { page: { size: { orientation: PageOrientation.LANDSCAPE } } }
+            : {},
         children: buildChildren(subject, slug, material) as never,
       },
     ],
