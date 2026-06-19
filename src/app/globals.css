@@ -105,7 +105,7 @@ nav.scrolled {
 
 /* ── HERO ─────────────────────────────────── */
 .hero {
-  padding: 170px max(64px, calc((100% - 1100px) / 2)) 110px;
+  padding: 138px max(64px, calc((100% - 1100px) / 2)) 84px;
   text-align: center;
   position: relative;
   overflow: hidden;
@@ -168,7 +168,7 @@ nav.scrolled {
 /* Hero visual — a single calm showcase panel */
 .hero-stage {
   position: relative;
-  max-width: 900px; margin: 80px auto 0;
+  max-width: 900px; margin: 56px auto 0;
   border-radius: 24px; overflow: hidden;
   background: linear-gradient(180deg, #fff 0%, #F4F7FB 100%);
   border: 1px solid var(--border);
@@ -226,7 +226,7 @@ nav.scrolled {
 
 /* ── SECTION BASE ──────────────────────────── */
 /* Full-bleed backgrounds, but content centred and capped at 1200px. */
-section { padding: 128px max(64px, calc((100% - 1200px) / 2)); }
+section { padding: 96px max(64px, calc((100% - 1200px) / 2)); }
 .tag {
   display: inline-block;
   background: var(--green-lt); color: var(--green);
@@ -347,7 +347,7 @@ h2.section-title {
 
 /* ── PROCESS ───────────────────────────────── */
 #process { background: var(--white); }
-.process-intro { max-width: 520px; margin-bottom: 64px; }
+.process-intro { max-width: 520px; margin-bottom: 48px; }
 .process-list { display: flex; flex-direction: column; gap: 0; }
 .process-row {
   display: grid; grid-template-columns: 56px 1fr auto;
