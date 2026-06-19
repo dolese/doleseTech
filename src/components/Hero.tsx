@@ -17,42 +17,42 @@ export default function Hero() {
         <a href="#about" className="btn-outline">How we work</a>
       </div>
 
-      <div className="hero-visual">
-        <div className="hero-card">
-          <div className="hcard-icon ic-orange">
-            <svg viewBox="0 0 24 24">
-              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-            </svg>
+      <div className="hero-stage">
+        {/* Calm brand motif echoing the logo's radar/hexagon arcs */}
+        <svg className="hero-stage-art" viewBox="0 0 880 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <defs>
+            <radialGradient id="heroGlow" cx="50%" cy="42%" r="60%">
+              <stop offset="0%" stopColor="#16235B" stopOpacity="0.10" />
+              <stop offset="100%" stopColor="#16235B" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+          <rect width="880" height="300" fill="url(#heroGlow)" />
+          <g transform="translate(440 150)" fill="none">
+            <circle r="48" stroke="#16235B" strokeOpacity="0.14" />
+            <circle r="92" stroke="#16235B" strokeOpacity="0.10" />
+            <circle r="136" stroke="#16235B" strokeOpacity="0.07" />
+            <path d="M -92 0 A 92 92 0 0 1 26 -88" stroke="#1E9E48" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M 136 0 A 136 136 0 0 1 60 122" stroke="#1E9E48" strokeOpacity="0.7" strokeWidth="2.5" strokeLinecap="round" />
+            <circle r="6" fill="#1E9E48" stroke="none" />
+            <circle cx="92" cy="0" r="5" fill="#1E9E48" stroke="none" />
+            <circle cx="-65" cy="-65" r="4" fill="#16235B" fillOpacity="0.5" stroke="none" />
+            <circle cx="48" cy="118" r="4" fill="#16235B" fillOpacity="0.5" stroke="none" />
+          </g>
+        </svg>
+        <div className="hero-stage-bar">
+          <div className="hsb-stat">
+            <strong>99.98%</strong>
+            <span>Uptime</span>
           </div>
-          <div className="hcard-label">Uptime</div>
-          <div className="hcard-value">99.98%</div>
-          <div className="hcard-bar">
-            <div className="hcard-bar-fill" style={{ width: "99%" }} />
+          <div className="hsb-divider" />
+          <div className="hsb-stat">
+            <strong>200+</strong>
+            <span>Projects delivered</span>
           </div>
-        </div>
-        <div className="hero-card">
-          <div className="hcard-icon ic-slate">
-            <svg viewBox="0 0 24 24">
-              <rect x="2" y="3" width="20" height="14" rx="2" />
-              <line x1="8" y1="21" x2="16" y2="21" />
-              <line x1="12" y1="17" x2="12" y2="21" />
-            </svg>
-          </div>
-          <div className="hcard-label">Projects delivered</div>
-          <div className="hcard-value">200+</div>
-          <div className="hcard-sub">Across 18 industries</div>
-        </div>
-        <div className="hero-card">
-          <div className="hcard-icon ic-green">
-            <svg viewBox="0 0 24 24">
-              <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
-              <polyline points="22 4 12 14.01 9 11.01" />
-            </svg>
-          </div>
-          <div className="hcard-label">Client retention</div>
-          <div className="hcard-value">98%</div>
-          <div className="hcard-bar">
-            <div className="hcard-bar-fill" style={{ width: "98%", background: "#3A8A52" }} />
+          <div className="hsb-divider" />
+          <div className="hsb-stat">
+            <strong>98%</strong>
+            <span>Client retention</span>
           </div>
         </div>
       </div>
