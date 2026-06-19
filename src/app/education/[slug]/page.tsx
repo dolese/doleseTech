@@ -3,13 +3,8 @@ import { notFound } from "next/navigation";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import ScrollReveal from "@/components/ScrollReveal";
-import {
-  SUBJECTS,
-  MATERIAL_TYPES,
-  SUBJECT_TOPICS,
-  subjectSlug,
-  getSubjectBySlug,
-} from "@/lib/education";
+import { SUBJECTS, SUBJECT_TOPICS, subjectSlug, getSubjectBySlug } from "@/lib/education";
+import { MATERIALS, hasContent, type MaterialKey } from "@/lib/materials";
 
 interface Params {
   params: { slug: string };
@@ -28,10 +23,10 @@ export function generateMetadata({ params }: Params): Metadata {
   };
 }
 
-const MATERIAL_BLURBS: Record<string, string> = {
-  "Scheme of Work": "Term-by-term plan: topics, sub-topics, objectives, activities, resources and assessment for each form.",
-  "Lesson Plans": "Period-ready plans with competences, specific objectives and staged activities in the standard format.",
-  "Lesson Notes": "Clear, well-organized notes per topic — definitions, examples and student activities.",
+const MATERIAL_BLURBS: Record<MaterialKey, string> = {
+  "scheme-of-work": "Term-by-term plan: topics, sub-topics, objectives, activities, resources and assessment for each form.",
+  "lesson-plans": "Period-ready plans with competences, specific objectives and staged activities in the standard format.",
+  "lesson-notes": "Clear, well-organized notes per topic — definitions, examples and student activities.",
 };
 
 export default function SubjectPage({ params }: Params) {
@@ -39,6 +34,7 @@ export default function SubjectPage({ params }: Params) {
   if (!subject) notFound();
 
   const outline = SUBJECT_TOPICS[params.slug];
+  const available = hasContent(params.slug);
 
   return (
     <>
@@ -73,14 +69,24 @@ export default function SubjectPage({ params }: Params) {
         <section className="detail-section">
           <h2 className="detail-h2">Available materials</h2>
           <div className="detail-materials">
-            {MATERIAL_TYPES.map((m) => (
-              <div className="detail-mat-card reveal" key={m}>
+            {MATERIALS.map((m) => (
+              <div className="detail-mat-card reveal" key={m.key}>
                 <span className="subj-dot" />
-                <h3>{m}</h3>
-                <p>{MATERIAL_BLURBS[m]}</p>
-                <a href="/education#samples" className="subj-link">
-                  See sample format →
-                </a>
+                <h3>{m.label}</h3>
+                <p>{MATERIAL_BLURBS[m.key]}</p>
+                <div className="mat-card-actions">
+                  <a href={`/education/${params.slug}/${m.key}`} className="subj-link">
+                    Open {m.label} →
+                  </a>
+                  {available && (
+                    <a
+                      href={`/api/education/download?slug=${params.slug}&material=${m.key}`}
+                      className="mat-dl-link"
+                    >
+                      ↓ .docx
+                    </a>
+                  )}
+                </div>
               </div>
             ))}
           </div>
