@@ -26,9 +26,9 @@ export default function Footer() {
         <div className="footer-col">
           <h4>Education</h4>
           <a href="/education">Browse subjects</a>
-          <a href="/education#samples">Schemes of Work</a>
-          <a href="/education#samples">Lesson Plans</a>
-          <a href="/education#samples">Lesson Notes</a>
+          <a href="/education">Schemes of Work</a>
+          <a href="/education">Lesson Plans</a>
+          <a href="/education">Lesson Notes</a>
         </div>
         <div className="footer-col">
           <h4>Company</h4>
@@ -48,9 +48,9 @@ export default function Footer() {
       <div className="footer-bottom">
         <p>© {new Date().getFullYear()} Dolese Tech. All rights reserved.</p>
         <div className="f-nav">
-          <a href="#">Privacy</a>
-          <a href="#">Terms</a>
-          <a href="#">Security</a>
+          <a href="/privacy">Privacy</a>
+          <a href="/terms">Terms</a>
+          <a href="/security">Security</a>
         </div>
       </div>
     </footer>
