@@ -32,8 +32,8 @@ export default function Footer() {
         </div>
         <div className="footer-col">
           <h4>Company</h4>
-          <a href="/#about">About</a>
-          <a href="/#team">Team</a>
+          <a href="/about">About</a>
+          <a href="/about#team">Team</a>
           <a href="/#cta">Careers</a>
         </div>
         <div className="footer-col">

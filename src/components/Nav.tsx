@@ -42,7 +42,7 @@ export default function Nav() {
       </a>
       <div className="nav-links">
         <a href="/#services">Services</a>
-        <a href="/#about">About</a>
+        <a href="/about">About</a>
         <a href="/#process">Process</a>
         <a href="/#team">Team</a>
         <a href="/education">Education</a>

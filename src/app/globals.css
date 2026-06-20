@@ -908,6 +908,51 @@ table.sow-table, table.lp-table { width: 100%; border-collapse: collapse; backgr
   .svc-cta { margin: 48px 24px 64px; padding: 40px 24px; }
 }
 
+/* ── ABOUT PAGE ────────────────────────────────────────────── */
+.about-hero {
+  padding: 140px max(64px, calc((100% - 820px) / 2)) 56px;
+  text-align: center;
+  background: linear-gradient(180deg, #fff 0%, var(--cream) 100%);
+  border-bottom: 1px solid var(--border-lt);
+}
+.about-hero .breadcrumb { justify-content: center; }
+.about-hero h1 {
+  font-family: 'Newsreader', Georgia, serif; font-weight: 400;
+  font-size: clamp(2.4rem, 5vw, 3.6rem); line-height: 1.08; letter-spacing: -.02em;
+  color: var(--text); max-width: 760px; margin: 0 auto 20px;
+}
+.about-hero h1 strong { font-family: 'Newsreader', Georgia, serif; font-style: italic; font-weight: 500; color: var(--green); }
+.about-hero-sub { max-width: 600px; margin: 0 auto; font-size: 1.1rem; line-height: 1.7; color: var(--text-mid); }
+
+.about-story { padding: 80px max(64px, calc((100% - 1000px) / 2)); }
+.about-story-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; }
+.about-story p { font-size: 1rem; line-height: 1.8; color: var(--text-mid); margin-bottom: 14px; }
+.about-story .subj-link { margin-top: 6px; display: inline-block; }
+
+.about-values { padding: 24px max(64px, calc((100% - 1000px) / 2)) 80px; }
+.values-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.value-card { background: var(--white); border: 1px solid var(--border); border-radius: 18px; padding: 28px; box-shadow: var(--shadow); }
+.value-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--green); margin-bottom: 16px; }
+.value-card h3 { font-size: 1.05rem; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+.value-card p { font-size: .9rem; line-height: 1.65; color: var(--text-muted); }
+
+.about-stats-band {
+  background: var(--navy); color: #fff;
+  padding: 56px max(64px, calc((100% - 1000px) / 2));
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; text-align: center;
+}
+.about-stat-num { font-size: 2.4rem; font-weight: 600; letter-spacing: -.03em; }
+.about-stat-label { font-size: .85rem; color: rgba(255,255,255,.6); margin-top: 4px; }
+
+@media (max-width: 900px) {
+  .about-hero { padding: 108px 24px 40px; }
+  .about-story { padding: 56px 24px; }
+  .about-story-grid { grid-template-columns: 1fr; gap: 36px; }
+  .about-values { padding: 16px 24px 56px; }
+  .values-grid { grid-template-columns: 1fr; }
+  .about-stats-band { grid-template-columns: 1fr 1fr; gap: 28px; padding: 44px 24px; }
+}
+
 .detail-section { padding: 56px max(64px, calc((100% - 1000px) / 2)) 0; }
 .detail-h2 { font-size: 1.4rem; font-weight: 600; color: var(--text); letter-spacing: -.01em; margin-bottom: 22px; }
 .detail-materials { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
