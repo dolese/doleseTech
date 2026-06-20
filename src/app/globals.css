@@ -792,6 +792,7 @@ table.sow-table, table.lp-table { width: 100%; border-collapse: collapse; backgr
 .lesson-notes { background: var(--white); border: 1px solid var(--border-lt); border-radius: 14px; padding: 24px 26px; }
 .lesson-notes h4 { font-size: 1rem; font-weight: 600; color: var(--text); margin: 18px 0 8px; }
 .lesson-notes h4:first-child { margin-top: 0; }
+.lesson-notes h5 { font-size: .9rem; font-weight: 600; color: var(--green); margin: 14px 0 6px; }
 .lesson-notes p { font-size: .92rem; color: var(--text-mid); line-height: 1.7; margin-bottom: 8px; }
 .lesson-notes ul { margin: 6px 0 8px 20px; }
 .lesson-notes li { font-size: .92rem; color: var(--text-mid); line-height: 1.7; margin-bottom: 5px; }
@@ -827,6 +828,7 @@ table.sow-table, table.lp-table { width: 100%; border-collapse: collapse; backgr
   color: var(--text);
 }
 .subj-detail-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 8px; font-size: .9rem; color: var(--text-muted); }
+.subj-authored { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #B5841E; background: #FBF1DC; border: 1px solid #EAD9AE; padding: 4px 9px; border-radius: 100px; }
 
 .detail-section { padding: 56px max(64px, calc((100% - 1000px) / 2)) 0; }
 .detail-h2 { font-size: 1.4rem; font-weight: 600; color: var(--text); letter-spacing: -.01em; margin-bottom: 22px; }

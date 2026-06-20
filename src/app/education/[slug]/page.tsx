@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import ScrollReveal from "@/components/ScrollReveal";
 import { SUBJECTS, SUBJECT_TOPICS, subjectSlug, getSubjectBySlug } from "@/lib/education";
 import { MATERIALS, hasContent, type MaterialKey } from "@/lib/materials";
+import { isAuthored } from "@/lib/content";
 
 interface Params {
   params: { slug: string };
@@ -59,6 +60,7 @@ export default function SubjectPage({ params }: Params) {
                 <span className={`subj-level ${subject.level === "A-Level" ? "is-alevel" : ""}`}>
                   {subject.level}
                 </span>
+                {isAuthored(params.slug) && <span className="subj-authored">★ Expert-written</span>}
                 {subject.forms} · {subject.topics} topics · TIE / NECTA aligned
               </p>
             </div>

@@ -9,6 +9,7 @@
  * material pages and the DOCX download route.
  */
 import { SUBJECT_TOPICS } from "./education";
+import { authoredContent, type NoteSubSection } from "./content";
 
 export type MaterialKey = "scheme-of-work" | "lesson-plans" | "lesson-notes";
 
@@ -32,13 +33,15 @@ export function hasContent(slug: string): boolean {
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October"];
 
-function competencesFor(topic: string) {
+/** Generic fallback content for subjects/topics without authored content. */
+function competencesFor2(topic: string) {
   return {
-    main: `Apply the principles of ${topic} in everyday life and further learning.`,
-    specifics: [
+    mainCompetence: `Apply the principles of ${topic} in everyday life and further learning.`,
+    specificCompetences: [
       `Explain the key concepts and terms used in ${topic}.`,
       `Use ${topic} to solve problems in real and contrived situations.`,
     ],
+    activities: `In groups, learners explore ${topic} through examples, then present and discuss their findings; the teacher guides and consolidates.`,
   };
 }
 
@@ -75,15 +78,16 @@ export function buildSchemeOfWork(slug: string, subjectName = "the subject"): So
       const weekLabel = `${week}–${week + span - 1}`;
       const month = MONTHS[Math.min(Math.floor((week - 1) / 4), MONTHS.length - 1)];
       week += span;
-      const c = competencesFor(topic);
+      const authored = authoredContent(slug, f.form, topic);
+      const c = authored ?? competencesFor2(topic);
       return {
         month,
         week: weekLabel,
-        mainCompetence: c.main,
-        specificCompetences: c.specifics,
+        mainCompetence: c.mainCompetence,
+        specificCompetences: c.specificCompetences,
         topic,
         subTopic: "Key concepts and applications",
-        activities: `In groups, learners explore ${topic} through examples, then present and discuss their findings; the teacher guides and consolidates.`,
+        activities: c.activities,
         methods: STANDARD_METHODS,
         resources: "Textbooks, charts, real objects, chalkboard, digital content.",
         assessment: STANDARD_ASSESSMENT,
@@ -123,13 +127,16 @@ export function buildLessonPlans(slug: string, subjectName = "the subject"): Les
   const plans: LessonPlan[] = [];
   outline.forEach((f) => {
     f.topics.slice(0, 2).forEach((topic) => {
-      const c = competencesFor(topic);
+      const authored = authoredContent(slug, f.form, topic);
+      const c = authored ?? competencesFor2(topic);
       plans.push({
         form: f.form,
         topic,
         subTopic: "Key concepts and applications",
-        mainCompetence: c.main,
-        specificCompetence: `Demonstrate understanding of ${topic} and apply it to real-life situations.`,
+        mainCompetence: c.mainCompetence,
+        specificCompetence: authored
+          ? authored.specificCompetences[0]
+          : `Demonstrate understanding of ${topic} and apply it to real-life situations.`,
         periods: "1",
         duration: "80 minutes (double period)",
         resources: "Chalkboard, textbook, charts, real objects and relevant digital content.",
@@ -178,7 +185,8 @@ export function buildLessonPlans(slug: string, subjectName = "the subject"): Les
 export interface NoteTopic {
   topic: string;
   intro: string;
-  points: string[];
+  sections: NoteSubSection[];
+  authored: boolean;
 }
 export interface NoteSection {
   form: string;
@@ -189,15 +197,27 @@ export function buildLessonNotes(slug: string): NoteSection[] {
   const outline = SUBJECT_TOPICS[slug] ?? [];
   return outline.map((f) => ({
     form: f.form,
-    topics: f.topics.map((topic) => ({
-      topic,
-      intro: `${topic} is a key area in this form. The points below outline what a learner should master.`,
-      points: [
-        `Meaning and key terms used in ${topic}.`,
-        `Main principles and explanations of ${topic}.`,
-        `Worked examples and applications of ${topic}.`,
-        `Common mistakes and revision questions on ${topic}.`,
-      ],
-    })),
+    topics: f.topics.map((topic) => {
+      const authored = authoredContent(slug, f.form, topic);
+      if (authored) {
+        return { topic, intro: authored.notes.intro, sections: authored.notes.sections, authored: true };
+      }
+      return {
+        topic,
+        intro: `${topic} is a key area in this form. The points below outline what a learner should master.`,
+        sections: [
+          {
+            heading: "Key points to master",
+            points: [
+              `Meaning and key terms used in ${topic}.`,
+              `Main principles and explanations of ${topic}.`,
+              `Worked examples and applications of ${topic}.`,
+              `Common mistakes and revision questions on ${topic}.`,
+            ],
+          },
+        ],
+        authored: false,
+      };
+    }),
   }));
 }

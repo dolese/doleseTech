@@ -137,7 +137,15 @@ function buildChildren(subject: ReturnType<typeof getSubjectBySlug>, slug: strin
       section.topics.forEach((t) => {
         children.push(heading(t.topic, HeadingLevel.HEADING_3));
         children.push(new Paragraph({ children: [new TextRun(t.intro)] }));
-        t.points.forEach((p) => children.push(new Paragraph({ bullet: { level: 0 }, children: [new TextRun(p)] })));
+        t.sections.forEach((s) => {
+          children.push(
+            new Paragraph({ spacing: { before: 120, after: 40 }, children: [new TextRun({ text: s.heading, bold: true })] }),
+          );
+          if (s.body) children.push(new Paragraph({ children: [new TextRun(s.body)] }));
+          (s.points ?? []).forEach((p) =>
+            children.push(new Paragraph({ bullet: { level: 0 }, children: [new TextRun(p)] })),
+          );
+        });
       });
     }
   }

@@ -212,11 +212,19 @@ function LessonNotesView({ slug }: { slug: string }) {
               <div key={t.topic}>
                 <h4>{t.topic}</h4>
                 <p>{t.intro}</p>
-                <ul>
-                  {t.points.map((p) => (
-                    <li key={p}>{p}</li>
-                  ))}
-                </ul>
+                {t.sections.map((s) => (
+                  <div key={s.heading}>
+                    <h5>{s.heading}</h5>
+                    {s.body && <p>{s.body}</p>}
+                    {s.points && (
+                      <ul>
+                        {s.points.map((p) => (
+                          <li key={p}>{p}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ))}
               </div>
             ))}
           </div>
