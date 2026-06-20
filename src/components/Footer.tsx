@@ -16,11 +16,11 @@ export default function Footer() {
         </div>
         <div className="footer-col">
           <h4>Services</h4>
-          <a href="/#services">Software Dev</a>
-          <a href="/#services">Cloud &amp; Infra</a>
-          <a href="/#services">Cybersecurity</a>
-          <a href="/#services">Data &amp; Analytics</a>
-          <a href="/#services">AI &amp; Automation</a>
+          <a href="/services/custom-software">Custom Software</a>
+          <a href="/services/cloud-infrastructure">Cloud &amp; Infra</a>
+          <a href="/services/cybersecurity">Cybersecurity</a>
+          <a href="/services/data-analytics">Data &amp; Analytics</a>
+          <a href="/services/ai-automation">AI &amp; Automation</a>
           <a href="https://sokoplus.co.tz">MarketPlace</a>
         </div>
         <div className="footer-col">
