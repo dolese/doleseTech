@@ -10,7 +10,8 @@ interface Params {
 }
 
 export function generateStaticParams() {
-  return SERVICES.map((s) => ({ slug: s.slug }));
+  // cloud-infrastructure has its own dedicated, richer page.
+  return SERVICES.filter((s) => s.slug !== "cloud-infrastructure").map((s) => ({ slug: s.slug }));
 }
 
 export function generateMetadata({ params }: Params): Metadata {

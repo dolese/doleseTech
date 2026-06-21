@@ -46,6 +46,12 @@ export default function Nav() {
         <a href="/#process">Process</a>
         <a href="/#team">Team</a>
         <a href="/education">Education</a>
+        <a href="/chat" className="nav-chat-link">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14, marginRight: 5, verticalAlign: "middle" }}>
+            <path d="M17.5 11.667a1.667 1.667 0 0 1-1.667 1.666H5.833L2.5 16.667V4.167A1.667 1.667 0 0 1 4.167 2.5h11.666A1.667 1.667 0 0 1 17.5 4.167v7.5z" />
+          </svg>
+          AI Chat
+        </a>
       </div>
       <div className="nav-right">
         <a href="#" className="nav-ghost">Log in</a>
@@ -96,6 +102,7 @@ export default function Nav() {
           <a href="/#process" onClick={closeMenu}>Process</a>
           <a href="/#team" onClick={closeMenu}>Team</a>
           <a href="/education" onClick={closeMenu}>Education</a>
+          <a href="/chat" onClick={closeMenu}>AI Chat</a>
           <a href="#" onClick={closeMenu}>Log in</a>
         </div>
 

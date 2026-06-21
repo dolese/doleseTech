@@ -29,3 +29,6 @@ next-env.d.ts
 
 # runtime lead store (file fallback)
 /data/*.jsonl
+
+# local reference dump (Replit build, has its own git)
+/Review
