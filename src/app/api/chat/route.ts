@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
+import { isAllowedModel, DEFAULT_MODEL } from "@/lib/chatModels";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,6 +16,7 @@ const chatBodySchema = z.object({
     )
     .min(1)
     .max(40),
+  model: z.string().optional(),
 });
 
 const SYSTEM = `You are an AI assistant for Dolese Tech, a technology company based in Tanzania. Dolese Tech specialises in software development, cloud infrastructure, education portals (Tanzania TIE/NECTA materials), cybersecurity, IT consulting, and digital transformation for businesses, schools, and organisations.
@@ -42,6 +44,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "AI service not configured." }, { status: 503 });
   }
 
+  const model = parse.data.model && isAllowedModel(parse.data.model) ? parse.data.model : DEFAULT_MODEL;
+
   const client = new Anthropic({ apiKey });
   const encoder = new TextEncoder();
 
@@ -50,7 +54,7 @@ export async function POST(req: NextRequest) {
       const send = (obj: unknown) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(obj)}\n\n`));
       try {
         const aiStream = client.messages.stream({
-          model: "claude-haiku-4-5",
+          model,
           max_tokens: 4096,
           system: SYSTEM,
           messages: parse.data.messages,

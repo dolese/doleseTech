@@ -1,0 +1,24 @@
+/**
+ * Models offered by the /chat assistant. Shared by the chat UI (model picker)
+ * and the /api/chat route (allowlist + default). Claude family only — the
+ * Anthropic SDK is already wired in; other providers would need their own SDK
+ * and API key.
+ */
+export interface ChatModel {
+  id: string;
+  label: string;
+  tagline: string;
+}
+
+export const CHAT_MODELS: ChatModel[] = [
+  { id: "claude-haiku-4-5", label: "Claude Haiku 4.5", tagline: "Fast & efficient" },
+  { id: "claude-sonnet-4-6", label: "Claude Sonnet 4.6", tagline: "Balanced" },
+  { id: "claude-opus-4-8", label: "Claude Opus 4.8", tagline: "Most capable" },
+];
+
+// A website assistant defaults to the fast, low-cost model; users can switch up.
+export const DEFAULT_MODEL = "claude-haiku-4-5";
+
+export function isAllowedModel(id: string): boolean {
+  return CHAT_MODELS.some((m) => m.id === id);
+}
