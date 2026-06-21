@@ -42,12 +42,27 @@ notifications and customize storage, copy `.env.example` to `.env.local`:
 cp .env.example .env.local
 ```
 
-| Variable         | Purpose                                              |
-| ---------------- | ---------------------------------------------------- |
-| `RESEND_API_KEY` | Enable email notifications via Resend.               |
-| `CONTACT_FROM`   | Verified sender address.                             |
-| `CONTACT_TO`     | Where lead notifications are delivered.              |
-| `LEADS_FILE`     | Path for the JSONL lead log (default `data/leads.jsonl`). |
+| Variable           | Purpose                                              |
+| ------------------ | ---------------------------------------------------- |
+| `RESEND_API_KEY`   | Enable email notifications via Resend.               |
+| `CONTACT_FROM`     | Verified sender address.                             |
+| `CONTACT_TO`       | Where lead notifications are delivered.              |
+| `LEADS_FILE`       | Path for the JSONL lead log (default `data/leads.jsonl`). |
+| `ADMIN_PASSWORD`   | Password for the `/admin` lead dashboard. Unset = admin disabled. |
+| `LEAD_STATUS_FILE` | Path for lead status/notes store (default `data/lead-status.json`). |
+
+## Admin dashboard
+
+`/admin` is a password-protected lead dashboard (set `ADMIN_PASSWORD`). It offers:
+
+- **KPIs** — total, untriaged, last-7-days, won, and win-rate cards.
+- **Analytics** — a 14-day intake trend chart and a status pipeline breakdown.
+- **Triage** — per-lead status (`new → contacted → qualified → won/lost`) and
+  private notes, persisted via `PATCH /api/admin/leads` to `LEAD_STATUS_FILE`.
+- **Filter / sort / search** — status chips, sort order, and free-text search.
+- **CSV export** — download the currently filtered leads.
+
+Leads are served by `GET /api/admin/leads` (auth via the `x-admin-password` header).
 
 ## Scripts
 
