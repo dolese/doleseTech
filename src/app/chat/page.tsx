@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Nav from "@/components/Nav";
-import { CHAT_MODELS, DEFAULT_MODEL } from "@/lib/chatModels";
+import { CHAT_MODELS, DEFAULT_MODEL, modelSupportsThinking } from "@/lib/chatModels";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+  thinking?: string;
 }
 interface Conversation {
   id: string;
@@ -18,6 +19,7 @@ interface Conversation {
 }
 
 const STORAGE_KEY = "dolese_chat_conversations_v1";
+const THINK_KEY = "dolese_chat_thinking";
 
 const SUGGESTIONS = [
   "What services does Dolese Tech offer?",
@@ -28,7 +30,7 @@ const SUGGESTIONS = [
 
 function newConversation(): Conversation {
   return {
-    id: (crypto?.randomUUID?.() ?? String(Date.now())),
+    id: crypto?.randomUUID?.() ?? String(Date.now()),
     title: "New chat",
     model: DEFAULT_MODEL,
     messages: [],
@@ -42,6 +44,10 @@ export default function ChatPage() {
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState("");
   const [hydrated, setHydrated] = useState(false);
+  const [thinkingOn, setThinkingOn] = useState(false);
+  const [search, setSearch] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -49,6 +55,8 @@ export default function ChatPage() {
 
   const active = conversations.find((c) => c.id === activeId);
   const messages = active?.messages ?? [];
+  const canThink = modelSupportsThinking(active?.model ?? DEFAULT_MODEL);
+  const activeModel = CHAT_MODELS.find((m) => m.id === active?.model);
 
   // ── Load / persist ──────────────────────────────────────────
   useEffect(() => {
@@ -63,6 +71,7 @@ export default function ChatPage() {
         setConversations([c]);
         setActiveId(c.id);
       }
+      setThinkingOn(localStorage.getItem(THINK_KEY) === "1");
     } catch {
       const c = newConversation();
       setConversations([c]);
@@ -74,6 +83,10 @@ export default function ChatPage() {
   useEffect(() => {
     if (hydrated) localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
   }, [conversations, hydrated]);
+
+  useEffect(() => {
+    if (hydrated) localStorage.setItem(THINK_KEY, thinkingOn ? "1" : "0");
+  }, [thinkingOn, hydrated]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -111,21 +124,42 @@ export default function ChatPage() {
     patchActive((c) => ({ ...c, model }));
   }
 
+  function beginRename(c: Conversation) {
+    setEditingId(c.id);
+    setEditTitle(c.title);
+  }
+  function commitRename() {
+    if (editingId) {
+      const t = editTitle.trim();
+      setConversations((prev) => prev.map((c) => (c.id === editingId ? { ...c, title: t || "Untitled" } : c)));
+    }
+    setEditingId(null);
+  }
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return conversations;
+    return conversations.filter(
+      (c) => c.title.toLowerCase().includes(q) || c.messages.some((m) => m.content.toLowerCase().includes(q)),
+    );
+  }, [conversations, search]);
+
   // ── Streaming ───────────────────────────────────────────────
   async function streamAssistant(history: Message[], model: string) {
     setError("");
     setStreaming(true);
-    patchActive((c) => ({ ...c, messages: [...history, { role: "assistant", content: "" }] }));
+    patchActive((c) => ({ ...c, messages: [...history, { role: "assistant", content: "", thinking: "" }] }));
 
     const controller = new AbortController();
     abortRef.current = controller;
-    let assistant = "";
+    let answer = "";
+    let think = "";
 
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: history, model }),
+        body: JSON.stringify({ messages: history, model, thinking: thinkingOn }),
         signal: controller.signal,
       });
       if (!res.ok) {
@@ -146,11 +180,12 @@ export default function ChatPage() {
           try {
             const evt = JSON.parse(line);
             if (evt.error) throw new Error(evt.error);
-            if (evt.content) {
-              assistant += evt.content;
+            if (evt.thinking) think += evt.thinking;
+            if (evt.content) answer += evt.content;
+            if (evt.thinking || evt.content) {
               patchActive((c) => {
                 const msgs = c.messages.slice();
-                msgs[msgs.length - 1] = { role: "assistant", content: assistant };
+                msgs[msgs.length - 1] = { role: "assistant", content: answer, thinking: think };
                 return { ...c, messages: msgs };
               });
             }
@@ -161,10 +196,11 @@ export default function ChatPage() {
       }
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") {
-        // keep whatever streamed so far; drop empty assistant bubble
         patchActive((c) => ({
           ...c,
-          messages: c.messages.filter((m, i) => !(i === c.messages.length - 1 && m.role === "assistant" && m.content === "")),
+          messages: c.messages.filter(
+            (m, i) => !(i === c.messages.length - 1 && m.role === "assistant" && m.content === ""),
+          ),
         }));
       } else {
         setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
@@ -183,11 +219,7 @@ export default function ChatPage() {
 
     const history = [...active.messages, { role: "user" as const, content: text }];
     const isFirst = active.messages.length === 0;
-    patchActive((c) => ({
-      ...c,
-      title: isFirst ? text.slice(0, 42) : c.title,
-      messages: history,
-    }));
+    patchActive((c) => ({ ...c, title: isFirst ? text.slice(0, 42) : c.title, messages: history }));
     await streamAssistant(history, active.model);
   }
 
@@ -203,18 +235,15 @@ export default function ChatPage() {
   function stop() {
     abortRef.current?.abort();
   }
-
   function copy(text: string) {
     navigator.clipboard?.writeText(text);
   }
-
   function autoGrow() {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "auto";
     el.style.height = Math.min(el.scrollHeight, 180) + "px";
   }
-
   function handleKey(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -239,23 +268,52 @@ export default function ChatPage() {
           </div>
           <button className="chat-new-btn" onClick={startNewChat}>+ New chat</button>
 
+          <div className="chat-search">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+            <input
+              type="search"
+              placeholder="Search chats…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              aria-label="Search chats"
+            />
+          </div>
+
           <div className="chat-convos">
-            {conversations.map((c) => (
-              <div
-                key={c.id}
-                className={`chat-convo ${c.id === activeId ? "active" : ""}`}
-                onClick={() => setActiveId(c.id)}
-              >
-                <span className="chat-convo-title">{c.title}</span>
-                <button
-                  className="chat-convo-del"
-                  aria-label="Delete chat"
-                  onClick={(e) => { e.stopPropagation(); deleteConversation(c.id); }}
+            {filtered.length === 0 ? (
+              <p className="chat-convos-empty">No chats found.</p>
+            ) : (
+              filtered.map((c) => (
+                <div
+                  key={c.id}
+                  className={`chat-convo ${c.id === activeId ? "active" : ""}`}
+                  onClick={() => setActiveId(c.id)}
                 >
-                  ×
-                </button>
-              </div>
-            ))}
+                  {editingId === c.id ? (
+                    <input
+                      className="chat-convo-edit"
+                      value={editTitle}
+                      autoFocus
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      onBlur={commitRename}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") commitRename();
+                        if (e.key === "Escape") setEditingId(null);
+                      }}
+                    />
+                  ) : (
+                    <>
+                      <span className="chat-convo-title">{c.title}</span>
+                      <span className="chat-convo-actions">
+                        <button aria-label="Rename" onClick={(e) => { e.stopPropagation(); beginRename(c); }}>✎</button>
+                        <button aria-label="Delete" onClick={(e) => { e.stopPropagation(); deleteConversation(c.id); }}>×</button>
+                      </span>
+                    </>
+                  )}
+                </div>
+              ))
+            )}
           </div>
 
           <div className="chat-model-picker">
@@ -275,6 +333,25 @@ export default function ChatPage() {
 
         {/* Main */}
         <div className="chat-main">
+          <div className="chat-topbar">
+            <div className="chat-topbar-model">
+              <span className="chat-topbar-dot" />
+              {activeModel?.label ?? "Claude"}
+              <span className="chat-topbar-tagline">{activeModel?.tagline}</span>
+            </div>
+            <button
+              className={`chat-think-toggle ${thinkingOn ? "on" : ""}`}
+              onClick={() => setThinkingOn((v) => !v)}
+              disabled={!canThink}
+              title={canThink ? "Show the model's reasoning" : "Not available on this model"}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2z" />
+              </svg>
+              Thinking
+            </button>
+          </div>
+
           <div className="chat-messages">
             {messages.length === 0 ? (
               <div className="chat-welcome">
@@ -307,6 +384,12 @@ export default function ChatPage() {
                     </div>
                   )}
                   <div className="chat-bubble-wrap">
+                    {m.role === "assistant" && m.thinking ? (
+                      <details className="chat-thinking">
+                        <summary>💭 Thinking</summary>
+                        <div className="chat-thinking-body">{m.thinking}</div>
+                      </details>
+                    ) : null}
                     <div className={`chat-bubble ${m.role}`}>
                       {m.content === "" && m.role === "assistant" ? (
                         <span className="chat-typing"><span /><span /><span /></span>
@@ -363,7 +446,7 @@ export default function ChatPage() {
               )}
             </div>
             <p className="chat-disclaimer">
-              {(CHAT_MODELS.find((m) => m.id === active?.model)?.label) ?? "Claude"} · AI can make mistakes. Verify important information.
+              {activeModel?.label ?? "Claude"} · AI can make mistakes. Verify important information.
             </p>
           </div>
         </div>

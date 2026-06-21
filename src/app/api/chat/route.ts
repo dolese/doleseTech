@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
-import { isAllowedModel, DEFAULT_MODEL } from "@/lib/chatModels";
+import { isAllowedModel, DEFAULT_MODEL, modelSupportsThinking } from "@/lib/chatModels";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,6 +17,7 @@ const chatBodySchema = z.object({
     .min(1)
     .max(40),
   model: z.string().optional(),
+  thinking: z.boolean().optional(),
 });
 
 const SYSTEM = `You are an AI assistant for Dolese Tech, a technology company based in Tanzania. Dolese Tech specialises in software development, cloud infrastructure, education portals (Tanzania TIE/NECTA materials), cybersecurity, IT consulting, and digital transformation for businesses, schools, and organisations.
@@ -45,6 +46,7 @@ export async function POST(req: NextRequest) {
   }
 
   const model = parse.data.model && isAllowedModel(parse.data.model) ? parse.data.model : DEFAULT_MODEL;
+  const useThinking = parse.data.thinking === true && modelSupportsThinking(model);
 
   const client = new Anthropic({ apiKey });
   const encoder = new TextEncoder();
@@ -55,14 +57,20 @@ export async function POST(req: NextRequest) {
       try {
         const aiStream = client.messages.stream({
           model,
-          max_tokens: 4096,
+          max_tokens: useThinking ? 8192 : 4096,
           system: SYSTEM,
           messages: parse.data.messages,
+          // Adaptive thinking on supported models; summarized so it can be shown.
+          ...(useThinking ? { thinking: { type: "adaptive", display: "summarized" } } : {}),
         });
 
         for await (const event of aiStream) {
-          if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-            send({ content: event.delta.text });
+          if (event.type === "content_block_delta") {
+            if (event.delta.type === "text_delta") {
+              send({ content: event.delta.text });
+            } else if (event.delta.type === "thinking_delta") {
+              send({ thinking: event.delta.thinking });
+            }
           }
         }
         send({ done: true });
