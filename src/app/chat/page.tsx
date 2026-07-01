@@ -48,6 +48,7 @@ export default function ChatPage() {
   const [search, setSearch] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -91,6 +92,33 @@ export default function ChatPage() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, streaming]);
+
+  useEffect(() => {
+    if (!sidebarOpen) {
+      document.body.style.overflow = "";
+      return;
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSidebarOpen(false);
+    };
+    const onResize = () => {
+      if (window.innerWidth > 768) setSidebarOpen(false);
+    };
+
+    if (window.innerWidth <= 768) {
+      document.body.style.overflow = "hidden";
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("resize", onResize);
+    };
+  }, [sidebarOpen]);
 
   // ── Conversation helpers ────────────────────────────────────
   const patchActive = useCallback(
@@ -251,6 +279,11 @@ export default function ChatPage() {
     }
   }
 
+  function activateConversation(id: string) {
+    setActiveId(id);
+    setSidebarOpen(false);
+  }
+
   const lastAssistantIdx = (() => {
     for (let i = messages.length - 1; i >= 0; i--) if (messages[i].role === "assistant") return i;
     return -1;
@@ -261,12 +294,34 @@ export default function ChatPage() {
       <Nav />
       <div className="chat-layout">
         {/* Sidebar */}
-        <aside className="chat-sidebar">
-          <div className="chat-sidebar-brand">
-            <div className="chat-sidebar-dot" />
-            <span>Dolese Tech AI</span>
+        <aside
+          id="chat-sidebar"
+          className={`chat-sidebar ${sidebarOpen ? "open" : ""}`}
+          aria-label="Chat conversations"
+        >
+          <div className="chat-sidebar-head">
+            <div className="chat-sidebar-brand">
+              <div className="chat-sidebar-dot" />
+              <span>Dolese Tech AI</span>
+            </div>
+            <button
+              type="button"
+              className="chat-sidebar-close"
+              onClick={() => setSidebarOpen(false)}
+              aria-label="Close chat list"
+            >
+              ×
+            </button>
           </div>
-          <button className="chat-new-btn" onClick={startNewChat}>+ New chat</button>
+          <button
+            className="chat-new-btn"
+            onClick={() => {
+              startNewChat();
+              setSidebarOpen(false);
+            }}
+          >
+            + New chat
+          </button>
 
           <div className="chat-search">
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
@@ -287,7 +342,16 @@ export default function ChatPage() {
                 <div
                   key={c.id}
                   className={`chat-convo ${c.id === activeId ? "active" : ""}`}
-                  onClick={() => setActiveId(c.id)}
+                  onClick={() => activateConversation(c.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      activateConversation(c.id);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={c.id === activeId}
                 >
                   {editingId === c.id ? (
                     <input
@@ -331,10 +395,21 @@ export default function ChatPage() {
           </div>
         </aside>
 
+        {sidebarOpen && <div className="chat-overlay" onClick={() => setSidebarOpen(false)} />}
+
         {/* Main */}
         <div className="chat-main">
           <div className="chat-topbar">
             <div className="chat-topbar-model">
+              <button
+                className="chat-menu-btn"
+                onClick={() => setSidebarOpen((v) => !v)}
+                aria-expanded={sidebarOpen}
+                aria-controls="chat-sidebar"
+                aria-label="Toggle chat list"
+              >
+                ☰
+              </button>
               <span className="chat-topbar-dot" />
               {activeModel?.label ?? "Claude"}
               <span className="chat-topbar-tagline">{activeModel?.tagline}</span>

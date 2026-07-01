@@ -60,6 +60,7 @@ export default function AdminPage() {
   const [sortKey, setSortKey] = useState<SortKey>("newest");
   const [savingId, setSavingId] = useState<string | null>(null);
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   async function fetchLeads(pw: string) {
@@ -109,6 +110,33 @@ export default function AdminPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!sidebarOpen) {
+      document.body.style.overflow = "";
+      return;
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSidebarOpen(false);
+    };
+    const onResize = () => {
+      if (window.innerWidth > 900) setSidebarOpen(false);
+    };
+
+    if (window.innerWidth <= 900) {
+      document.body.style.overflow = "hidden";
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("resize", onResize);
+    };
+  }, [sidebarOpen]);
 
   function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -258,13 +286,58 @@ export default function AdminPage() {
   return (
     <>
       <Nav />
-      <main className="admin-main">
-        <div className="admin-header">
-          <div>
-            <div className="tag">Admin</div>
-            <h1 className="admin-title">Lead Dashboard</h1>
+      <div className="admin-shell">
+        <aside
+          id="admin-sidebar"
+          className={`admin-sidebar ${sidebarOpen ? "open" : ""}`}
+          aria-label="Lead dashboard navigation"
+        >
+          <div className="admin-sidebar-head">
+            <div className="admin-sidebar-brand">
+              <span className="admin-sidebar-dot" />
+              <span>Dolese Admin</span>
+            </div>
+            <button
+              type="button"
+              className="admin-sidebar-close"
+              onClick={() => setSidebarOpen(false)}
+              aria-label="Close dashboard menu"
+            >
+              ×
+            </button>
           </div>
-          <div className="admin-header-right">
+
+          <nav className="admin-sidebar-nav">
+            <span className="admin-sidebar-heading">Pipeline</span>
+            <button
+              className={`admin-nav-item ${statusFilter === "all" ? "active" : ""}`}
+              onClick={() => {
+                setStatusFilter("all");
+                setSidebarOpen(false);
+              }}
+            >
+              <span>All leads</span>
+              <span className="admin-nav-count">{leads.length}</span>
+            </button>
+            {STATUSES.map((s) => (
+              <button
+                key={s}
+                className={`admin-nav-item ${statusFilter === s ? "active" : ""}`}
+                onClick={() => {
+                  setStatusFilter(s);
+                  setSidebarOpen(false);
+                }}
+              >
+                <span className="admin-nav-label">
+                  <span className={`admin-nav-dot admin-fill-${s}`} />
+                  {STATUS_LABELS[s]}
+                </span>
+                <span className="admin-nav-count">{stats.counts[s]}</span>
+              </button>
+            ))}
+          </nav>
+
+          <div className="admin-sidebar-footer">
             <button className="admin-refresh-btn" onClick={exportCsv} disabled={filtered.length === 0}>
               ↓ Export CSV
             </button>
@@ -272,6 +345,27 @@ export default function AdminPage() {
               {loading ? "Refreshing…" : "↻ Refresh"}
             </button>
             <button className="admin-logout-btn" onClick={logout}>Sign out</button>
+          </div>
+        </aside>
+
+        {sidebarOpen && <div className="admin-overlay" onClick={() => setSidebarOpen(false)} />}
+
+        <main className="admin-main">
+        <div className="admin-header">
+          <div className="admin-header-left">
+            <button
+              className="admin-menu-btn"
+              onClick={() => setSidebarOpen((v) => !v)}
+              aria-expanded={sidebarOpen}
+              aria-controls="admin-sidebar"
+              aria-label="Toggle menu"
+            >
+              ☰
+            </button>
+            <div>
+              <div className="tag">Admin</div>
+              <h1 className="admin-title">Lead Dashboard</h1>
+            </div>
           </div>
         </div>
 
@@ -359,22 +453,7 @@ export default function AdminPage() {
           </select>
         </div>
 
-        <div className="admin-filter-chips">
-          <button
-            className={`admin-chip ${statusFilter === "all" ? "admin-chip-active" : ""}`}
-            onClick={() => setStatusFilter("all")}
-          >
-            All <span className="admin-chip-count">{leads.length}</span>
-          </button>
-          {STATUSES.map((s) => (
-            <button
-              key={s}
-              className={`admin-chip ${statusFilter === s ? "admin-chip-active" : ""}`}
-              onClick={() => setStatusFilter(s)}
-            >
-              {STATUS_LABELS[s]} <span className="admin-chip-count">{stats.counts[s]}</span>
-            </button>
-          ))}
+        <div className="admin-count-row">
           <span className="admin-count">{filtered.length} shown</span>
         </div>
 
@@ -482,7 +561,8 @@ export default function AdminPage() {
             ))}
           </div>
         )}
-      </main>
+        </main>
+      </div>
       <Footer />
     </>
   );
