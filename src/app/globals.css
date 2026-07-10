@@ -74,7 +74,13 @@ nav.scrolled {
   flex-shrink: 0;
 }
 /* Brand logo image (light backgrounds — nav) */
-.nav-logo-img { height: 40px; width: auto; display: block; }
+.nav-logo-img {
+  display: block;
+  width: 126px;
+  height: auto;
+  max-height: 56px;
+  object-fit: contain;
+}
 .nav-logo-text {
   font-size: .95rem; font-weight: 600;
   color: var(--text); letter-spacing: -.01em;
@@ -661,6 +667,7 @@ footer {
 /* ── RESPONSIVE ────────────────────────────── */
 @media (max-width: 900px) {
   nav { padding: 0 20px; }
+  .nav-logo-img { width: 112px; }
   .nav-links { display: none; }
   .nav-ghost { display: none; }
   .nav-menu-btn { display: inline-flex; }
