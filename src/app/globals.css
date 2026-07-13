@@ -666,8 +666,8 @@ footer {
 
 /* ── RESPONSIVE ────────────────────────────── */
 @media (max-width: 900px) {
-  nav { padding: 0 20px; }
-  .nav-logo-img { width: 112px; }
+  nav { padding: 0 16px; }
+  .nav-logo-img { width: auto; max-width: 42vw; max-height: 34px; }
   .nav-links { display: none; }
   .nav-ghost { display: none; }
   .nav-menu-btn { display: inline-flex; }
