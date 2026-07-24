@@ -73,12 +73,13 @@ nav.scrolled {
   border-radius: 50% 50% 50% 30% / 50% 50% 30% 50%;
   flex-shrink: 0;
 }
-/* Brand logo image (light backgrounds — nav) */
+/* Brand logo image (light backgrounds — nav).
+   Height-driven so any logo aspect stays within the bar (no expansion). */
 .nav-logo-img {
   display: block;
-  width: 126px;
-  height: auto;
-  max-height: 56px;
+  height: 38px;
+  width: auto;
+  max-width: 200px;
   object-fit: contain;
 }
 .nav-logo-text {
@@ -667,7 +668,7 @@ footer {
 /* ── RESPONSIVE ────────────────────────────── */
 @media (max-width: 900px) {
   nav { padding: 0 16px; }
-  .nav-logo-img { width: auto; max-width: 42vw; max-height: 34px; }
+  .nav-logo-img { height: 30px; width: auto; max-width: 58vw; }
   .nav-links { display: none; }
   .nav-ghost { display: none; }
   .nav-menu-btn { display: inline-flex; }
