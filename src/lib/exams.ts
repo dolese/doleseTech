@@ -143,6 +143,7 @@ Rules:
 - Only use the requested question formats. Multiple Choice items need 4 options (A–D) and the answer states the correct letter.
 - Cover the requested topics; every question must be answerable from the stated subject/form syllabus.
 - Every question includes a correct, complete "answer" (model answer) with a brief mark breakdown.
+- Write ALL mathematical expressions in LaTeX: inline as $...$ and display as $$...$$ (e.g. fractions $\\frac{3}{4}$, powers $x^{2}$, roots $\\sqrt{x}$, $\\times$, $\\pm$, $\\leq$). Do not write math as plain ASCII.
 - Write in the requested language.`;
 
   const parts = [
@@ -229,4 +230,31 @@ export function extractExamJson(raw: string): unknown {
   const end = s.lastIndexOf("}");
   if (start !== -1 && end !== -1) s = s.slice(start, end + 1);
   return JSON.parse(s);
+}
+
+/**
+ * Best-effort LaTeX → readable plain text for the .docx export (which has no
+ * equation typesetting). Keeps the common Form II / secondary maths notation.
+ */
+export function latexToPlain(input: string): string {
+  return (input || "")
+    .replace(/\$\$?/g, "")
+    .replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g, "($1)/($2)")
+    .replace(/\\sqrt\{([^{}]*)\}/g, "√($1)")
+    .replace(/\^\{([^{}]*)\}/g, "^$1")
+    .replace(/_\{([^{}]*)\}/g, "_$1")
+    .replace(/\\times/g, "×")
+    .replace(/\\div/g, "÷")
+    .replace(/\\pm/g, "±")
+    .replace(/\\leq/g, "≤")
+    .replace(/\\geq/g, "≥")
+    .replace(/\\neq/g, "≠")
+    .replace(/\\cdot/g, "·")
+    .replace(/\\pi/g, "π")
+    .replace(/\\theta/g, "θ")
+    .replace(/\\infty/g, "∞")
+    .replace(/\\(?:degree|circ)/g, "°")
+    .replace(/\\left|\\right/g, "")
+    .replace(/\\[a-zA-Z]+/g, "")
+    .replace(/[{}]/g, "");
 }

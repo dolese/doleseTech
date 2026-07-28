@@ -2492,3 +2492,8 @@ table.sow-table, table.lp-table { width: 100%; border-collapse: collapse; backgr
 .ea-moderation li.warn { color: var(--text); }
 @media (max-width: 900px) { .ea-grid { grid-template-columns: 1fr; gap: 16px; } }
 @media print { .exam-analytics { display: none !important; } }
+
+/* ── MATH (KaTeX) in exam text ──────────────────────────────── */
+.math-p { display: inline; }
+.exam-q-text .katex, .exam-q-answer .katex, .exam-q-options .katex { font-size: 1.04em; }
+.exam-q-answer .katex-display, .exam-q-text .katex-display { margin: 6px 0; }

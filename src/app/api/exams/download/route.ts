@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Footer } from "docx";
-import { examSchema, makeVariant, EXAM_VERSIONS, type Exam, type ExamVersion } from "@/lib/exams";
+import { examSchema, makeVariant, EXAM_VERSIONS, latexToPlain, type Exam, type ExamVersion } from "@/lib/exams";
 
 export const runtime = "nodejs";
 
@@ -48,13 +48,13 @@ function buildDoc(exam: Exam, includeScheme: boolean, watermark: string) {
           spacing: { before: 100 },
           children: [
             new TextRun({ text: `${q.number}. `, bold: true, size: 22 }),
-            new TextRun({ text: q.text, size: 22 }),
+            new TextRun({ text: latexToPlain(q.text), size: 22 }),
             new TextRun({ text: `   [${q.marks}]`, bold: true, size: 20, color: "777777" }),
           ],
         }),
       );
       (q.options ?? []).forEach((opt, i) =>
-        children.push(new Paragraph({ indent: { left: 480 }, children: [new TextRun({ text: `${String.fromCharCode(65 + i)}. ${opt}`, size: 20 })] })),
+        children.push(new Paragraph({ indent: { left: 480 }, children: [new TextRun({ text: `${String.fromCharCode(65 + i)}. ${latexToPlain(opt)}`, size: 20 })] })),
       );
     }
   }
@@ -73,7 +73,7 @@ function buildDoc(exam: Exam, includeScheme: boolean, watermark: string) {
       for (const q of section.questions) {
         children.push(
           new Paragraph({ spacing: { before: 80 }, children: [new TextRun({ text: `${q.number}. `, bold: true, size: 22 }), new TextRun({ text: `(${q.marks} marks · ${q.bloom})`, size: 18, color: "777777" })] }),
-          new Paragraph({ indent: { left: 360 }, children: [new TextRun({ text: q.answer, size: 20 })] }),
+          new Paragraph({ indent: { left: 360 }, children: [new TextRun({ text: latexToPlain(q.answer), size: 20 })] }),
         );
       }
     }

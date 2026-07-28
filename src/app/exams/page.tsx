@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import MathText from "@/components/MathText";
 import { SUBJECTS, SUBJECT_TOPICS, subjectSlug } from "@/lib/education";
 import { CHAT_MODELS } from "@/lib/chatModels";
 import {
@@ -307,18 +308,18 @@ export default function ExamsPage() {
                       {s.questions.map((q, qi) => (
                         <div className="exam-q" key={qi}>
                           <p className="exam-q-text">
-                            <strong>{q.number}.</strong> {q.text}
+                            <strong>{q.number}.</strong> <MathText>{q.text}</MathText>
                             <span className="exam-q-marks">[{q.marks}]</span>
                           </p>
                           {q.options && q.options.length > 0 && (
                             <ol className="exam-q-options">
-                              {q.options.map((o, oi) => <li key={oi}>{o}</li>)}
+                              {q.options.map((o, oi) => <li key={oi}><MathText>{o}</MathText></li>)}
                             </ol>
                           )}
                           {showScheme && (
                             <div className="exam-q-answer">
                               <span className="exam-q-answer-label">Answer · {q.bloom}</span>
-                              {q.answer}
+                              <MathText>{q.answer}</MathText>
                             </div>
                           )}
                         </div>
