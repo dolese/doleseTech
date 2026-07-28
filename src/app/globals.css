@@ -2455,3 +2455,15 @@ table.sow-table, table.lp-table { width: 100%; border-collapse: collapse; backgr
   .exam-paper { border: none; box-shadow: none; padding: 0; }
   .exam-q-answer { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
+/* Exam versions / watermark (security) */
+.exam-versions { margin-top: 16px; padding: 16px 18px; background: var(--cream); border: 1px solid var(--border-lt); border-radius: 14px; }
+.exam-versions-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+.exam-versions-head strong { font-size: .92rem; color: var(--text); }
+.exam-versions-head span { font-size: .8rem; color: var(--text-muted); }
+.exam-versions-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.exam-watermark { flex: 1; min-width: 220px; border: 1px solid var(--border); border-radius: 9px; padding: 9px 12px; font-family: inherit; font-size: .85rem; background: var(--white); color: var(--text); }
+.exam-watermark:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px var(--green-lt); }
+.exam-version-btns { display: flex; gap: 6px; }
+.exam-version-btn { width: 40px; height: 40px; border: 1px solid var(--border); background: var(--white); color: var(--text); font-weight: 700; font-size: .95rem; border-radius: 10px; cursor: pointer; transition: all .15s; }
+.exam-version-btn:hover { border-color: var(--green); color: var(--green); background: var(--green-lt); }

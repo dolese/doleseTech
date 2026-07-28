@@ -159,6 +159,67 @@ Rules:
   return { system, user: parts.filter(Boolean).join(" ") };
 }
 
+// ── Exam variants (A/B/C/D) — anti-cheat randomisation ──────────
+export const EXAM_VERSIONS = ["A", "B", "C", "D"] as const;
+export type ExamVersion = (typeof EXAM_VERSIONS)[number];
+
+function mulberry32(seed: number): () => number {
+  return function () {
+    seed |= 0;
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function shuffle<T>(arr: T[], rng: () => number): T[] {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/** Reorder MCQ options and remap the answer's leading letter accordingly. */
+function shuffleOptions(q: ExamQuestion, rng: () => number): ExamQuestion {
+  if (!q.options || q.options.length < 2) return q;
+  const order = shuffle(
+    q.options.map((_, i) => i),
+    rng,
+  );
+  const options = order.map((i) => q.options![i]);
+  let answer = q.answer;
+  const m = q.answer.match(/^\s*([A-Da-d])\b/);
+  if (m) {
+    const oldIdx = m[1].toUpperCase().charCodeAt(0) - 65;
+    const newPos = order.indexOf(oldIdx);
+    if (newPos >= 0) answer = q.answer.replace(/^\s*[A-Da-d]\b/, String.fromCharCode(65 + newPos));
+  }
+  return { ...q, options, answer };
+}
+
+/**
+ * Produce version A/B/C/D of an exam. A is the canonical order; B/C/D shuffle
+ * question order (renumbered continuously) and MCQ options, deterministically
+ * per version so the same version always reproduces the same paper.
+ */
+export function makeVariant(exam: Exam, version: ExamVersion): Exam {
+  if (version === "A") return exam;
+  const rng = mulberry32(version.charCodeAt(0) * 2654435761);
+  let n = 0;
+  const sections = exam.sections.map((s) => {
+    const questions = shuffle(s.questions, rng).map((q) => {
+      n += 1;
+      const withOpts = shuffleOptions(q, rng);
+      return { ...withOpts, number: String(n) };
+    });
+    return { ...s, questions };
+  });
+  return { ...exam, title: `${exam.title} — Version ${version}`, sections };
+}
+
 /** Extract a JSON object from a model response that may include stray text/fences. */
 export function extractExamJson(raw: string): unknown {
   let s = raw.trim();

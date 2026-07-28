@@ -45,6 +45,7 @@ export default function ExamsPage() {
   const [exam, setExam] = useState<Exam | null>(null);
   const [showScheme, setShowScheme] = useState(false);
   const [refine, setRefine] = useState("");
+  const [watermark, setWatermark] = useState("");
 
   const topicChoices = outline.find((f) => f.form === form)?.topics ?? [];
 
@@ -102,19 +103,20 @@ export default function ExamsPage() {
     }
   }
 
-  async function download() {
+  async function download(version?: string) {
     if (!exam) return;
     const res = await fetch("/api/exams/download", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ exam, includeScheme: true }),
+      body: JSON.stringify({ exam, includeScheme: true, version, watermark: watermark || undefined }),
     });
     if (!res.ok) return;
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${(exam.title || "exam").replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.docx`;
+    const suffix = version && version !== "A" ? `-version-${version.toLowerCase()}` : "";
+    a.download = `${(exam.title || "exam").replace(/[^a-z0-9]+/gi, "-").toLowerCase()}${suffix}.docx`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -262,7 +264,7 @@ export default function ExamsPage() {
                   </label>
                   <div className="exam-actions">
                     <button className="btn-outline" onClick={() => window.print()}>Print / PDF</button>
-                    <button className="btn-filled" onClick={download}>Download .docx</button>
+                    <button className="btn-filled" onClick={() => download()}>Download .docx</button>
                   </div>
                 </div>
 
@@ -308,6 +310,29 @@ export default function ExamsPage() {
                     </div>
                   ))}
                 </article>
+
+                <div className="exam-versions">
+                  <div className="exam-versions-head">
+                    <strong>Exam security</strong>
+                    <span>Shuffled versions + watermark for anti-cheating</span>
+                  </div>
+                  <div className="exam-versions-row">
+                    <input
+                      type="text"
+                      className="exam-watermark"
+                      placeholder="Watermark / footer text (optional) — e.g. school name, term"
+                      value={watermark}
+                      onChange={(e) => setWatermark(e.target.value)}
+                    />
+                    <div className="exam-version-btns">
+                      {["A", "B", "C", "D"].map((v) => (
+                        <button key={v} className="exam-version-btn" onClick={() => download(v)} title={`Download Version ${v}`}>
+                          {v}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
 
                 <div className="exam-refine">
                   <input
