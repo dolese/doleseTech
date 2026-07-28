@@ -13,8 +13,24 @@ import {
   DURATIONS,
   type Exam,
 } from "@/lib/exams";
+import { analyzeExam, moderateExam, type Dist } from "@/lib/examAnalytics";
 
 const DEFAULT_FORMATS = ["Multiple Choice", "Short Answer", "Structured"];
+
+function Bars({ list }: { list: Dist[] }) {
+  const max = Math.max(1, ...list.map((d) => d.marks));
+  return (
+    <div className="ea-bars">
+      {list.map((d) => (
+        <div className="ea-bar-row" key={d.label}>
+          <span className="ea-bar-label">{d.label}</span>
+          <div className="ea-bar"><div className="ea-bar-fill" style={{ width: `${(d.marks / max) * 100}%` }} /></div>
+          <span className="ea-bar-val">{d.marks}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function ExamsPage() {
   const [subjectSlugValue, setSubjectSlugValue] = useState(subjectSlug(SUBJECTS[0]));
@@ -310,6 +326,38 @@ export default function ExamsPage() {
                     </div>
                   ))}
                 </article>
+
+                {(() => {
+                  const a = analyzeExam(exam);
+                  const mod = moderateExam(exam);
+                  return (
+                    <details className="exam-analytics" open>
+                      <summary>Analytics &amp; moderation</summary>
+                      <div className="ea-stats">
+                        <span><strong>{a.questionCount}</strong> questions</span>
+                        <span><strong>{a.computedMarks}</strong> marks</span>
+                        <span>~<strong>{a.estimatedMinutes}</strong> min est.</span>
+                        <span><strong>{a.hotsPercent}%</strong> higher-order</span>
+                      </div>
+                      <div className="ea-grid">
+                        <div className="ea-block"><h4>Bloom&apos;s taxonomy</h4><Bars list={a.bloom} /></div>
+                        <div className="ea-block"><h4>Question types</h4><Bars list={a.types} /></div>
+                        <div className="ea-block"><h4>Difficulty</h4><Bars list={a.difficulty} /></div>
+                      </div>
+                      <div className="ea-moderation">
+                        <h4>Moderation</h4>
+                        <ul>
+                          {mod.map((m, i) => (
+                            <li key={i} className={m.level}>
+                              <span className="ea-mod-icon">{m.level === "ok" ? "✓" : "!"}</span>
+                              {m.message}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </details>
+                  );
+                })()}
 
                 <div className="exam-versions">
                   <div className="exam-versions-head">
