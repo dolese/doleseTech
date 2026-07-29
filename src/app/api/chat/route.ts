@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
-import { isAllowedModel, DEFAULT_MODEL, modelSupportsThinking } from "@/lib/chatModels";
+import { isAllowedModel, DEFAULT_MODEL, modelSupportsThinking, modelProvider } from "@/lib/chatModels";
+import { geminiKey, geminiStream } from "@/lib/gemini";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -40,16 +41,44 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const model = parse.data.model && isAllowedModel(parse.data.model) ? parse.data.model : DEFAULT_MODEL;
+  const provider = modelProvider(model);
+  const encoder = new TextEncoder();
+  const sseHeaders = {
+    "Content-Type": "text/event-stream; charset=utf-8",
+    "Cache-Control": "no-cache, no-transform",
+    Connection: "keep-alive",
+  };
+
+  // ── Google Gemini path ──────────────────────────────────────
+  if (provider === "google") {
+    if (!geminiKey()) {
+      return NextResponse.json({ error: "Gemini not configured. Set GEMINI_API_KEY." }, { status: 503 });
+    }
+    const stream = new ReadableStream({
+      async start(controller) {
+        const send = (obj: unknown) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(obj)}\n\n`));
+        try {
+          for await (const t of geminiStream(model, SYSTEM, parse.data.messages)) send({ content: t });
+          send({ done: true });
+        } catch (err) {
+          console.error("Gemini stream error:", err);
+          send({ error: "AI service error. Please try again." });
+        } finally {
+          controller.close();
+        }
+      },
+    });
+    return new Response(stream, { headers: sseHeaders });
+  }
+
+  // ── Anthropic (Claude) path ─────────────────────────────────
   const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
   if (!apiKey) {
     return NextResponse.json({ error: "AI service not configured." }, { status: 503 });
   }
-
-  const model = parse.data.model && isAllowedModel(parse.data.model) ? parse.data.model : DEFAULT_MODEL;
   const useThinking = parse.data.thinking === true && modelSupportsThinking(model);
-
   const client = new Anthropic({ apiKey });
-  const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
     async start(controller) {

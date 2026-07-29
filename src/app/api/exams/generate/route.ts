@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { isAllowedModel } from "@/lib/chatModels";
+import { isAllowedModel, modelProvider } from "@/lib/chatModels";
+import { geminiKey, geminiComplete } from "@/lib/gemini";
 import { buildExamPrompt, extractExamJson, examConfigSchema, examSchema } from "@/lib/exams";
 
 export const runtime = "nodejs";
@@ -26,29 +27,36 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
-  if (!apiKey) {
-    return NextResponse.json({ error: "AI service not configured. Set ANTHROPIC_API_KEY." }, { status: 503 });
-  }
-
   const cfg = parsed.data;
   const model = cfg.model && isAllowedModel(cfg.model) ? cfg.model : DEFAULT_EXAM_MODEL;
+  const provider = modelProvider(model);
   const { system, user } = buildExamPrompt(cfg, cfg.instruction);
 
-  const client = new Anthropic({ apiKey });
-
   try {
-    const stream = client.messages.stream({
-      model,
-      max_tokens: 8192,
-      system,
-      messages: [{ role: "user", content: user }],
-    });
-    const message = await stream.finalMessage();
-    const text = message.content
-      .filter((b): b is Anthropic.TextBlock => b.type === "text")
-      .map((b) => b.text)
-      .join("");
+    let text: string;
+    if (provider === "google") {
+      if (!geminiKey()) {
+        return NextResponse.json({ error: "Gemini not configured. Set GEMINI_API_KEY." }, { status: 503 });
+      }
+      text = await geminiComplete(model, system, user);
+    } else {
+      const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
+      if (!apiKey) {
+        return NextResponse.json({ error: "AI service not configured. Set ANTHROPIC_API_KEY." }, { status: 503 });
+      }
+      const client = new Anthropic({ apiKey });
+      const stream = client.messages.stream({
+        model,
+        max_tokens: 8192,
+        system,
+        messages: [{ role: "user", content: user }],
+      });
+      const message = await stream.finalMessage();
+      text = message.content
+        .filter((b): b is Anthropic.TextBlock => b.type === "text")
+        .map((b) => b.text)
+        .join("");
+    }
 
     let json: unknown;
     try {
