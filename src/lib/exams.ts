@@ -49,6 +49,33 @@ export interface ExamConfig {
   school?: string;
 }
 
+// ── Figure spec (controlled diagram the model can attach) ───────
+export const figureSchema = z.object({
+  type: z.enum(["numberline", "barchart", "coordinates", "table"]),
+  caption: z.string().optional().default(""),
+  // number line
+  min: z.number().optional(),
+  max: z.number().optional(),
+  step: z.number().optional(),
+  marks: z.array(z.object({ value: z.number(), label: z.string().optional() })).optional(),
+  // bar chart (labels + values)
+  labels: z.array(z.string()).optional(),
+  values: z.array(z.number()).optional(),
+  xLabel: z.string().optional(),
+  yLabel: z.string().optional(),
+  // coordinate plane
+  xMin: z.number().optional(),
+  xMax: z.number().optional(),
+  yMin: z.number().optional(),
+  yMax: z.number().optional(),
+  points: z.array(z.object({ x: z.number(), y: z.number(), label: z.string().optional() })).optional(),
+  segments: z.array(z.object({ x1: z.number(), y1: z.number(), x2: z.number(), y2: z.number(), label: z.string().optional() })).optional(),
+  // data table
+  headers: z.array(z.string()).optional(),
+  rows: z.array(z.array(z.string())).optional(),
+});
+export type Figure = z.infer<typeof figureSchema>;
+
 // ── Exam schema (what the model must return) ────────────────────
 export const examQuestionSchema = z.object({
   number: z.string(),
@@ -58,6 +85,7 @@ export const examQuestionSchema = z.object({
   difficulty: z.string().optional().default("Medium"),
   text: z.string(),
   options: z.array(z.string()).optional(),
+  figure: figureSchema.optional(),
   answer: z.string(), // model answer / marking scheme
 });
 
@@ -129,6 +157,14 @@ You output ONLY a single valid JSON object (no markdown, no code fences, no comm
           "difficulty": string,
           "text": string,              // the full question (use \n for structured sub-parts)
           "options": string[],         // ONLY for Multiple Choice; otherwise omit
+          "figure": {                  // OPTIONAL — include ONLY when the question needs a diagram
+            "type": "numberline" | "barchart" | "coordinates" | "table",
+            "caption": string,
+            // numberline: min, max, step, marks:[{value,label}]
+            // barchart:   labels:string[], values:number[], xLabel, yLabel
+            // coordinates:xMin,xMax,yMin,yMax, points:[{x,y,label}], segments:[{x1,y1,x2,y2,label}]
+            // table:      headers:string[], rows:string[][]
+          },
           "answer": string             // model answer / marking scheme with mark breakdown
         }
       ]
@@ -144,6 +180,7 @@ Rules:
 - Cover the requested topics; every question must be answerable from the stated subject/form syllabus.
 - Every question includes a correct, complete "answer" (model answer) with a brief mark breakdown.
 - Write ALL mathematical expressions in LaTeX: inline as $...$ and display as $$...$$ (e.g. fractions $\\frac{3}{4}$, powers $x^{2}$, roots $\\sqrt{x}$, $\\times$, $\\pm$, $\\leq$). Do not write math as plain ASCII.
+- Attach a "figure" ONLY when the question genuinely needs a diagram — a data table to read, a bar chart, a number line, or points/lines to plot on a coordinate plane. Use one of the four supported figure types with numeric data (never prose). Do not invent figure types. Most questions need no figure.
 - Write in the requested language.`;
 
   const parts = [

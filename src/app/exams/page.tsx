@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import MathText from "@/components/MathText";
+import ExamFigure from "@/components/exams/Figure";
 import { SUBJECTS, SUBJECT_TOPICS, subjectSlug } from "@/lib/education";
 import { CHAT_MODELS } from "@/lib/chatModels";
 import {
@@ -311,6 +312,7 @@ export default function ExamsPage() {
                             <strong>{q.number}.</strong> <MathText>{q.text}</MathText>
                             <span className="exam-q-marks">[{q.marks}]</span>
                           </p>
+                          {q.figure && <ExamFigure figure={q.figure} />}
                           {q.options && q.options.length > 0 && (
                             <ol className="exam-q-options">
                               {q.options.map((o, oi) => <li key={oi}><MathText>{o}</MathText></li>)}

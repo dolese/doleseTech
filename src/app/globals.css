@@ -2437,6 +2437,13 @@ table.sow-table, table.lp-table { width: 100%; border-collapse: collapse; backgr
 .exam-q-marks { color: var(--text-muted); font-weight: 600; font-size: .82rem; margin-left: 6px; }
 .exam-q-options { list-style: upper-alpha; margin: 6px 0 0 26px; font-size: .92rem; color: var(--text-mid); }
 .exam-q-options li { margin-bottom: 2px; }
+.exam-figure { margin: 12px 0 6px 18px; padding: 12px 14px; background: var(--white); border: 1px solid var(--border); border-radius: 10px; max-width: 540px; }
+.exam-figure-body { overflow-x: auto; }
+.exam-figure-svg { display: block; max-width: 100%; height: auto; }
+.exam-figure figcaption { margin-top: 8px; font-size: .78rem; color: var(--text-mid); font-style: italic; }
+.exam-figure-table { border-collapse: collapse; width: 100%; font-size: .86rem; }
+.exam-figure-table th, .exam-figure-table td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; color: var(--text); }
+.exam-figure-table th { background: var(--bg-soft, #eef1f6); font-weight: 700; }
 .exam-q-answer { margin: 8px 0 0 18px; padding: 10px 14px; background: var(--green-lt); border-radius: 9px; font-size: .88rem; color: var(--text-mid); line-height: 1.55; white-space: pre-wrap; }
 .exam-q-answer-label { display: block; font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; color: var(--green); font-weight: 700; margin-bottom: 4px; }
 .exam-refine { display: flex; gap: 8px; margin-top: 16px; }

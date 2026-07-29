@@ -1,14 +1,71 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Footer } from "docx";
-import { examSchema, makeVariant, EXAM_VERSIONS, latexToPlain, type Exam, type ExamVersion } from "@/lib/exams";
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Footer, Table, TableRow, TableCell, WidthType, BorderStyle } from "docx";
+import { examSchema, makeVariant, EXAM_VERSIONS, latexToPlain, type Exam, type ExamVersion, type Figure } from "@/lib/exams";
 
 export const runtime = "nodejs";
 
 const NAVY = "16235B";
 const GREEN = "1E9E48";
 
+const CELL_BORDER = { style: BorderStyle.SINGLE, size: 4, color: "C4CCD8" };
+const CELL_BORDERS = { top: CELL_BORDER, bottom: CELL_BORDER, left: CELL_BORDER, right: CELL_BORDER };
+
+/** Render a figure spec for the .docx: real tables become native tables;
+ * graphic figures (number line / bar chart / coordinates) can't be typeset
+ * offline, so we emit a labelled caption placeholder the teacher can sketch. */
+function figureBlocks(fig: Figure): (Paragraph | Table)[] {
+  const caption = fig.caption?.trim();
+  if (fig.type === "table" && fig.rows?.length) {
+    const headers = fig.headers ?? [];
+    const rows: TableRow[] = [];
+    if (headers.length) {
+      rows.push(
+        new TableRow({
+          tableHeader: true,
+          children: headers.map(
+            (h) =>
+              new TableCell({
+                borders: CELL_BORDERS,
+                shading: { fill: "EEF1F6" },
+                children: [new Paragraph({ children: [new TextRun({ text: latexToPlain(h), bold: true, size: 20 })] })],
+              }),
+          ),
+        }),
+      );
+    }
+    for (const r of fig.rows) {
+      rows.push(
+        new TableRow({
+          children: r.map(
+            (c) =>
+              new TableCell({
+                borders: CELL_BORDERS,
+                children: [new Paragraph({ children: [new TextRun({ text: latexToPlain(c), size: 20 })] })],
+              }),
+          ),
+        }),
+      );
+    }
+    const blocks: (Paragraph | Table)[] = [
+      new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows, indent: { size: 360, type: WidthType.DXA } }),
+    ];
+    if (caption) blocks.push(new Paragraph({ indent: { left: 360 }, spacing: { before: 40, after: 60 }, children: [new TextRun({ text: caption, italics: true, size: 18, color: "555555" })] }));
+    return blocks;
+  }
+  // Graphic figure → placeholder note
+  const kind = fig.type === "numberline" ? "Number line" : fig.type === "barchart" ? "Bar chart" : "Coordinate graph";
+  const label = caption ? `${kind}: ${caption}` : kind;
+  return [
+    new Paragraph({
+      indent: { left: 360 },
+      spacing: { before: 60, after: 60 },
+      children: [new TextRun({ text: `[ ${label} — see on-screen diagram ]`, italics: true, size: 18, color: "777777" })],
+    }),
+  ];
+}
+
 function buildDoc(exam: Exam, includeScheme: boolean, watermark: string) {
-  const children: Paragraph[] = [];
+  const children: (Paragraph | Table)[] = [];
 
   // Cover / header
   children.push(
@@ -53,6 +110,7 @@ function buildDoc(exam: Exam, includeScheme: boolean, watermark: string) {
           ],
         }),
       );
+      if (q.figure) figureBlocks(q.figure).forEach((b) => children.push(b));
       (q.options ?? []).forEach((opt, i) =>
         children.push(new Paragraph({ indent: { left: 480 }, children: [new TextRun({ text: `${String.fromCharCode(65 + i)}. ${latexToPlain(opt)}`, size: 20 })] })),
       );
