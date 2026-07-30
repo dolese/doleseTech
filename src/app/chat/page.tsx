@@ -51,8 +51,10 @@ export default function ChatPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement>(null);
+  const messagesRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const [atBottom, setAtBottom] = useState(true);
 
   const active = conversations.find((c) => c.id === activeId);
   const messages = active?.messages ?? [];
@@ -89,9 +91,49 @@ export default function ChatPage() {
     if (hydrated) localStorage.setItem(THINK_KEY, thinkingOn ? "1" : "0");
   }, [thinkingOn, hydrated]);
 
+  // Keep the visible height locked to the *visual* viewport so the composer
+  // never hides behind the mobile keyboard (iOS/Android). Falls back to dvh.
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, streaming]);
+    const vv = window.visualViewport;
+    const set = () => {
+      const h = vv ? vv.height : window.innerHeight;
+      document.documentElement.style.setProperty("--app-height", `${h}px`);
+    };
+    set();
+    vv?.addEventListener("resize", set);
+    vv?.addEventListener("scroll", set);
+    window.addEventListener("resize", set);
+    return () => {
+      vv?.removeEventListener("resize", set);
+      vv?.removeEventListener("scroll", set);
+      window.removeEventListener("resize", set);
+    };
+  }, []);
+
+  // Smart auto-scroll: only stick to the bottom when the user is already there.
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
+    const el = messagesRef.current;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior });
+  }, []);
+
+  function onMessagesScroll() {
+    const el = messagesRef.current;
+    if (!el) return;
+    const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
+    setAtBottom(distance < 96);
+  }
+
+  useEffect(() => {
+    if (atBottom) scrollToBottom(streaming ? "auto" : "smooth");
+  }, [messages, streaming, atBottom, scrollToBottom]);
+
+  // Auto-focus the composer on load and when switching / starting a chat
+  // (desktop only — avoids popping the keyboard unprompted on mobile).
+  useEffect(() => {
+    if (hydrated && typeof window !== "undefined" && window.innerWidth > 768) {
+      textareaRef.current?.focus();
+    }
+  }, [activeId, hydrated]);
 
   useEffect(() => {
     if (!sidebarOpen) {
@@ -270,7 +312,7 @@ export default function ChatPage() {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "auto";
-    el.style.height = Math.min(el.scrollHeight, 180) + "px";
+    el.style.height = Math.min(el.scrollHeight, 200) + "px";
   }
   function handleKey(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -427,7 +469,7 @@ export default function ChatPage() {
             </button>
           </div>
 
-          <div className="chat-messages">
+          <div className="chat-messages" ref={messagesRef} onScroll={onMessagesScroll}>
             {messages.length === 0 ? (
               <div className="chat-welcome">
                 <div className="chat-welcome-logo">
@@ -481,6 +523,19 @@ export default function ChatPage() {
             {error && <div className="chat-error-banner">{error}</div>}
             <div ref={bottomRef} />
           </div>
+
+          {!atBottom && messages.length > 0 && (
+            <button
+              className="chat-scroll-btn"
+              onClick={() => scrollToBottom("smooth")}
+              aria-label="Scroll to latest message"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <polyline points="19 12 12 19 5 12" />
+              </svg>
+            </button>
+          )}
 
           <div className="chat-input-area">
             <div className="chat-input-box">

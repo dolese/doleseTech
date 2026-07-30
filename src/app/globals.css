@@ -1675,7 +1675,7 @@ table.sow-table, table.lp-table { width: 100%; border-collapse: collapse; backgr
 }
 
 /* ── CHAT PAGE ─────────────────────────────────────────── */
-.chat-root { display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
+.chat-root { display: flex; flex-direction: column; height: var(--app-height, 100dvh); overflow: hidden; }
 .chat-layout { display: flex; flex: 1; overflow: hidden; padding-top: 64px; }
 
 .chat-sidebar {
@@ -1739,7 +1739,32 @@ table.sow-table, table.lp-table { width: 100%; border-collapse: collapse; backgr
 .chat-sidebar-divider { height: 1px; background: var(--border); }
 .chat-sidebar-hint { font-size: .82rem; color: var(--text-muted); line-height: 1.6; padding: 0 2px; }
 
-.chat-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--cream); }
+.chat-main { position: relative; flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--cream); }
+
+/* Floating jump-to-latest button (Claude-style) */
+.chat-scroll-btn {
+  position: absolute;
+  left: 50%;
+  bottom: 104px;
+  transform: translateX(-50%);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--white);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 16px rgba(16, 35, 91, .16);
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 5;
+  transition: transform .12s, box-shadow .15s;
+  animation: chat-scroll-in .18s ease;
+}
+.chat-scroll-btn:hover { transform: translateX(-50%) translateY(-2px); box-shadow: 0 6px 20px rgba(16, 35, 91, .22); }
+.chat-scroll-btn svg { width: 18px; height: 18px; }
+@keyframes chat-scroll-in { from { opacity: 0; transform: translateX(-50%) translateY(6px); } to { opacity: 1; transform: translateX(-50%); } }
 
 .chat-messages {
   flex: 1;
@@ -1846,7 +1871,7 @@ table.sow-table, table.lp-table { width: 100%; border-collapse: collapse; backgr
 .chat-input-area {
   border-top: none;
   background: linear-gradient(to top, var(--cream) 62%, transparent);
-  padding: 8px max(20px, calc((100% - 740px) / 2)) 18px;
+  padding: 8px max(20px, calc((100% - 740px) / 2)) calc(18px + env(safe-area-inset-bottom, 0px));
 }
 .chat-input-box {
   display: flex;
@@ -1893,16 +1918,35 @@ table.sow-table, table.lp-table { width: 100%; border-collapse: collapse; backgr
 .chat-send-btn.disabled { opacity: .3; cursor: not-allowed; }
 .chat-disclaimer { font-size: .78rem; color: var(--text-muted); text-align: center; margin-top: 8px; }
 
+/* ── Tablet: narrower sidebar, tighter column ── */
+@media (max-width: 1024px) {
+  .chat-sidebar { width: 232px; }
+  .chat-messages { padding: 28px max(18px, calc((100% - 680px) / 2)) 20px; }
+  .chat-input-area { padding: 8px max(18px, calc((100% - 680px) / 2)) calc(16px + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* ── Mobile: full-width thread (drawer sidebar defined below) ── */
 @media (max-width: 768px) {
-  .chat-sidebar { display: flex; }
-  .chat-layout { padding-top: 60px; }
-  .chat-messages { padding: 20px 14px 16px; gap: 4px; }
+  .chat-messages { padding: 18px 14px 12px; gap: 4px; }
   .chat-message-row { max-width: 100%; }
   .chat-bubble.user { max-width: 88%; }
   .chat-message-row.assistant + .chat-message-row.user { margin-top: 18px; }
-  .chat-input-area { padding: 6px 12px 14px; }
+  .chat-input-area { padding: 6px 12px calc(12px + env(safe-area-inset-bottom, 0px)); }
   .chat-input-box { border-radius: 22px; padding: 9px 9px 9px 16px; }
+  .chat-scroll-btn { bottom: 96px; }
   .chat-sidebar-close { display: inline-flex; align-items: center; justify-content: center; }
+}
+
+/* ── Small mobile: compact type + controls ── */
+@media (max-width: 480px) {
+  .chat-topbar { padding: 10px 14px; }
+  .chat-topbar-tagline { display: none; }
+  .chat-messages { padding: 14px 12px 10px; }
+  .chat-bubble, .chat-bubble.assistant .chat-md { font-size: .92rem; }
+  .chat-bubble.user { max-width: 92%; padding: 10px 14px; }
+  .chat-welcome-title { font-size: 1.6rem; }
+  .chat-suggestions { grid-template-columns: 1fr; }
+  .chat-disclaimer { font-size: .72rem; }
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -2393,10 +2437,12 @@ table.sow-table, table.lp-table { width: 100%; border-collapse: collapse; backgr
     position: fixed;
     top: 64px;
     left: 0;
-    height: calc(100vh - 64px);
+    width: min(84vw, 320px);
+    height: calc(var(--app-height, 100dvh) - 64px);
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
     transform: translateX(-100%);
-    transition: transform .25s ease;
-    box-shadow: var(--shadow-lg);
+    transition: transform .24s cubic-bezier(.4, 0, .2, 1);
+    box-shadow: 2px 0 28px rgba(0, 0, 0, .3);
     visibility: hidden;
     pointer-events: none;
   }
