@@ -450,14 +450,6 @@ export default function ChatPage() {
             ) : (
               messages.map((m, i) => (
                 <div key={i} className={`chat-message-row ${m.role}`}>
-                  {m.role === "assistant" && (
-                    <div className="chat-avatar">
-                      <svg viewBox="0 0 24 24" fill="none">
-                        <circle cx="12" cy="12" r="12" fill="#16235B" />
-                        <path d="M8 12h8M12 8v8" stroke="#1E9E48" strokeWidth="1.8" strokeLinecap="round" />
-                      </svg>
-                    </div>
-                  )}
                   <div className="chat-bubble-wrap">
                     {m.role === "assistant" && m.thinking ? (
                       <details className="chat-thinking">
