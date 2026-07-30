@@ -1869,15 +1869,16 @@ table.sow-table, table.lp-table { width: 100%; border-collapse: collapse; backgr
 .chat-bubble {
   font-size: .94rem;
   line-height: 1.72;
-  word-break: break-word;
+  overflow-wrap: break-word;
 }
 .chat-bubble.user {
+  width: fit-content;
   max-width: min(80%, 480px);
   background: var(--navy);
   border-radius: 20px;
   border-bottom-right-radius: 6px;
   color: #fff;
-  padding: 12px 18px;
+  padding: 10px 16px;
 }
 .chat-bubble.assistant {
   background: transparent;
@@ -2052,7 +2053,7 @@ table.sow-table, table.lp-table { width: 100%; border-collapse: collapse; backgr
   }
   .chat-message-row { gap: 10px; }
   .chat-avatar { width: 24px; height: 24px; margin-top: 2px; }
-  .chat-bubble.user { max-width: 85%; border-radius: 18px; border-bottom-right-radius: 6px; padding: 11px 16px; }
+  .chat-bubble.user { max-width: 85%; border-radius: 18px; border-bottom-right-radius: 6px; padding: 10px 14px; }
   .chat-bubble { font-size: .92rem; }
 
   .chat-welcome { padding: 28px 16px; }
@@ -2078,7 +2079,7 @@ table.sow-table, table.lp-table { width: 100%; border-collapse: collapse; backgr
   .chat-messages { padding: 14px 12px; gap: 2px; }
   .chat-message-row { gap: 8px; }
   .chat-avatar { width: 22px; height: 22px; }
-  .chat-bubble.user { max-width: 90%; padding: 10px 14px; border-radius: 16px; border-bottom-right-radius: 4px; }
+  .chat-bubble.user { max-width: 90%; padding: 9px 14px; border-radius: 16px; border-bottom-right-radius: 4px; }
   .chat-input-area { padding: 8px 10px; padding-bottom: max(10px, env(safe-area-inset-bottom, 10px)); }
   .chat-input-box { padding: 6px 8px 6px 14px; border-radius: 20px; }
   .chat-send-btn, .chat-stop-btn { width: 34px; height: 34px; }
