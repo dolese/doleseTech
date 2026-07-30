@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
       if (!geminiKey()) {
         return NextResponse.json({ error: "Gemini not configured. Set GEMINI_API_KEY." }, { status: 503 });
       }
-      text = await geminiComplete(model, system, user);
+      text = await geminiComplete(model, system, user, { json: true });
     } else {
       const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
       if (!apiKey) {
@@ -73,6 +73,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ exam: exam.data, model });
   } catch (err) {
     console.error("Exam generation error:", err);
-    return NextResponse.json({ error: "Exam generation failed. Please try again." }, { status: 500 });
+    const detail = err instanceof Error ? err.message : "";
+    return NextResponse.json(
+      { error: detail ? `Exam generation failed: ${detail}` : "Exam generation failed. Please try again." },
+      { status: 500 },
+    );
   }
 }
