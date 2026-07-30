@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Nav from "@/components/Nav";
 import { CHAT_MODELS, DEFAULT_MODEL, modelSupportsThinking } from "@/lib/chatModels";
@@ -37,6 +37,50 @@ function newConversation(): Conversation {
   };
 }
 
+function CodeBlock({ className, children, ...props }: React.HTMLAttributes<HTMLElement>) {
+  const match = /language-(\w+)/.exec(className || "");
+  const isInline = !match && typeof children === "string" && !children.includes("\n");
+
+  if (isInline) {
+    return <code className={className} {...props}>{children}</code>;
+  }
+
+  const text = String(children).replace(/\n$/, "");
+
+  function handleCopy() {
+    navigator.clipboard?.writeText(text);
+  }
+
+  return (
+    <div className="chat-code-block">
+      <div className="chat-code-header">
+        <span className="chat-code-lang">{match?.[1] ?? "code"}</span>
+        <button type="button" className="chat-code-copy" onClick={handleCopy}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+          </svg>
+          Copy
+        </button>
+      </div>
+      <pre><code className={className}>{text}</code></pre>
+    </div>
+  );
+}
+
+function TableWrapper({ children, ...props }: React.HTMLAttributes<HTMLTableElement>) {
+  return (
+    <div className="chat-table-scroll">
+      <table {...props}>{children}</table>
+    </div>
+  );
+}
+
+const mdComponents: Components = {
+  code: CodeBlock as Components["code"],
+  table: TableWrapper as Components["table"],
+};
+
 export default function ChatPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeId, setActiveId] = useState<string>("");
@@ -49,10 +93,12 @@ export default function ChatPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isNearBottom, setIsNearBottom] = useState(true);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const messagesRef = useRef<HTMLDivElement>(null);
 
   const active = conversations.find((c) => c.id === activeId);
   const messages = active?.messages ?? [];
@@ -90,8 +136,23 @@ export default function ChatPage() {
   }, [thinkingOn, hydrated]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, streaming]);
+    if (isNearBottom) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, streaming, isNearBottom]);
+
+  useEffect(() => {
+    const el = messagesRef.current;
+    if (!el) return;
+    function onScroll() {
+      if (!el) return;
+      const threshold = 120;
+      const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+      setIsNearBottom(atBottom);
+    }
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     if (!sidebarOpen) {
@@ -120,6 +181,21 @@ export default function ChatPage() {
     };
   }, [sidebarOpen]);
 
+  // Mobile viewport height fix for keyboard
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.visualViewport) return;
+    const vv = window.visualViewport;
+    function onResize() {
+      document.documentElement.style.setProperty(
+        "--chat-vh",
+        `${vv!.height}px`
+      );
+    }
+    onResize();
+    vv.addEventListener("resize", onResize);
+    return () => vv.removeEventListener("resize", onResize);
+  }, []);
+
   // ── Conversation helpers ────────────────────────────────────
   const patchActive = useCallback(
     (fn: (c: Conversation) => Conversation) => {
@@ -133,6 +209,7 @@ export default function ChatPage() {
     setConversations((prev) => [c, ...prev]);
     setActiveId(c.id);
     setError("");
+    setTimeout(() => textareaRef.current?.focus(), 50);
   }
 
   function deleteConversation(id: string) {
@@ -176,6 +253,7 @@ export default function ChatPage() {
   async function streamAssistant(history: Message[], model: string) {
     setError("");
     setStreaming(true);
+    setIsNearBottom(true);
     patchActive((c) => ({ ...c, messages: [...history, { role: "assistant", content: "", thinking: "" }] }));
 
     const controller = new AbortController();
@@ -270,7 +348,7 @@ export default function ChatPage() {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "auto";
-    el.style.height = Math.min(el.scrollHeight, 180) + "px";
+    el.style.height = Math.min(el.scrollHeight, 200) + "px";
   }
   function handleKey(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -282,6 +360,7 @@ export default function ChatPage() {
   function activateConversation(id: string) {
     setActiveId(id);
     setSidebarOpen(false);
+    setIsNearBottom(true);
   }
 
   const lastAssistantIdx = (() => {
@@ -310,7 +389,9 @@ export default function ChatPage() {
               onClick={() => setSidebarOpen(false)}
               aria-label="Close chat list"
             >
-              ×
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
             </button>
           </div>
           <button
@@ -320,14 +401,17 @@ export default function ChatPage() {
               setSidebarOpen(false);
             }}
           >
-            + New chat
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            New chat
           </button>
 
           <div className="chat-search">
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
             <input
               type="search"
-              placeholder="Search chats…"
+              placeholder="Search chats..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               aria-label="Search chats"
@@ -370,8 +454,12 @@ export default function ChatPage() {
                     <>
                       <span className="chat-convo-title">{c.title}</span>
                       <span className="chat-convo-actions">
-                        <button aria-label="Rename" onClick={(e) => { e.stopPropagation(); beginRename(c); }}>✎</button>
-                        <button aria-label="Delete" onClick={(e) => { e.stopPropagation(); deleteConversation(c.id); }}>×</button>
+                        <button aria-label="Rename" onClick={(e) => { e.stopPropagation(); beginRename(c); }}>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /></svg>
+                        </button>
+                        <button aria-label="Delete" onClick={(e) => { e.stopPropagation(); deleteConversation(c.id); }}>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                        </button>
                       </span>
                     </>
                   )}
@@ -400,7 +488,7 @@ export default function ChatPage() {
         {/* Main */}
         <div className="chat-main">
           <div className="chat-topbar">
-            <div className="chat-topbar-model">
+            <div className="chat-topbar-left">
               <button
                 className="chat-menu-btn"
                 onClick={() => setSidebarOpen((v) => !v)}
@@ -408,11 +496,15 @@ export default function ChatPage() {
                 aria-controls="chat-sidebar"
                 aria-label="Toggle chat list"
               >
-                ☰
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
               </button>
-              <span className="chat-topbar-dot" />
-              {activeModel?.label ?? "Claude"}
-              <span className="chat-topbar-tagline">{activeModel?.tagline}</span>
+              <div className="chat-topbar-model">
+                <span className="chat-topbar-dot" />
+                <span className="chat-topbar-name">{activeModel?.label ?? "Claude"}</span>
+                <span className="chat-topbar-tagline">{activeModel?.tagline}</span>
+              </div>
             </div>
             <button
               className={`chat-think-toggle ${thinkingOn ? "on" : ""}`}
@@ -423,11 +515,11 @@ export default function ChatPage() {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2z" />
               </svg>
-              Thinking
+              <span className="chat-think-label">Thinking</span>
             </button>
           </div>
 
-          <div className="chat-messages">
+          <div className="chat-messages" ref={messagesRef}>
             {messages.length === 0 ? (
               <div className="chat-welcome">
                 <div className="chat-welcome-logo">
@@ -443,7 +535,12 @@ export default function ChatPage() {
                 </p>
                 <div className="chat-suggestions">
                   {SUGGESTIONS.map((s) => (
-                    <button key={s} className="chat-suggestion" onClick={() => send(s)}>{s}</button>
+                    <button key={s} className="chat-suggestion" onClick={() => send(s)}>
+                      <svg className="chat-suggestion-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                      </svg>
+                      {s}
+                    </button>
                   ))}
                 </div>
               </div>
@@ -461,7 +558,15 @@ export default function ChatPage() {
                   <div className="chat-bubble-wrap">
                     {m.role === "assistant" && m.thinking ? (
                       <details className="chat-thinking">
-                        <summary>💭 Thinking</summary>
+                        <summary>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="chat-thinking-icon">
+                            <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2z" />
+                          </svg>
+                          Thinking
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="chat-thinking-chevron">
+                            <polyline points="6 9 12 15 18 9" />
+                          </svg>
+                        </summary>
                         <div className="chat-thinking-body">{m.thinking}</div>
                       </details>
                     ) : null}
@@ -470,7 +575,7 @@ export default function ChatPage() {
                         <span className="chat-typing"><span /><span /><span /></span>
                       ) : m.role === "assistant" ? (
                         <div className="chat-md">
-                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.content}</ReactMarkdown>
+                          <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>{m.content}</ReactMarkdown>
                         </div>
                       ) : (
                         <span className="chat-text">{m.content}</span>
@@ -478,50 +583,92 @@ export default function ChatPage() {
                     </div>
                     {m.role === "assistant" && m.content !== "" && !streaming && (
                       <div className="chat-msg-actions">
-                        <button onClick={() => copy(m.content)}>Copy</button>
-                        {i === lastAssistantIdx && <button onClick={regenerate}>Regenerate</button>}
+                        <button onClick={() => copy(m.content)} title="Copy message">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                          </svg>
+                          Copy
+                        </button>
+                        {i === lastAssistantIdx && (
+                          <button onClick={regenerate} title="Regenerate response">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="1 4 1 10 7 10" />
+                              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+                            </svg>
+                            Retry
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
                 </div>
               ))
             )}
-            {error && <div className="chat-error-banner">{error}</div>}
+            {error && (
+              <div className="chat-error-banner">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                <span>{error}</span>
+                <button onClick={() => setError("")} aria-label="Dismiss error">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+            )}
             <div ref={bottomRef} />
           </div>
+
+          {!isNearBottom && messages.length > 0 && (
+            <button
+              className="chat-scroll-bottom"
+              onClick={() => {
+                setIsNearBottom(true);
+                bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+              }}
+              aria-label="Scroll to bottom"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+          )}
 
           <div className="chat-input-area">
             <div className="chat-input-box">
               <textarea
                 ref={textareaRef}
                 className="chat-textarea"
-                placeholder="Message Dolese Tech AI…"
+                placeholder="Message Dolese Tech AI..."
                 value={input}
                 onChange={(e) => { setInput(e.target.value); autoGrow(); }}
                 onKeyDown={handleKey}
                 disabled={streaming}
                 rows={1}
               />
-              {streaming ? (
-                <button className="chat-stop-btn" onClick={stop} aria-label="Stop">
-                  <svg viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="7" width="10" height="10" rx="2" /></svg>
-                </button>
-              ) : (
-                <button
-                  className={`chat-send-btn ${!input.trim() ? "disabled" : ""}`}
-                  onClick={() => send()}
-                  disabled={!input.trim()}
-                  aria-label="Send"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="22" y1="2" x2="11" y2="13" />
-                    <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                  </svg>
-                </button>
-              )}
+              <div className="chat-input-right">
+                {streaming ? (
+                  <button className="chat-stop-btn" onClick={stop} aria-label="Stop generating">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="7" width="10" height="10" rx="2" /></svg>
+                  </button>
+                ) : (
+                  <button
+                    className={`chat-send-btn ${!input.trim() ? "disabled" : ""}`}
+                    onClick={() => send()}
+                    disabled={!input.trim()}
+                    aria-label="Send message"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 19V5M5 12l7-7 7 7" />
+                    </svg>
+                  </button>
+                )}
+              </div>
             </div>
             <p className="chat-disclaimer">
-              {activeModel?.label ?? "Claude"} · AI can make mistakes. Verify important information.
+              {activeModel?.label ?? "Claude"} can make mistakes. Verify important information.
             </p>
           </div>
         </div>
