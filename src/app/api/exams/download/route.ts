@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Footer, Table, TableRow, TableCell, WidthType, BorderStyle } from "docx";
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Footer, Table, TableRow, TableCell, WidthType, BorderStyle, ImageRun } from "docx";
 import { examSchema, makeVariant, EXAM_VERSIONS, latexToPlain, type Exam, type ExamVersion, type Figure } from "@/lib/exams";
+import { renderFigurePng } from "@/lib/figureImage";
 
 export const runtime = "nodejs";
 
@@ -67,6 +68,21 @@ function figureBlocks(fig: Figure): (Paragraph | Table)[] {
   if (fig.type === "table" && fig.rows?.length) {
     blocks.push(dataTable(fig.headers ?? [], fig.rows));
     if (caption) blocks.push(captionPara(caption));
+    return blocks;
+  }
+
+  // Graphic figures: draw a real image; fall back to preserved data below.
+  const png = renderFigurePng(fig);
+  if (png) {
+    const docWidth = 440;
+    const docHeight = Math.round((docWidth * png.height) / png.width);
+    blocks.push(
+      new Paragraph({
+        indent: { left: 360 },
+        spacing: { before: 60, after: 60 },
+        children: [new ImageRun({ data: png.data, transformation: { width: docWidth, height: docHeight } })],
+      }),
+    );
     return blocks;
   }
 
