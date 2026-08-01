@@ -107,8 +107,8 @@ const FAMILY: Record<SubjectFamily, FamilyProfile> = {
     ],
     materials: ["Non-programmable calculator", "NECTA four-figure mathematical tables"],
     guidance: [
-      "Mathematics is examined by problem-solving, not recall — every computation item requires full working shown.",
-      "The national Form IV (CSEE) and A-Level (ACSEE) Mathematics papers contain NO multiple-choice section — use short-answer and structured items there. The Form II (FTNA) paper and classroom quizzes/tests may include a multiple-choice/matching section.",
+      "Mathematics is examined by problem-solving, not recall — every item requires computation with full working shown.",
+      "There is NO multiple-choice or matching section in the national Mathematics paper; do not add one.",
       "Write ALL mathematics in LaTeX (fractions $\\frac{a}{b}$, powers $x^{2}$, roots $\\sqrt{x}$, $\\times$, $\\div$, $\\pm$, $\\leq$, $\\geq$). Never write maths as plain ASCII.",
       "Marking schemes MUST award method marks: give the step-by-step solution and mark each stage (correct substitution, correct manipulation, correct final answer with units).",
       "Assume a non-programmable calculator and NECTA four-figure mathematical tables are available.",
@@ -232,11 +232,6 @@ function isALevel(level: string): boolean {
   return /a-?level|form\s*(v|vi|5|6)/i.test(level);
 }
 
-/** Form I–II (lower secondary), where the national FTNA paper is objective-led. */
-function isLowerSecondary(form: string): boolean {
-  return /^form\s*(i|ii|1|2)$/i.test(form.trim());
-}
-
 export function familyFor(subject: string): SubjectFamily | undefined {
   return SUBJECT_FAMILY[norm(subject)];
 }
@@ -249,37 +244,15 @@ interface SpecificSpec {
   sections: BlueprintSection[];
   materials?: string[];
   notes?: string[];
-  /** When present, this spec only applies to forms it accepts (e.g. FTNA). */
-  formTest?: (form: string) => boolean;
 }
 
 const SPECIFIC_SPECS: SpecificSpec[] = [
   {
-    // Form II (FTNA) Basic Mathematics — objective Section A, unlike CSEE.
-    subject: "Basic Mathematics",
-    level: "O-Level",
-    family: "mathematics",
-    formTest: isLowerSecondary,
-    sections: [
-      { name: "SECTION A", marksShare: 0.15, perQuestionMarks: 1, formats: ["Multiple Choice", "Matching"], note: "Objective: one multiple-choice question (~10 items) and one matching question (~5 items), 1 mark each. Compulsory." },
-      { name: "SECTION B", marksShare: 0.7, perQuestionMarks: 10, formats: ["Short Answer", "Structured"], note: "Short-answer/structured computation questions, all compulsory. Show full working." },
-      { name: "SECTION C", marksShare: 0.15, perQuestionMarks: 15, formats: ["Essay", "Structured"], note: "One extended structured/problem question. Compulsory." },
-    ],
-    notes: [
-      "The Form II (FTNA) Mathematics paper opens with an objective Section A (multiple-choice + matching) — include it.",
-      "State units where applicable and give answers to the required degree of accuracy.",
-    ],
-  },
-  {
-    // Form III–IV (CSEE) Basic Mathematics — no multiple-choice section.
     subject: "Basic Mathematics",
     level: "O-Level",
     family: "mathematics",
     sections: FAMILY.mathematics.sections,
-    notes: [
-      "The Form IV (CSEE) Mathematics paper has NO multiple-choice or matching section — use short-answer and structured items only.",
-      "State units where applicable and give answers to the required degree of accuracy.",
-    ],
+    notes: ["State units where applicable and give answers to the required degree of accuracy."],
   },
   {
     subject: "Biology",
@@ -349,18 +322,12 @@ function resolveGuidance(family: SubjectFamily, level: string): string[] {
  * one exists, otherwise one derived from the subject's family and level. Returns
  * undefined only for subjects outside the known catalogue.
  */
-export function blueprintFor(subject: string, level: string, form = ""): ExamBlueprint | undefined {
+export function blueprintFor(subject: string, level: string): ExamBlueprint | undefined {
   const s = norm(subject);
   const l = norm(level);
   const aLevel = isALevel(level);
 
-  // Among specific specs for this subject/level, prefer one whose form matches
-  // (e.g. FTNA for Form II), else the general (no form-test) spec.
-  const candidates = SPECIFIC_SPECS.filter((b) => norm(b.subject) === s && (!l || norm(b.level) === l));
-  const spec =
-    candidates.find((b) => b.formTest && form && b.formTest(form)) ??
-    candidates.find((b) => !b.formTest) ??
-    candidates[0];
+  const spec = SPECIFIC_SPECS.find((b) => norm(b.subject) === s && (!l || norm(b.level) === l));
   if (spec) {
     return {
       subject: spec.subject,
@@ -393,8 +360,8 @@ export function blueprintFor(subject: string, level: string, form = ""): ExamBlu
 }
 
 /** True when the blueprint should govern the paper's structure and formats. */
-export function examStructureGoverned(subject: string, level: string, examType: string, form = ""): boolean {
-  return Boolean(blueprintFor(subject, level, form)) && isFullPaperType(examType);
+export function examStructureGoverned(subject: string, level: string, examType: string): boolean {
+  return Boolean(blueprintFor(subject, level)) && isFullPaperType(examType);
 }
 
 export interface ScaledSection extends BlueprintSection {
@@ -432,9 +399,8 @@ export function blueprintPromptBlock(
   level: string,
   examType: string,
   totalMarks: number,
-  form = "",
 ): string | null {
-  const blueprint = blueprintFor(subject, level, form);
+  const blueprint = blueprintFor(subject, level);
   if (!blueprint) return null;
 
   const strict = isFullPaperType(examType);
