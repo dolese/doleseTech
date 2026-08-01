@@ -10,58 +10,104 @@ const GREEN = "1E9E48";
 const CELL_BORDER = { style: BorderStyle.SINGLE, size: 4, color: "C4CCD8" };
 const CELL_BORDERS = { top: CELL_BORDER, bottom: CELL_BORDER, left: CELL_BORDER, right: CELL_BORDER };
 
-/** Render a figure spec for the .docx: real tables become native tables;
+/** A bordered data table for the .docx. */
+function dataTable(headers: string[], rows: string[][]): Table {
+  const trs: TableRow[] = [];
+  if (headers.length) {
+    trs.push(
+      new TableRow({
+        tableHeader: true,
+        children: headers.map(
+          (h) =>
+            new TableCell({
+              borders: CELL_BORDERS,
+              shading: { fill: "EEF1F6" },
+              children: [new Paragraph({ children: [new TextRun({ text: latexToPlain(h), bold: true, size: 20 })] })],
+            }),
+        ),
+      }),
+    );
+  }
+  for (const r of rows) {
+    trs.push(
+      new TableRow({
+        children: r.map(
+          (c) =>
+            new TableCell({
+              borders: CELL_BORDERS,
+              children: [new Paragraph({ children: [new TextRun({ text: latexToPlain(c), size: 20 })] })],
+            }),
+        ),
+      }),
+    );
+  }
+  return new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: trs, indent: { size: 360, type: WidthType.DXA } });
+}
+
+function captionPara(text: string): Paragraph {
+  return new Paragraph({ indent: { left: 360 }, spacing: { before: 40, after: 60 }, children: [new TextRun({ text, italics: true, size: 18, color: "555555" })] });
+}
+
+function notePara(text: string): Paragraph {
+  return new Paragraph({ indent: { left: 360 }, spacing: { before: 40, after: 80 }, children: [new TextRun({ text, italics: true, size: 18, color: "777777" })] });
+}
+
+function num(n: number | undefined): string {
+  return typeof n === "number" ? String(n) : "";
+}
+
+/** Render a figure spec for the .docx. Real tables become native tables;
  * graphic figures (number line / bar chart / coordinates) can't be typeset
- * offline, so we emit a labelled caption placeholder the teacher can sketch. */
+ * offline, so we preserve their DATA (as a table or described values) and add a
+ * note to draw the diagram — rather than dropping the data to a placeholder. */
 function figureBlocks(fig: Figure): (Paragraph | Table)[] {
   const caption = fig.caption?.trim();
+  const blocks: (Paragraph | Table)[] = [];
+
   if (fig.type === "table" && fig.rows?.length) {
-    const headers = fig.headers ?? [];
-    const rows: TableRow[] = [];
-    if (headers.length) {
-      rows.push(
-        new TableRow({
-          tableHeader: true,
-          children: headers.map(
-            (h) =>
-              new TableCell({
-                borders: CELL_BORDERS,
-                shading: { fill: "EEF1F6" },
-                children: [new Paragraph({ children: [new TextRun({ text: latexToPlain(h), bold: true, size: 20 })] })],
-              }),
-          ),
-        }),
-      );
-    }
-    for (const r of fig.rows) {
-      rows.push(
-        new TableRow({
-          children: r.map(
-            (c) =>
-              new TableCell({
-                borders: CELL_BORDERS,
-                children: [new Paragraph({ children: [new TextRun({ text: latexToPlain(c), size: 20 })] })],
-              }),
-          ),
-        }),
-      );
-    }
-    const blocks: (Paragraph | Table)[] = [
-      new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows, indent: { size: 360, type: WidthType.DXA } }),
-    ];
-    if (caption) blocks.push(new Paragraph({ indent: { left: 360 }, spacing: { before: 40, after: 60 }, children: [new TextRun({ text: caption, italics: true, size: 18, color: "555555" })] }));
+    blocks.push(dataTable(fig.headers ?? [], fig.rows));
+    if (caption) blocks.push(captionPara(caption));
     return blocks;
   }
-  // Graphic figure → placeholder note
-  const kind = fig.type === "numberline" ? "Number line" : fig.type === "barchart" ? "Bar chart" : "Coordinate graph";
-  const label = caption ? `${kind}: ${caption}` : kind;
-  return [
-    new Paragraph({
-      indent: { left: 360 },
-      spacing: { before: 60, after: 60 },
-      children: [new TextRun({ text: `[ ${label} — see on-screen diagram ]`, italics: true, size: 18, color: "777777" })],
-    }),
-  ];
+
+  if (fig.type === "barchart" && fig.labels?.length) {
+    const values = fig.values ?? [];
+    const headers = [fig.xLabel?.trim() || "Category", fig.yLabel?.trim() || "Value"];
+    const rows = fig.labels.map((l, i) => [l, num(values[i])]);
+    blocks.push(dataTable(headers, rows));
+    blocks.push(notePara(caption ? `Bar chart: ${caption} — draw a bar chart from the data above.` : "Draw a bar chart from the data above."));
+    return blocks;
+  }
+
+  if (fig.type === "coordinates") {
+    const pts = fig.points ?? [];
+    if (pts.length) {
+      const rows = pts.map((p, i) => [p.label?.trim() || String.fromCharCode(65 + i), num(p.x), num(p.y)]);
+      blocks.push(dataTable(["Point", "x", "y"], rows));
+    }
+    const segs = (fig.segments ?? []).map(
+      (s) => `${s.label ? `${s.label}: ` : ""}(${num(s.x1)}, ${num(s.y1)}) → (${num(s.x2)}, ${num(s.y2)})`,
+    );
+    if (segs.length) blocks.push(new Paragraph({ indent: { left: 360 }, children: [new TextRun({ text: `Line segments: ${segs.join("; ")}`, size: 20 })] }));
+    const range = `x ∈ [${num(fig.xMin)}, ${num(fig.xMax)}], y ∈ [${num(fig.yMin)}, ${num(fig.yMax)}]`;
+    blocks.push(notePara(caption ? `Coordinate graph: ${caption} — plot on axes ${range}.` : `Plot the points/segments above on axes ${range}.`));
+    return blocks;
+  }
+
+  if (fig.type === "numberline") {
+    const marks = (fig.marks ?? []).map((m) => `${num(m.value)}${m.label ? ` (${m.label})` : ""}`);
+    const spec =
+      `Number line from ${num(fig.min)} to ${num(fig.max)}` +
+      (typeof fig.step === "number" ? `, step ${fig.step}` : "") +
+      (marks.length ? `. Mark: ${marks.join(", ")}` : "") + ".";
+    blocks.push(notePara(caption ? `Number line: ${caption} — ${spec}` : spec));
+    return blocks;
+  }
+
+  // Empty table / bar chart with no data → labelled note (last resort)
+  const kind = fig.type === "barchart" ? "Bar chart" : "Data table";
+  blocks.push(notePara(caption ? `${kind}: ${caption} — draw the diagram.` : `${kind} — draw the diagram.`));
+  return blocks;
 }
 
 function buildDoc(exam: Exam, includeScheme: boolean, watermark: string) {

@@ -276,29 +276,65 @@ export function extractExamJson(raw: string): unknown {
   return JSON.parse(s);
 }
 
+/** Unicode replacements for common LaTeX operators, relations and symbols. */
+const LATEX_SYMBOLS: Array<[string, string]> = [
+  ["\\times", "×"], ["\\div", "÷"], ["\\cdot", "·"], ["\\ast", "∗"],
+  ["\\pm", "±"], ["\\mp", "∓"], ["\\leq", "≤"], ["\\geq", "≥"], ["\\neq", "≠"],
+  ["\\approx", "≈"], ["\\equiv", "≡"], ["\\propto", "∝"], ["\\sim", "∼"],
+  ["\\infty", "∞"], ["\\partial", "∂"], ["\\nabla", "∇"], ["\\prime", "′"],
+  ["\\angle", "∠"], ["\\triangle", "△"], ["\\parallel", "∥"], ["\\perp", "⊥"],
+  ["\\Rightarrow", "⇒"], ["\\Leftarrow", "⇐"], ["\\Leftrightarrow", "⇔"],
+  ["\\rightarrow", "→"], ["\\leftarrow", "←"], ["\\to", "→"], ["\\mapsto", "↦"],
+  ["\\leftrightarrow", "↔"], ["\\Sigma", "Σ"], ["\\sum", "Σ"], ["\\prod", "∏"],
+  ["\\int", "∫"], ["\\sqrt", "√"], ["\\therefore", "∴"], ["\\because", "∵"],
+  ["\\in", "∈"], ["\\notin", "∉"], ["\\ni", "∋"], ["\\subset", "⊂"],
+  ["\\subseteq", "⊆"], ["\\supset", "⊃"], ["\\cup", "∪"], ["\\cap", "∩"],
+  ["\\emptyset", "∅"], ["\\varnothing", "∅"], ["\\forall", "∀"], ["\\exists", "∃"],
+  ["\\ldots", "…"], ["\\cdots", "⋯"], ["\\dots", "…"], ["\\degree", "°"], ["\\circ", "°"],
+  // Greek (lower)
+  ["\\alpha", "α"], ["\\beta", "β"], ["\\gamma", "γ"], ["\\delta", "δ"],
+  ["\\epsilon", "ε"], ["\\varepsilon", "ε"], ["\\zeta", "ζ"], ["\\eta", "η"],
+  ["\\theta", "θ"], ["\\iota", "ι"], ["\\kappa", "κ"], ["\\lambda", "λ"],
+  ["\\mu", "μ"], ["\\nu", "ν"], ["\\xi", "ξ"], ["\\pi", "π"], ["\\rho", "ρ"],
+  ["\\sigma", "σ"], ["\\tau", "τ"], ["\\phi", "φ"], ["\\varphi", "φ"],
+  ["\\chi", "χ"], ["\\psi", "ψ"], ["\\omega", "ω"],
+  // Greek (upper)
+  ["\\Gamma", "Γ"], ["\\Delta", "Δ"], ["\\Theta", "Θ"], ["\\Lambda", "Λ"],
+  ["\\Xi", "Ξ"], ["\\Pi", "Π"], ["\\Phi", "Φ"], ["\\Psi", "Ψ"], ["\\Omega", "Ω"],
+];
+
 /**
  * Best-effort LaTeX → readable plain text for the .docx export (which has no
- * equation typesetting). Keeps the common Form II / secondary maths notation.
+ * equation typesetting). Covers secondary-school maths/science notation and,
+ * critically, NEVER silently deletes an unknown macro — it drops the backslash
+ * and keeps the word, so \sin, \log, \lim, \vec, matrices, etc. survive as
+ * readable text instead of vanishing from the printed paper.
  */
 export function latexToPlain(input: string): string {
-  return (input || "")
-    .replace(/\$\$?/g, "")
-    .replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g, "($1)/($2)")
-    .replace(/\\sqrt\{([^{}]*)\}/g, "√($1)")
-    .replace(/\^\{([^{}]*)\}/g, "^$1")
-    .replace(/_\{([^{}]*)\}/g, "_$1")
-    .replace(/\\times/g, "×")
-    .replace(/\\div/g, "÷")
-    .replace(/\\pm/g, "±")
-    .replace(/\\leq/g, "≤")
-    .replace(/\\geq/g, "≥")
-    .replace(/\\neq/g, "≠")
-    .replace(/\\cdot/g, "·")
-    .replace(/\\pi/g, "π")
-    .replace(/\\theta/g, "θ")
-    .replace(/\\infty/g, "∞")
-    .replace(/\\(?:degree|circ)/g, "°")
-    .replace(/\\left|\\right/g, "")
-    .replace(/\\[a-zA-Z]+/g, "")
-    .replace(/[{}]/g, "");
+  let s = input || "";
+  // Math delimiters
+  s = s.replace(/\${1,2}/g, "");
+  // Environments (matrices, cases, aligned…): keep contents; row/col separators
+  s = s.replace(/\\begin\{[a-zA-Z*]+\}/g, "").replace(/\\end\{[a-zA-Z*]+\}/g, "");
+  // Text-mode wrappers → inner text
+  s = s.replace(/\\(?:text|mathrm|mathbf|mathit|mathsf|operatorname)\s*\{([^{}]*)\}/g, "$1");
+  // Fractions, roots, powers, subscripts, binomials, accents
+  s = s.replace(/\\frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, "($1)/($2)");
+  s = s.replace(/\\sqrt\s*\[([^\]]*)\]\s*\{([^{}]*)\}/g, "$1√($2)");
+  s = s.replace(/\\sqrt\s*\{([^{}]*)\}/g, "√($1)");
+  s = s.replace(/\\binom\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, "C($1, $2)");
+  s = s.replace(/\^\{([^{}]*)\}/g, "^$1").replace(/_\{([^{}]*)\}/g, "_$1");
+  s = s.replace(/\\(?:overline|underline|vec|hat|bar|widehat|overrightarrow)\s*\{([^{}]*)\}/g, "$1");
+  // Known symbols/operators
+  for (const [tex, uni] of LATEX_SYMBOLS) s = s.split(tex).join(uni);
+  // Row/column separators from environments
+  s = s.replace(/\\\\/g, "; ");
+  // Spacing macros
+  s = s.replace(/\\[,;:!> ]/g, " ").replace(/\\q?quad/g, "  ");
+  s = s.replace(/\\left|\\right/g, "");
+  // Any remaining \macro → keep the name (never delete content)
+  s = s.replace(/\\([a-zA-Z]+)/g, "$1");
+  // Leftover grouping/alignment characters
+  s = s.replace(/[{}]/g, "").replace(/&/g, " ");
+  return s.replace(/[ \t]{2,}/g, " ").trim();
 }
