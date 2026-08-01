@@ -2566,7 +2566,15 @@ table.sow-table, table.lp-table { width: 100%; border-collapse: collapse; backgr
 .ea-moderation li.warn .ea-mod-icon { background: #FCEBD6; color: #B5721E; }
 .ea-moderation li.warn { color: var(--text); }
 @media (max-width: 900px) { .ea-grid { grid-template-columns: 1fr; gap: 16px; } }
-@media print { .exam-analytics { display: none !important; } }
+@media print { .exam-analytics, .exam-quality { display: none !important; } }
+
+/* ── Quality-check notices (server-side normalisation) ───────── */
+.exam-quality { margin-top: 16px; background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 14px 20px 16px; box-shadow: var(--shadow); }
+.exam-quality > strong { display: block; font-size: .8rem; font-weight: 600; color: var(--text-mid); margin-bottom: 8px; text-transform: uppercase; letter-spacing: .04em; }
+.exam-quality ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.exam-quality li { display: flex; align-items: flex-start; gap: 9px; font-size: .86rem; line-height: 1.5; color: var(--text-mid); }
+.exam-quality li.fixed .ea-mod-icon { background: var(--green-lt); color: var(--green); }
+.exam-quality li.warn .ea-mod-icon { background: #FCEBD6; color: #B5721E; }
 
 /* ── MATH (KaTeX) in exam text ──────────────────────────────── */
 .math-p { display: inline; }

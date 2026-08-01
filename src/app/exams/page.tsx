@@ -61,6 +61,7 @@ export default function ExamsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [exam, setExam] = useState<Exam | null>(null);
+  const [issues, setIssues] = useState<{ level: string; message: string }[]>([]);
   const [showScheme, setShowScheme] = useState(false);
   const [refine, setRefine] = useState("");
   const [watermark, setWatermark] = useState("");
@@ -113,6 +114,7 @@ export default function ExamsPage() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? `HTTP ${res.status}`);
       setExam(json.exam);
+      setIssues(Array.isArray(json.issues) ? json.issues : []);
       setRefine("");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Generation failed.");
@@ -329,6 +331,20 @@ export default function ExamsPage() {
                     </div>
                   ))}
                 </article>
+
+                {issues.length > 0 && (
+                  <div className="exam-quality">
+                    <strong>Quality check</strong>
+                    <ul>
+                      {issues.map((it, i) => (
+                        <li key={i} className={it.level}>
+                          <span className="ea-mod-icon">{it.level === "fixed" ? "✎" : "!"}</span>
+                          {it.message}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
                 {(() => {
                   const a = analyzeExam(exam);

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { isAllowedModel, modelProvider } from "@/lib/chatModels";
 import { geminiKey, geminiComplete } from "@/lib/gemini";
-import { buildExamPrompt, extractExamJson, examConfigSchema, examSchema } from "@/lib/exams";
+import { buildExamPrompt, extractExamJson, examConfigSchema, examSchema, normalizeExam } from "@/lib/exams";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -72,7 +72,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "The generated exam was malformed. Please try again." }, { status: 502 });
     }
 
-    return NextResponse.json({ exam: exam.data, model });
+    // Reject an empty paper outright rather than deliver a blank product.
+    const questionCount = exam.data.sections.reduce((n, s) => n + s.questions.length, 0);
+    if (questionCount === 0) {
+      return NextResponse.json({ error: "The generated exam had no questions. Please try again." }, { status: 502 });
+    }
+
+    // Quality control: guarantee the delivered paper's marks are consistent.
+    const { exam: normalized, issues } = normalizeExam(exam.data);
+
+    return NextResponse.json({ exam: normalized, model, issues });
   } catch (err) {
     console.error("Exam generation error:", err);
     const detail = err instanceof Error ? err.message : "";

@@ -112,6 +112,65 @@ export const examSchema = z.object({
 
 export type Exam = z.infer<typeof examSchema>;
 export type ExamQuestion = z.infer<typeof examQuestionSchema>;
+export type ExamSection = z.infer<typeof examSectionSchema>;
+
+// ── Quality control ─────────────────────────────────────────────────
+// A section where candidates choose a subset of questions ("answer any two").
+const CHOICE_RE = /\b(any|choose|either|optional|attempt\s+(?:any|only)|chagua|jibu\s+maswali)\b/i;
+
+function isChoiceSection(s: ExamSection): boolean {
+  return CHOICE_RE.test(s.instructions || "");
+}
+
+export interface ExamIssue {
+  level: "fixed" | "warn";
+  message: string;
+}
+
+export interface NormalizedExam {
+  exam: Exam;
+  issues: ExamIssue[];
+}
+
+/**
+ * Make a generated paper internally consistent before it is delivered, so the
+ * printed section and paper totals always match the questions actually set — no
+ * "the marks don't add up" mistakes reach the teacher.
+ *
+ * - Compulsory sections: section marks are recomputed from their questions.
+ * - Choice sections ("answer any two"): the model's declared section marks (what
+ *   a candidate can earn) are trusted, since the printed questions total more.
+ * - The paper total is the sum of the (reconciled) section marks.
+ * Every correction is reported as an issue for transparency.
+ */
+export function normalizeExam(exam: Exam): NormalizedExam {
+  const issues: ExamIssue[] = [];
+
+  const sections = exam.sections.map((s) => {
+    const sum = s.questions.reduce((n, q) => n + (q.marks || 0), 0);
+    const choice = isChoiceSection(s);
+    const marks = choice && s.marks ? s.marks : sum;
+    if (!choice && s.marks && s.marks !== sum) {
+      issues.push({ level: "fixed", message: `${s.name}: declared ${s.marks} marks corrected to ${sum} to match its questions.` });
+    }
+    return { ...s, marks };
+  });
+
+  const total = sections.reduce((n, s) => n + (s.marks || 0), 0);
+  if (exam.totalMarks && exam.totalMarks !== total) {
+    issues.push({ level: "fixed", message: `Paper total corrected from ${exam.totalMarks} to ${total} to match the sections.` });
+  }
+
+  // MCQ integrity is a content problem we cannot silently fix — surface it.
+  const badMcq = sections.flatMap((s) => s.questions).filter(
+    (q) => /multiple choice|mcq/i.test(q.type) && (!q.options || q.options.length < 2),
+  );
+  if (badMcq.length) {
+    issues.push({ level: "warn", message: `${badMcq.length} multiple-choice question(s) have fewer than 2 options.` });
+  }
+
+  return { exam: { ...exam, sections, totalMarks: total || exam.totalMarks }, issues };
+}
 
 export const examConfigSchema = z.object({
   subject: z.string().min(1),
