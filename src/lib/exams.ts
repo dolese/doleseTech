@@ -4,7 +4,7 @@
  * /api/exams/generate route and the /exams UI. Tanzania (TIE/NECTA) oriented.
  */
 import { z } from "zod";
-import { blueprintPromptBlock } from "./examBlueprints";
+import { blueprintPromptBlock, examStructureGoverned } from "./examBlueprints";
 
 export const EXAM_TYPES = [
   "Quiz",
@@ -185,11 +185,14 @@ Rules:
 - Write in the requested language.`;
 
   const blueprint = blueprintPromptBlock(config.subject, config.level, config.examType, config.totalMarks);
+  const governed = examStructureGoverned(config.subject, config.level, config.examType);
 
   const parts = [
     `Create a ${config.examType} for ${config.subject} — ${config.level} ${config.form}.`,
     `Duration: ${config.durationMinutes} minutes. Total marks: ${config.totalMarks}.`,
-    `Question formats to use: ${config.formats.join(", ")}.`,
+    governed
+      ? `The official paper structure below governs the sections and question types; use the teacher's format preferences (${config.formats.join(", ")}) only where they fit that structure.`
+      : `Question formats to use: ${config.formats.join(", ")}.`,
     `Overall difficulty: ${config.difficulty}.`,
     `Language: ${config.language}.`,
     config.topics.length ? `Focus on these topics: ${config.topics.join("; ")}.` : `Cover the core topics of the form.`,
