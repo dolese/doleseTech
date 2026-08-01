@@ -314,8 +314,8 @@ Rules:
 - Attach a "figure" ONLY when the question genuinely needs a diagram — a data table to read, a bar chart, a number line, or points/lines to plot on a coordinate plane. Use one of the four supported figure types with numeric data (never prose). Do not invent figure types. Most questions need no figure.
 - Write in the requested language.`;
 
-  const blueprint = blueprintPromptBlock(config.subject, config.level, config.examType, config.totalMarks);
-  const governed = examStructureGoverned(config.subject, config.level, config.examType);
+  const blueprint = blueprintPromptBlock(config.subject, config.level, config.examType, config.totalMarks, config.form);
+  const governed = examStructureGoverned(config.subject, config.level, config.examType, config.form);
 
   const parts = [
     `Create a ${config.examType} for ${config.subject} — ${config.level} ${config.form}.`,

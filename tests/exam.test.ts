@@ -135,12 +135,23 @@ test("makeVariant A is identity; B renumbers continuously and preserves question
 });
 
 // ── blueprints ──────────────────────────────────────────────────────
-test("Basic Mathematics blueprint has no multiple-choice section", () => {
-  const bp = blueprintFor("Basic Mathematics", "O-Level");
+const hasMcq = (bp: NonNullable<ReturnType<typeof blueprintFor>>) => bp.sections.flatMap((s) => s.formats).includes("Multiple Choice");
+
+test("Form IV (CSEE) Basic Mathematics has no multiple-choice section", () => {
+  const bp = blueprintFor("Basic Mathematics", "O-Level", "Form IV");
   assert.ok(bp);
   assert.equal(bp!.family, "mathematics");
-  const formats = bp!.sections.flatMap((s) => s.formats).join(",");
-  assert.ok(!/Multiple Choice/.test(formats));
+  assert.ok(!hasMcq(bp!));
+});
+
+test("Form II (FTNA) Basic Mathematics DOES have a multiple-choice section", () => {
+  const bp = blueprintFor("Basic Mathematics", "O-Level", "Form II");
+  assert.ok(bp);
+  assert.ok(hasMcq(bp!), "Form II FTNA maths should include an objective Section A");
+});
+
+test("Basic Mathematics defaults to the no-MCQ (CSEE) shape when no form is given", () => {
+  assert.ok(!hasMcq(blueprintFor("Basic Mathematics", "O-Level")!));
 });
 
 test("A-Level Advanced Mathematics has a compulsory section and an optional (choice) section", () => {
