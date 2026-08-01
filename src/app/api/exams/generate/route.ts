@@ -8,6 +8,7 @@ import {
   examConfigSchema,
   examSchema,
   normalizeExam,
+  validateExam,
   type Exam,
   type ExamConfig,
 } from "@/lib/exams";
@@ -61,6 +62,11 @@ function drift(exam: Exam, cfg: ExamConfig): number {
   return Math.abs((exam.totalMarks || 0) - cfg.totalMarks);
 }
 
+/** Lower is better: content faults dominate, then distance from the target total. */
+function score(exam: Exam, cfg: ExamConfig): number {
+  return validateExam(exam).length * 1000 + drift(exam, cfg);
+}
+
 export async function POST(req: NextRequest) {
   let body: unknown;
   try {
@@ -96,22 +102,33 @@ export async function POST(req: NextRequest) {
     }
 
     let best = normalizeExam(first);
-    // Allow a little rounding slack; beyond it, try ONE corrective pass so the
-    // paper actually totals what the teacher asked for instead of being
-    // silently reconciled to a different number.
+    // Try ONE corrective pass when the paper misses the target total (beyond a
+    // little rounding slack) OR has "not answerable" content faults, so the
+    // teacher gets a paper that hits the marks and is actually usable rather
+    // than one silently reconciled to a different number.
     const tolerance = Math.max(2, Math.round(cfg.totalMarks * 0.05));
-    if (drift(best.exam, cfg) > tolerance) {
+    const defects = validateExam(best.exam);
+    if (drift(best.exam, cfg) > tolerance || defects.length > 0) {
       try {
-        const repairNote =
-          `The paper currently totals ${best.exam.totalMarks} marks but must total EXACTLY ${cfg.totalMarks}. ` +
-          `Adjust question marks and/or counts so every section and the whole paper sum exactly to ${cfg.totalMarks}, ` +
-          `keeping the same sections, structure and question types.`;
+        const notes: string[] = [];
+        if (drift(best.exam, cfg) > tolerance) {
+          notes.push(
+            `The paper currently totals ${best.exam.totalMarks} marks but must total EXACTLY ${cfg.totalMarks}. ` +
+              `Adjust question marks and/or counts so every section and the whole paper sum exactly to ${cfg.totalMarks}, keeping the same sections and question types.`,
+          );
+        }
+        if (defects.length > 0) {
+          notes.push(
+            "Ensure EVERY multiple-choice question has exactly four options (A–D) with no blank option, and EVERY question has a complete, non-trivial marking-scheme answer.",
+          );
+        }
+        const repairNote = notes.join(" ");
         const refine = cfg.instruction ? `${cfg.instruction} ${repairNote}` : repairNote;
         const repairPrompt = buildExamPrompt(cfg, refine);
         const repaired = parseExam(await complete(model, provider, repairPrompt.system, repairPrompt.user));
         if (repaired) {
           const candidate = normalizeExam(repaired);
-          if (drift(candidate.exam, cfg) < drift(best.exam, cfg)) best = candidate;
+          if (score(candidate.exam, cfg) < score(best.exam, cfg)) best = candidate;
         }
       } catch (repairErr) {
         console.error("Exam repair pass failed:", repairErr);

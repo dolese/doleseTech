@@ -165,6 +165,50 @@ export interface NormalizedExam {
   issues: ExamIssue[];
 }
 
+// Objective item types whose model answer is naturally short (a letter, a word).
+const OBJECTIVE_TYPE = /multiple choice|mcq|matching|true\s*\/?\s*false|fill/i;
+// A model answer that carries no real marking information.
+const TRIVIAL_ANSWER = /^(n\/?a|tbd|todo|none|-+|\.+|see above|as above)$/i;
+
+function isTrivialAnswer(a: string | undefined): boolean {
+  const t = (a || "").trim();
+  return t.length === 0 || TRIVIAL_ANSWER.test(t);
+}
+
+/**
+ * Detect "not answerable" content faults — problems that make a paper unusable
+ * even when the marks add up. These cannot be fixed deterministically (they need
+ * new content), so they are reported as warnings and drive the repair pass.
+ */
+export function validateExam(exam: Exam): ExamIssue[] {
+  const issues: ExamIssue[] = [];
+  const qs = exam.sections.flatMap((s) => s.questions);
+
+  const mcqBadCount = qs.filter((q) => /multiple choice|mcq/i.test(q.type) && (q.options?.length ?? 0) !== 4);
+  if (mcqBadCount.length) {
+    issues.push({ level: "warn", message: `${mcqBadCount.length} multiple-choice question(s) do not have exactly 4 options (A–D).` });
+  }
+
+  const blankOption = qs.filter((q) => (q.options ?? []).some((o) => !o || !o.trim()));
+  if (blankOption.length) {
+    issues.push({ level: "warn", message: `${blankOption.length} question(s) have a blank answer option.` });
+  }
+
+  const missingAnswer = qs.filter((q) => isTrivialAnswer(q.answer));
+  if (missingAnswer.length) {
+    issues.push({ level: "warn", message: `${missingAnswer.length} question(s) have a missing or placeholder marking scheme.` });
+  }
+
+  const thinAnswer = qs.filter(
+    (q) => !OBJECTIVE_TYPE.test(q.type) && !isTrivialAnswer(q.answer) && (q.answer || "").trim().length < 8,
+  );
+  if (thinAnswer.length) {
+    issues.push({ level: "warn", message: `${thinAnswer.length} non-objective question(s) have a very short marking scheme.` });
+  }
+
+  return issues;
+}
+
 /**
  * Make a generated paper internally consistent before it is delivered, so the
  * printed section and paper totals always match the questions actually set — no
@@ -172,8 +216,8 @@ export interface NormalizedExam {
  *
  * - Every section's `marks` is set to its effective (choice-aware) marks.
  * - The paper total is the sum of those section marks.
- * - MCQ items with fewer than two options are flagged (a content fault we
- *   cannot silently fix). Every correction is reported for transparency.
+ * - "Not answerable" content faults (bad MCQ option counts, missing marking
+ *   schemes) are flagged via validateExam. Every issue is reported.
  */
 export function normalizeExam(exam: Exam): NormalizedExam {
   const issues: ExamIssue[] = [];
@@ -192,14 +236,10 @@ export function normalizeExam(exam: Exam): NormalizedExam {
     issues.push({ level: "fixed", message: `Paper total corrected from ${exam.totalMarks} to ${total} to match the sections.` });
   }
 
-  const badMcq = sections.flatMap((s) => s.questions).filter(
-    (q) => /multiple choice|mcq/i.test(q.type) && (!q.options || q.options.length < 2),
-  );
-  if (badMcq.length) {
-    issues.push({ level: "warn", message: `${badMcq.length} multiple-choice question(s) have fewer than 2 options.` });
-  }
+  const normalized: Exam = { ...exam, sections, totalMarks: total || exam.totalMarks };
+  issues.push(...validateExam(normalized));
 
-  return { exam: { ...exam, sections, totalMarks: total || exam.totalMarks }, issues };
+  return { exam: normalized, issues };
 }
 
 export const examConfigSchema = z.object({
