@@ -153,10 +153,11 @@ const FAMILY: Record<SubjectFamily, FamilyProfile> = {
     ],
   },
   humanities: {
+    // CSEE standard template (confirmed on a real Geography 033 paper): 16/54/30.
     sections: [
-      { ...OBJECTIVE_A, marksShare: 0.2, note: "Objective items: multiple-choice (~10) and matching (~10), 1 mark each. Compulsory." },
-      { name: "SECTION B", marksShare: 0.4, perQuestionMarks: 10, formats: ["Short Answer", "Structured"], note: "Short-answer/structured questions. Compulsory." },
-      { name: "SECTION C", marksShare: 0.4, perQuestionMarks: 20, formats: ["Essay"], choice: { answer: 2, of: 4 }, note: "Essay questions — set several, candidates answer two." },
+      { ...OBJECTIVE_A, note: "Objective items: one multiple-choice question (~10 items) and one matching question (~6 items), 1 mark each. Compulsory." },
+      { name: "SECTION B", marksShare: 0.54, perQuestionMarks: 9, formats: ["Short Answer", "Structured"], note: "Short-answer/structured questions (incl. map work, statistics and interpretation for Geography). Compulsory." },
+      { name: "SECTION C", marksShare: 0.3, perQuestionMarks: 15, formats: ["Essay"], choice: { answer: 2, of: 3 }, note: "Extended essay questions — set 3, candidates answer 2." },
     ],
     aLevelSections: [
       { name: "SECTION A", marksShare: 0.3, perQuestionMarks: 10, formats: ["Short Answer", "Structured"], note: "Compulsory short/structured questions." },
@@ -164,7 +165,7 @@ const FAMILY: Record<SubjectFamily, FamilyProfile> = {
     ],
     materials: [],
     guidance: [
-      "History, Geography and Civics use an objective Section A, short-answer Section B and essay Section C (O-Level); essays dominate at A-Level.",
+      "History, Geography and Civics use an objective Section A (16), a short-answer/structured Section B (54) and an essay Section C where candidates answer two of three (30) at O-Level; essays dominate at A-Level.",
       "Essays must be structured with a clear introduction, well-argued points supported by examples, and a conclusion.",
       "Geography additionally requires map reading, sketch maps and simple statistics (graphs and calculations).",
       "Marking schemes credit relevant points and the use of evidence.",
@@ -299,6 +300,24 @@ const SPECIFIC_SPECS: SpecificSpec[] = [
       { name: "SECTION A", marksShare: 0.2, perQuestionMarks: 1, formats: ["Multiple Choice", "Matching"], note: "Objective: ~10 multiple-choice + ~10 matching items, 1 mark each. Compulsory." },
       { name: "SECTION B", marksShare: 0.4, perQuestionMarks: 10, formats: ["Short Answer", "Structured"], note: "Four questions — one a calculation/drawing, three short-answer on commercial concepts. Compulsory." },
       { name: "SECTION C", marksShare: 0.4, perQuestionMarks: 20, formats: ["Essay"], choice: { answer: 2, of: 4 }, note: "Four essay questions — candidates answer two." },
+    ],
+  },
+  {
+    // Confirmed on a real Form IV pre-mock Geography (033) paper: 16/54/30.
+    subject: "Geography",
+    level: "O-Level",
+    family: "humanities",
+    sections: FAMILY.humanities.sections,
+    materials: ["Map extract", "Ruler", "Non-programmable calculator"],
+    rubric: [
+      "This paper consists of sections A, B and C with a total of eleven (11) questions.",
+      "Answer ALL questions in sections A and B, and only TWO (2) questions from section C.",
+      "Sketch maps and diagrams must be drawn neatly and fully labelled.",
+      "All communication devices and any unauthorised materials are not allowed in the examination room.",
+    ],
+    notes: [
+      "Section B is skills-based: include a map-extract question (settlement pattern, economic/social activities, area by the square method, scale conversion, transport), plus research methods, a simple (chain) survey, photograph interpretation, rock classification, and a statistics question that asks candidates to draw a graph from a data table.",
+      "Section C is essay-based (population, migration, tourism, environmental management).",
     ],
   },
   {

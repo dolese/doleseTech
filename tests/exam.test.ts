@@ -75,7 +75,7 @@ test("normalizeExam keeps a choice section at its earned total and reports no fa
 });
 
 // ── validateExam (not-answerable guard) ─────────────────────────────
-test("validateExam flags MCQs without exactly 4 options, blank options and missing schemes", () => {
+test("validateExam flags MCQs with too few/many options, blank options and missing schemes", () => {
   const e = exam([section("A", [
     q("1", 1, { type: "Multiple Choice", options: ["a", "b"], answer: "A" }),
     q("2", 1, { type: "Multiple Choice", options: ["a", "b", "c", ""], answer: "B" }),
@@ -83,17 +83,18 @@ test("validateExam flags MCQs without exactly 4 options, blank options and missi
     q("4", 9, { type: "Essay", answer: "ok" }),
   ])]);
   const msgs = validateExam(e).map((i) => i.message).join(" | ");
-  assert.match(msgs, /do not have exactly 4 options/);
+  assert.match(msgs, /do not have 4 or 5 options/);
   assert.match(msgs, /blank answer option/);
   assert.match(msgs, /missing or placeholder marking scheme/);
   assert.match(msgs, /very short marking scheme/);
 });
 
-test("validateExam passes a clean paper and exempts short objective answers", () => {
+test("validateExam accepts NECTA 4-option (A–D) and 5-option (A–E) MCQs", () => {
   const e = exam([section("A", [
     q("1", 1, { type: "Multiple Choice", options: ["a", "b", "c", "d"], answer: "C" }),
-    q("2", 1, { type: "True/False", answer: "True" }),
-    q("3", 10, { type: "Structured", answer: "Step-by-step model answer worth ten marks." }),
+    q("2", 1, { type: "Multiple Choice", options: ["a", "b", "c", "d", "e"], answer: "E" }),
+    q("3", 1, { type: "True/False", answer: "True" }),
+    q("4", 10, { type: "Structured", answer: "Step-by-step model answer worth ten marks." }),
   ])]);
   assert.equal(validateExam(e).length, 0);
 });
@@ -144,7 +145,7 @@ test("Basic Mathematics blueprint has no multiple-choice section", () => {
 });
 
 test("Basic Mathematics carries the authentic CSEE rubric (working shown, tables/graphs, constants)", () => {
-  const bp = blueprintFor("Basic Mathematics", "O-Level", "Form IV");
+  const bp = blueprintFor("Basic Mathematics", "O-Level");
   assert.ok(bp);
   const rubric = (bp!.rubric ?? []).join(" ");
   assert.match(rubric, /working/i);
@@ -157,6 +158,18 @@ test("A-Level Advanced Mathematics has a compulsory section and an optional (cho
   assert.ok(bp);
   assert.equal(bp!.level, "A-Level");
   assert.ok(bp!.sections.some((s) => s.choice));
+});
+
+const hasMcq = (bp: NonNullable<ReturnType<typeof blueprintFor>>) => bp.sections.flatMap((s) => s.formats).includes("Multiple Choice");
+
+test("Geography (O-Level) follows the CSEE 16/54/30 template with an objective Section A", () => {
+  const bp = blueprintFor("Geography", "O-Level");
+  assert.ok(bp);
+  const scaled = scaleSections(bp!, 100).map((s) => s.marks);
+  assert.deepEqual(scaled, [16, 54, 30]);
+  assert.ok(hasMcq(bp!), "Geography Section A is objective (MCQ + matching)");
+  assert.ok(bp!.sections.some((s) => s.choice && s.choice.answer === 2 && s.choice.of === 3), "Section C is answer 2 of 3");
+  assert.match((bp!.rubric ?? []).join(" "), /eleven \(11\) questions/i);
 });
 
 test("unknown subject has no blueprint", () => {

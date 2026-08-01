@@ -184,9 +184,14 @@ export function validateExam(exam: Exam): ExamIssue[] {
   const issues: ExamIssue[] = [];
   const qs = exam.sections.flatMap((s) => s.questions);
 
-  const mcqBadCount = qs.filter((q) => /multiple choice|mcq/i.test(q.type) && (q.options?.length ?? 0) !== 4);
+  // NECTA multiple-choice items carry 4 (A–D) or 5 (A–E) alternatives.
+  const mcqBadCount = qs.filter((q) => {
+    if (!/multiple choice|mcq/i.test(q.type)) return false;
+    const n = q.options?.length ?? 0;
+    return n < 4 || n > 5;
+  });
   if (mcqBadCount.length) {
-    issues.push({ level: "warn", message: `${mcqBadCount.length} multiple-choice question(s) do not have exactly 4 options (A–D).` });
+    issues.push({ level: "warn", message: `${mcqBadCount.length} multiple-choice question(s) do not have 4 or 5 options (A–D or A–E).` });
   }
 
   const blankOption = qs.filter((q) => (q.options ?? []).some((o) => !o || !o.trim()));
@@ -307,7 +312,7 @@ Rules:
 - The marks a candidate can earn MUST sum exactly to totalMarks. For a COMPULSORY section, its "marks" equals the sum of its question marks. For an OPTIONAL section, set "choose" to the number of questions answered and set the section "marks" to the marks earned by that many questions (NOT the sum of all printed questions), then include extra printed questions to choose from. State the choice in the section "instructions" (e.g. "Answer any two (2) questions from this section.").
 - Keep the whole paper doable within the given duration.
 - Balance Bloom's levels across the paper; do not make every item "Remember".
-- Only use the requested question formats. Multiple Choice items need 4 options (A–D) and the answer states the correct letter.
+- Only use the requested question formats. Multiple Choice items need 4 options (A–D) or 5 options (A–E) — NECTA commonly uses 5 — and the answer states the correct letter.
 - Cover the requested topics; every question must be answerable from the stated subject/form syllabus.
 - Every question includes a correct, complete "answer" (model answer) with a brief mark breakdown.
 - Write ALL mathematical expressions in LaTeX: inline as $...$ and display as $$...$$ (e.g. fractions $\\frac{3}{4}$, powers $x^{2}$, roots $\\sqrt{x}$, $\\times$, $\\pm$, $\\leq$). Do not write math as plain ASCII.
