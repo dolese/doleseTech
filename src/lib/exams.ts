@@ -4,6 +4,7 @@
  * /api/exams/generate route and the /exams UI. Tanzania (TIE/NECTA) oriented.
  */
 import { z } from "zod";
+import { blueprintPromptBlock } from "./examBlueprints";
 
 export const EXAM_TYPES = [
   "Quiz",
@@ -183,6 +184,8 @@ Rules:
 - Attach a "figure" ONLY when the question genuinely needs a diagram — a data table to read, a bar chart, a number line, or points/lines to plot on a coordinate plane. Use one of the four supported figure types with numeric data (never prose). Do not invent figure types. Most questions need no figure.
 - Write in the requested language.`;
 
+  const blueprint = blueprintPromptBlock(config.subject, config.level, config.examType, config.totalMarks);
+
   const parts = [
     `Create a ${config.examType} for ${config.subject} — ${config.level} ${config.form}.`,
     `Duration: ${config.durationMinutes} minutes. Total marks: ${config.totalMarks}.`,
@@ -191,6 +194,7 @@ Rules:
     `Language: ${config.language}.`,
     config.topics.length ? `Focus on these topics: ${config.topics.join("; ")}.` : `Cover the core topics of the form.`,
     config.school ? `School: ${config.school}.` : "",
+    blueprint ? `\n${blueprint}` : "",
     refine ? `\nApply this change to the paper: ${refine}` : "",
     `\nReturn ONLY the JSON object.`,
   ];

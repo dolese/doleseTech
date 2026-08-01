@@ -46,8 +46,10 @@ export async function POST(req: NextRequest) {
       }
       const client = new Anthropic({ apiKey });
       const stream = client.messages.stream({
+        // A full 100-mark NECTA paper carries a complete marking scheme inline,
+        // so 8k tokens truncated large papers into invalid JSON. Give room.
         model,
-        max_tokens: 8192,
+        max_tokens: 16000,
         system,
         messages: [{ role: "user", content: user }],
       });
