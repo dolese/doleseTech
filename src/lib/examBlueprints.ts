@@ -67,6 +67,8 @@ export interface ExamBlueprint {
   guidance: string[];
   /** Extra rubric notes specific to this exact subject. */
   notes: string[];
+  /** Authentic candidate instructions to place in the paper's instructions[]. */
+  rubric?: string[];
 }
 
 // ── Family profiles: how each subject family is examined ────────────
@@ -244,6 +246,7 @@ interface SpecificSpec {
   sections: BlueprintSection[];
   materials?: string[];
   notes?: string[];
+  rubric?: string[];
 }
 
 const SPECIFIC_SPECS: SpecificSpec[] = [
@@ -253,6 +256,14 @@ const SPECIFIC_SPECS: SpecificSpec[] = [
     family: "mathematics",
     sections: FAMILY.mathematics.sections,
     notes: ["State units where applicable and give answers to the required degree of accuracy."],
+    rubric: [
+      "This paper consists of two sections, A and B.",
+      "Answer ALL questions in both sections.",
+      "All necessary working and answers for each question must be shown clearly.",
+      "Mathematical tables and graph papers may be used where necessary.",
+      "Use $\\pi = \\frac{22}{7}$ and $R = 6370$ km where necessary.",
+      "All communication devices and any unauthorised materials are not allowed in the examination room.",
+    ],
   },
   {
     subject: "Biology",
@@ -339,6 +350,7 @@ export function blueprintFor(subject: string, level: string): ExamBlueprint | un
       materials: spec.materials ?? FAMILY[spec.family].materials,
       guidance: resolveGuidance(spec.family, spec.level),
       notes: spec.notes ?? [],
+      rubric: spec.rubric,
     };
   }
 
@@ -422,6 +434,11 @@ export function blueprintPromptBlock(
   }
 
   if (blueprint.materials.length) lines.push(`Permitted materials: ${blueprint.materials.join(", ")}.`);
+
+  if (blueprint.rubric?.length) {
+    lines.push("", "Use these exact candidate instructions as the paper's instructions[] (the rubric):");
+    for (const r of blueprint.rubric) lines.push(`- ${r}`);
+  }
 
   lines.push("", `SUBJECT-SPECIFIC EXAMINING GUIDANCE (${blueprint.family}${isALevel(level) ? ", A-Level" : ""}):`);
   for (const g of blueprint.guidance) lines.push(`- ${g}`);

@@ -143,6 +143,15 @@ test("Basic Mathematics blueprint has no multiple-choice section", () => {
   assert.ok(!/Multiple Choice/.test(formats));
 });
 
+test("Basic Mathematics carries the authentic CSEE rubric (working shown, tables/graphs, constants)", () => {
+  const bp = blueprintFor("Basic Mathematics", "O-Level", "Form IV");
+  assert.ok(bp);
+  const rubric = (bp!.rubric ?? []).join(" ");
+  assert.match(rubric, /working/i);
+  assert.match(rubric, /graph papers/i);
+  assert.match(rubric, /22\}\{7\}|22.?7/); // pi = 22/7
+});
+
 test("A-Level Advanced Mathematics has a compulsory section and an optional (choice) section", () => {
   const bp = blueprintFor("Advanced Mathematics", "A-Level");
   assert.ok(bp);
