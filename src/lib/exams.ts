@@ -94,6 +94,9 @@ export const examSectionSchema = z.object({
   name: z.string(),
   instructions: z.string().optional().default(""),
   marks: z.number().optional().default(0),
+  /** For optional sections: how many of the printed questions a candidate answers.
+   *  Omitted (or ≥ question count) means every question is compulsory. */
+  choose: z.number().int().positive().optional(),
   questions: z.array(examQuestionSchema),
 });
 
@@ -114,14 +117,44 @@ export type Exam = z.infer<typeof examSchema>;
 export type ExamQuestion = z.infer<typeof examQuestionSchema>;
 export type ExamSection = z.infer<typeof examSectionSchema>;
 
-// ── Quality control ─────────────────────────────────────────────────
+// ── Effective marks (choice-aware) ──────────────────────────────────
 // A section where candidates choose a subset of questions ("answer any two").
 const CHOICE_RE = /\b(any|choose|either|optional|attempt\s+(?:any|only)|chagua|jibu\s+maswali)\b/i;
 
-function isChoiceSection(s: ExamSection): boolean {
-  return CHOICE_RE.test(s.instructions || "");
+/** Sum of every printed question's marks in a section. */
+export function sectionPrintedMarks(s: ExamSection): number {
+  return s.questions.reduce((n, q) => n + (q.marks || 0), 0);
 }
 
+/** How many questions a candidate answers in a section (choose, else all). */
+export function sectionAnswerCount(s: ExamSection): number {
+  return s.choose && s.choose > 0 && s.choose < s.questions.length ? s.choose : s.questions.length;
+}
+
+/**
+ * Marks a candidate can actually earn in a section. For an optional section
+ * ("answer any two of four") this is the best `choose` questions, not the sum of
+ * all printed questions — the number that belongs on the cover and in the total.
+ */
+export function sectionEffectiveMarks(s: ExamSection): number {
+  const marks = s.questions.map((q) => q.marks || 0);
+  const n = sectionAnswerCount(s);
+  if (n < marks.length) {
+    return [...marks].sort((a, b) => b - a).slice(0, n).reduce((a, b) => a + b, 0);
+  }
+  // No explicit choose, but the wording implies a choice and marks were declared
+  // below the printed sum → trust the declared (legacy papers without `choose`).
+  const printed = marks.reduce((a, b) => a + b, 0);
+  if (CHOICE_RE.test(s.instructions || "") && s.marks && s.marks < printed) return s.marks;
+  return printed;
+}
+
+/** The marks the whole paper is worth to a candidate (choice-aware). */
+export function examEffectiveMarks(exam: Exam): number {
+  return exam.sections.reduce((n, s) => n + sectionEffectiveMarks(s), 0);
+}
+
+// ── Quality control ─────────────────────────────────────────────────
 export interface ExamIssue {
   level: "fixed" | "warn";
   message: string;
@@ -137,23 +170,21 @@ export interface NormalizedExam {
  * printed section and paper totals always match the questions actually set — no
  * "the marks don't add up" mistakes reach the teacher.
  *
- * - Compulsory sections: section marks are recomputed from their questions.
- * - Choice sections ("answer any two"): the model's declared section marks (what
- *   a candidate can earn) are trusted, since the printed questions total more.
- * - The paper total is the sum of the (reconciled) section marks.
- * Every correction is reported as an issue for transparency.
+ * - Every section's `marks` is set to its effective (choice-aware) marks.
+ * - The paper total is the sum of those section marks.
+ * - MCQ items with fewer than two options are flagged (a content fault we
+ *   cannot silently fix). Every correction is reported for transparency.
  */
 export function normalizeExam(exam: Exam): NormalizedExam {
   const issues: ExamIssue[] = [];
 
   const sections = exam.sections.map((s) => {
-    const sum = s.questions.reduce((n, q) => n + (q.marks || 0), 0);
-    const choice = isChoiceSection(s);
-    const marks = choice && s.marks ? s.marks : sum;
-    if (!choice && s.marks && s.marks !== sum) {
-      issues.push({ level: "fixed", message: `${s.name}: declared ${s.marks} marks corrected to ${sum} to match its questions.` });
+    const effective = sectionEffectiveMarks(s);
+    if (s.marks && s.marks !== effective) {
+      const detail = sectionAnswerCount(s) < s.questions.length ? ` (answer ${sectionAnswerCount(s)} of ${s.questions.length})` : "";
+      issues.push({ level: "fixed", message: `${s.name}: declared ${s.marks} marks corrected to ${effective}${detail} to match its questions.` });
     }
-    return { ...s, marks };
+    return { ...s, marks: effective };
   });
 
   const total = sections.reduce((n, s) => n + (s.marks || 0), 0);
@@ -161,7 +192,6 @@ export function normalizeExam(exam: Exam): NormalizedExam {
     issues.push({ level: "fixed", message: `Paper total corrected from ${exam.totalMarks} to ${total} to match the sections.` });
   }
 
-  // MCQ integrity is a content problem we cannot silently fix — surface it.
   const badMcq = sections.flatMap((s) => s.questions).filter(
     (q) => /multiple choice|mcq/i.test(q.type) && (!q.options || q.options.length < 2),
   );
@@ -207,7 +237,8 @@ You output ONLY a single valid JSON object (no markdown, no code fences, no comm
     {
       "name": string,                  // e.g. "SECTION A"
       "instructions": string,
-      "marks": number,                 // total marks for the section
+      "marks": number,                 // marks a candidate earns in this section
+      "choose": number,                // OPTIONAL — for an optional section, how many of the printed questions to answer (e.g. 2 when "answer any two of four"); omit for compulsory sections
       "questions": [
         {
           "number": string,            // e.g. "1", "2(a)"
@@ -233,7 +264,7 @@ You output ONLY a single valid JSON object (no markdown, no code fences, no comm
 }
 
 Rules:
-- Section and question marks MUST sum exactly to totalMarks.
+- The marks a candidate can earn MUST sum exactly to totalMarks. For a COMPULSORY section, its "marks" equals the sum of its question marks. For an OPTIONAL section, set "choose" to the number of questions answered and set the section "marks" to the marks earned by that many questions (NOT the sum of all printed questions), then include extra printed questions to choose from. State the choice in the section "instructions" (e.g. "Answer any two (2) questions from this section.").
 - Keep the whole paper doable within the given duration.
 - Balance Bloom's levels across the paper; do not make every item "Remember".
 - Only use the requested question formats. Multiple Choice items need 4 options (A–D) and the answer states the correct letter.

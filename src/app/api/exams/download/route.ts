@@ -135,11 +135,13 @@ function buildDoc(exam: Exam, includeScheme: boolean, watermark: string) {
   }
 
   for (const section of exam.sections) {
+    const choose = section.choose && section.choose < section.questions.length ? section.choose : 0;
+    const headerBits = [section.marks ? `${section.marks} marks` : "", choose ? `answer any ${choose}` : ""].filter(Boolean);
     children.push(
       new Paragraph({
         heading: HeadingLevel.HEADING_2,
         spacing: { before: 200, after: 60 },
-        children: [new TextRun({ text: `${section.name}${section.marks ? `  (${section.marks} marks)` : ""}`, bold: true, color: GREEN })],
+        children: [new TextRun({ text: `${section.name}${headerBits.length ? `  (${headerBits.join(" · ")})` : ""}`, bold: true, color: GREEN })],
       }),
     );
     if (section.instructions) {

@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { isAllowedModel, modelProvider } from "@/lib/chatModels";
+import { isAllowedModel, modelProvider, type Provider } from "@/lib/chatModels";
 import { geminiKey, geminiComplete } from "@/lib/gemini";
-import { buildExamPrompt, extractExamJson, examConfigSchema, examSchema, normalizeExam } from "@/lib/exams";
+import {
+  buildExamPrompt,
+  extractExamJson,
+  examConfigSchema,
+  examSchema,
+  normalizeExam,
+  type Exam,
+  type ExamConfig,
+} from "@/lib/exams";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,6 +18,48 @@ export const maxDuration = 120;
 
 // Exam generation is intelligence-heavy; default to a balanced model.
 const DEFAULT_EXAM_MODEL = "claude-sonnet-4-6";
+
+/** Run one completion against the chosen provider and return the raw text. */
+async function complete(model: string, provider: Provider, system: string, user: string): Promise<string> {
+  if (provider === "google") {
+    return geminiComplete(model, system, user, { json: true });
+  }
+  const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
+  if (!apiKey) throw new Error("AI service not configured. Set ANTHROPIC_API_KEY.");
+  const client = new Anthropic({ apiKey });
+  const stream = client.messages.stream({
+    // A full 100-mark NECTA paper carries a complete marking scheme inline,
+    // so 8k tokens truncated large papers into invalid JSON. Give room.
+    model,
+    max_tokens: 16000,
+    system,
+    messages: [{ role: "user", content: user }],
+  });
+  const message = await stream.finalMessage();
+  return message.content
+    .filter((b): b is Anthropic.TextBlock => b.type === "text")
+    .map((b) => b.text)
+    .join("");
+}
+
+/** Parse model text into a validated exam, or return null if unusable. */
+function parseExam(text: string): Exam | null {
+  let json: unknown;
+  try {
+    json = extractExamJson(text);
+  } catch {
+    return null;
+  }
+  const parsed = examSchema.safeParse(json);
+  if (!parsed.success) return null;
+  const questionCount = parsed.data.sections.reduce((n, s) => n + s.questions.length, 0);
+  return questionCount > 0 ? parsed.data : null;
+}
+
+/** How far a normalized paper's total is from what the teacher requested. */
+function drift(exam: Exam, cfg: ExamConfig): number {
+  return Math.abs((exam.totalMarks || 0) - cfg.totalMarks);
+}
 
 export async function POST(req: NextRequest) {
   let body: unknown;
@@ -30,58 +80,46 @@ export async function POST(req: NextRequest) {
   const cfg = parsed.data;
   const model = cfg.model && isAllowedModel(cfg.model) ? cfg.model : DEFAULT_EXAM_MODEL;
   const provider = modelProvider(model);
-  const { system, user } = buildExamPrompt(cfg, cfg.instruction);
+
+  if (provider === "google" && !geminiKey()) {
+    return NextResponse.json({ error: "Gemini not configured. Set GEMINI_API_KEY." }, { status: 503 });
+  }
+  if (provider === "anthropic" && !process.env.ANTHROPIC_API_KEY?.trim()) {
+    return NextResponse.json({ error: "AI service not configured. Set ANTHROPIC_API_KEY." }, { status: 503 });
+  }
 
   try {
-    let text: string;
-    if (provider === "google") {
-      if (!geminiKey()) {
-        return NextResponse.json({ error: "Gemini not configured. Set GEMINI_API_KEY." }, { status: 503 });
-      }
-      text = await geminiComplete(model, system, user, { json: true });
-    } else {
-      const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
-      if (!apiKey) {
-        return NextResponse.json({ error: "AI service not configured. Set ANTHROPIC_API_KEY." }, { status: 503 });
-      }
-      const client = new Anthropic({ apiKey });
-      const stream = client.messages.stream({
-        // A full 100-mark NECTA paper carries a complete marking scheme inline,
-        // so 8k tokens truncated large papers into invalid JSON. Give room.
-        model,
-        max_tokens: 16000,
-        system,
-        messages: [{ role: "user", content: user }],
-      });
-      const message = await stream.finalMessage();
-      text = message.content
-        .filter((b): b is Anthropic.TextBlock => b.type === "text")
-        .map((b) => b.text)
-        .join("");
-    }
-
-    let json: unknown;
-    try {
-      json = extractExamJson(text);
-    } catch {
+    const { system, user } = buildExamPrompt(cfg, cfg.instruction);
+    const first = parseExam(await complete(model, provider, system, user));
+    if (!first) {
       return NextResponse.json({ error: "The model did not return a valid exam. Please try again." }, { status: 502 });
     }
 
-    const exam = examSchema.safeParse(json);
-    if (!exam.success) {
-      return NextResponse.json({ error: "The generated exam was malformed. Please try again." }, { status: 502 });
+    let best = normalizeExam(first);
+    // Allow a little rounding slack; beyond it, try ONE corrective pass so the
+    // paper actually totals what the teacher asked for instead of being
+    // silently reconciled to a different number.
+    const tolerance = Math.max(2, Math.round(cfg.totalMarks * 0.05));
+    if (drift(best.exam, cfg) > tolerance) {
+      try {
+        const repairNote =
+          `The paper currently totals ${best.exam.totalMarks} marks but must total EXACTLY ${cfg.totalMarks}. ` +
+          `Adjust question marks and/or counts so every section and the whole paper sum exactly to ${cfg.totalMarks}, ` +
+          `keeping the same sections, structure and question types.`;
+        const refine = cfg.instruction ? `${cfg.instruction} ${repairNote}` : repairNote;
+        const repairPrompt = buildExamPrompt(cfg, refine);
+        const repaired = parseExam(await complete(model, provider, repairPrompt.system, repairPrompt.user));
+        if (repaired) {
+          const candidate = normalizeExam(repaired);
+          if (drift(candidate.exam, cfg) < drift(best.exam, cfg)) best = candidate;
+        }
+      } catch (repairErr) {
+        console.error("Exam repair pass failed:", repairErr);
+        // Keep the first (already consistent) paper.
+      }
     }
 
-    // Reject an empty paper outright rather than deliver a blank product.
-    const questionCount = exam.data.sections.reduce((n, s) => n + s.questions.length, 0);
-    if (questionCount === 0) {
-      return NextResponse.json({ error: "The generated exam had no questions. Please try again." }, { status: 502 });
-    }
-
-    // Quality control: guarantee the delivered paper's marks are consistent.
-    const { exam: normalized, issues } = normalizeExam(exam.data);
-
-    return NextResponse.json({ exam: normalized, model, issues });
+    return NextResponse.json({ exam: best.exam, model, issues: best.issues });
   } catch (err) {
     console.error("Exam generation error:", err);
     const detail = err instanceof Error ? err.message : "";

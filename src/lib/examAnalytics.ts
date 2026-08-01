@@ -2,7 +2,7 @@
  * Assessment analytics + moderation for a generated exam (modules 19 & 18).
  * Pure functions computed from the exam JSON — no AI, no I/O.
  */
-import { BLOOM_LEVELS, type Exam, type ExamQuestion } from "./exams";
+import { BLOOM_LEVELS, examEffectiveMarks, sectionEffectiveMarks, type Exam, type ExamQuestion } from "./exams";
 
 export interface Dist {
   label: string;
@@ -12,11 +12,12 @@ export interface Dist {
 
 export interface ExamAnalysis {
   questionCount: number;
-  computedMarks: number;
+  computedMarks: number; // effective (choice-aware) marks the paper is worth
+  printedMarks: number; // sum of every printed question's marks
   declaredMarks: number;
   estimatedMinutes: number;
   declaredMinutes: number;
-  hotsPercent: number; // % of marks at Analyze/Evaluate/Create
+  hotsPercent: number; // % of printed marks at Analyze/Evaluate/Create
   bloom: Dist[];
   types: Dist[];
   difficulty: Dist[];
@@ -47,10 +48,12 @@ function tally(items: { key: string; marks: number }[]): Dist[] {
 
 export function analyzeExam(exam: Exam): ExamAnalysis {
   const qs = allQuestions(exam);
-  const computedMarks = qs.reduce((n, q) => n + (q.marks || 0), 0);
+  const printedMarks = qs.reduce((n, q) => n + (q.marks || 0), 0);
+  const effectiveMarks = examEffectiveMarks(exam);
   const hotsMarks = qs.filter((q) => HOTS.has(normBloom(q.bloom))).reduce((n, q) => n + (q.marks || 0), 0);
 
-  // Bloom in canonical order (include zero rows for a full picture)
+  // Bloom/type/difficulty distributions describe the paper's composition, so
+  // they are computed over every printed question (denominator = printedMarks).
   const bloomMap = new Map<string, Dist>(BLOOM_LEVELS.map((b) => [b, { label: b, count: 0, marks: 0 }]));
   for (const q of qs) {
     const d = bloomMap.get(normBloom(q.bloom))!;
@@ -58,22 +61,24 @@ export function analyzeExam(exam: Exam): ExamAnalysis {
     d.marks += q.marks || 0;
   }
 
-  // ~1.5 min per mark is a common rough estimate for written papers
-  const estimatedMinutes = Math.round(computedMarks * 1.5);
+  // ~1.5 min per mark is a common rough estimate; a candidate only does the
+  // marks they can earn, so timing is based on effective marks.
+  const estimatedMinutes = Math.round(effectiveMarks * 1.5);
 
   return {
     questionCount: qs.length,
-    computedMarks,
-    declaredMarks: exam.totalMarks || computedMarks,
+    computedMarks: effectiveMarks,
+    printedMarks,
+    declaredMarks: exam.totalMarks || effectiveMarks,
     estimatedMinutes,
     declaredMinutes: exam.durationMinutes || 0,
-    hotsPercent: computedMarks ? Math.round((hotsMarks / computedMarks) * 100) : 0,
+    hotsPercent: printedMarks ? Math.round((hotsMarks / printedMarks) * 100) : 0,
     bloom: [...bloomMap.values()],
     types: tally(qs.map((q) => ({ key: q.type || "Other", marks: q.marks || 0 }))),
     difficulty: tally(qs.map((q) => ({ key: q.difficulty || "Medium", marks: q.marks || 0 }))),
     sections: exam.sections.map((s) => ({
       name: s.name,
-      computed: s.questions.reduce((n, q) => n + (q.marks || 0), 0),
+      computed: sectionEffectiveMarks(s),
       declared: s.marks || 0,
     })),
   };
