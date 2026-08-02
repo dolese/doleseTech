@@ -20,6 +20,7 @@ import {
 } from "../src/lib/examBlueprints";
 import { analyzeExam, moderateExam } from "../src/lib/examAnalytics";
 import { renderFigurePng } from "../src/lib/figureImage";
+import { CHAT_MODELS, isAllowedModel, modelProvider } from "../src/lib/chatModels";
 
 // ── helpers ─────────────────────────────────────────────────────────
 function q(number: string, marks: number, extra: Record<string, unknown> = {}) {
@@ -213,6 +214,18 @@ test("moderateExam raises no marks-mismatch warning on a well-formed choice pape
   ], { totalMarks: 90 });
   const mod = moderateExam(normalizeExam(e).exam);
   assert.ok(!mod.some((m) => m.level === "warn" && /don't match|declares/.test(m.message)));
+});
+
+// ── model IDs ───────────────────────────────────────────────────────
+test("Gemini models use auto-updating -latest aliases, not pinned versions", () => {
+  const gemini = CHAT_MODELS.filter((m) => m.provider === "google");
+  assert.ok(gemini.length > 0, "there should be Gemini models");
+  for (const m of gemini) {
+    assert.ok(m.id.endsWith("-latest"), `${m.id} should be a -latest alias`);
+    assert.ok(!/\d/.test(m.id), `${m.id} should not pin a version number (it will 404 when retired)`);
+    assert.ok(isAllowedModel(m.id));
+    assert.equal(modelProvider(m.id), "google");
+  }
 });
 
 // ── figure rasteriser ───────────────────────────────────────────────
