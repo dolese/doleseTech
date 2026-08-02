@@ -21,6 +21,7 @@ import {
 import { analyzeExam, moderateExam } from "../src/lib/examAnalytics";
 import { renderFigurePng } from "../src/lib/figureImage";
 import { CHAT_MODELS, isAllowedModel, modelProvider } from "../src/lib/chatModels";
+import { classifyAiError } from "../src/lib/aiErrors";
 
 // ── helpers ─────────────────────────────────────────────────────────
 function q(number: string, marks: number, extra: Record<string, unknown> = {}) {
@@ -226,6 +227,31 @@ test("Gemini models use auto-updating -latest aliases, not pinned versions", () 
     assert.ok(isAllowedModel(m.id));
     assert.equal(modelProvider(m.id), "google");
   }
+});
+
+// ── AI error classification ─────────────────────────────────────────
+test("a Gemini quota error becomes a short, actionable 429 message", () => {
+  const raw = new Error(
+    "[GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent: [429 Too Many Requests] You exceeded your current quota, please check your plan and billing details. * Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.5-pro",
+  );
+  const out = classifyAiError(raw, "Exam generation");
+  assert.equal(out.status, 429);
+  assert.match(out.message, /quota or rate limit/i);
+  assert.ok(!out.message.includes("googleapis.com"), "must not leak the raw provider URL/JSON");
+  assert.ok(out.message.length < 400, "message should be short");
+});
+
+test("retired-model, auth and overload errors are classified distinctly", () => {
+  assert.match(classifyAiError(new Error("[404 Not Found] models/gemini-2.5-flash is no longer available")).message, /model is unavailable/i);
+  assert.match(classifyAiError(new Error("[401] invalid api key")).message, /authentication failed/i);
+  assert.match(classifyAiError(new Error("[503] model is overloaded")).message, /temporarily unavailable/i);
+  assert.equal(classifyAiError(new Error("[503] overloaded")).status, 503);
+});
+
+test("an unrecognised error keeps its detail and a 500", () => {
+  const out = classifyAiError(new Error("something odd broke"), "Exam generation");
+  assert.equal(out.status, 500);
+  assert.match(out.message, /Exam generation failed: something odd broke/);
 });
 
 // ── figure rasteriser ───────────────────────────────────────────────

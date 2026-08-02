@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { isAllowedModel, DEFAULT_MODEL, modelSupportsThinking, modelProvider } from "@/lib/chatModels";
 import { geminiKey, geminiStream } from "@/lib/gemini";
+import { classifyAiError } from "@/lib/aiErrors";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest) {
           send({ done: true });
         } catch (err) {
           console.error("Gemini stream error:", err);
-          send({ error: "AI service error. Please try again." });
+          send({ error: classifyAiError(err, "Chat").message });
         } finally {
           controller.close();
         }
@@ -105,7 +106,7 @@ export async function POST(req: NextRequest) {
         send({ done: true });
       } catch (err) {
         console.error("Anthropic stream error:", err);
-        send({ error: "AI service error. Please try again." });
+        send({ error: classifyAiError(err, "Chat").message });
       } finally {
         controller.close();
       }

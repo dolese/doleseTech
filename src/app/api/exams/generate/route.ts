@@ -12,6 +12,7 @@ import {
   type Exam,
   type ExamConfig,
 } from "@/lib/exams";
+import { classifyAiError } from "@/lib/aiErrors";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -139,10 +140,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ exam: best.exam, model, issues: best.issues });
   } catch (err) {
     console.error("Exam generation error:", err);
-    const detail = err instanceof Error ? err.message : "";
-    return NextResponse.json(
-      { error: detail ? `Exam generation failed: ${detail}` : "Exam generation failed. Please try again." },
-      { status: 500 },
-    );
+    const { status, message } = classifyAiError(err, "Exam generation");
+    return NextResponse.json({ error: message }, { status });
   }
 }
