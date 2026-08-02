@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
-import { isAllowedModel, modelProvider, type Provider } from "@/lib/chatModels";
-import { geminiKey, geminiComplete } from "@/lib/gemini";
+import { isAllowedModel, modelProvider } from "@/lib/chatModels";
+import { complete, providerConfigError, EXAM_MAX_TOKENS } from "@/lib/aiComplete";
 import {
   buildExamPrompt,
   extractExamJson,
@@ -20,29 +19,6 @@ export const maxDuration = 120;
 
 // Exam generation is intelligence-heavy; default to a balanced model.
 const DEFAULT_EXAM_MODEL = "claude-sonnet-4-6";
-
-/** Run one completion against the chosen provider and return the raw text. */
-async function complete(model: string, provider: Provider, system: string, user: string): Promise<string> {
-  if (provider === "google") {
-    return geminiComplete(model, system, user, { json: true });
-  }
-  const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
-  if (!apiKey) throw new Error("AI service not configured. Set ANTHROPIC_API_KEY.");
-  const client = new Anthropic({ apiKey });
-  const stream = client.messages.stream({
-    // A full 100-mark NECTA paper carries a complete marking scheme inline,
-    // so 8k tokens truncated large papers into invalid JSON. Give room.
-    model,
-    max_tokens: 16000,
-    system,
-    messages: [{ role: "user", content: user }],
-  });
-  const message = await stream.finalMessage();
-  return message.content
-    .filter((b): b is Anthropic.TextBlock => b.type === "text")
-    .map((b) => b.text)
-    .join("");
-}
 
 /** Parse model text into a validated exam, or return null if unusable. */
 function parseExam(text: string): Exam | null {
@@ -86,18 +62,12 @@ export async function POST(req: NextRequest) {
 
   const cfg = parsed.data;
   const model = cfg.model && isAllowedModel(cfg.model) ? cfg.model : DEFAULT_EXAM_MODEL;
-  const provider = modelProvider(model);
-
-  if (provider === "google" && !geminiKey()) {
-    return NextResponse.json({ error: "Gemini not configured. Set GEMINI_API_KEY." }, { status: 503 });
-  }
-  if (provider === "anthropic" && !process.env.ANTHROPIC_API_KEY?.trim()) {
-    return NextResponse.json({ error: "AI service not configured. Set ANTHROPIC_API_KEY." }, { status: 503 });
-  }
+  const configError = providerConfigError(modelProvider(model));
+  if (configError) return NextResponse.json({ error: configError }, { status: 503 });
 
   try {
     const { system, user } = buildExamPrompt(cfg, cfg.instruction);
-    const first = parseExam(await complete(model, provider, system, user));
+    const first = parseExam(await complete(model, system, user, EXAM_MAX_TOKENS));
     if (!first) {
       return NextResponse.json({ error: "The model did not return a valid exam. Please try again." }, { status: 502 });
     }
@@ -126,7 +96,7 @@ export async function POST(req: NextRequest) {
         const repairNote = notes.join(" ");
         const refine = cfg.instruction ? `${cfg.instruction} ${repairNote}` : repairNote;
         const repairPrompt = buildExamPrompt(cfg, refine);
-        const repaired = parseExam(await complete(model, provider, repairPrompt.system, repairPrompt.user));
+        const repaired = parseExam(await complete(model, repairPrompt.system, repairPrompt.user, EXAM_MAX_TOKENS));
         if (repaired) {
           const candidate = normalizeExam(repaired);
           if (score(candidate.exam, cfg) < score(best.exam, cfg)) best = candidate;

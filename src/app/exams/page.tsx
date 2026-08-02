@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import MathText from "@/components/MathText";
@@ -16,6 +16,16 @@ import {
   type Exam,
 } from "@/lib/exams";
 import { analyzeExam, moderateExam, type Dist } from "@/lib/examAnalytics";
+import {
+  listPapers,
+  savePaper,
+  getPaper,
+  deletePaper,
+  readDraft,
+  writeDraft,
+  clearDraft,
+  type SavedPaper,
+} from "@/lib/examLibrary";
 
 const DEFAULT_FORMATS = ["Multiple Choice", "Short Answer", "Structured"];
 
@@ -65,6 +75,122 @@ export default function ExamsPage() {
   const [showScheme, setShowScheme] = useState(false);
   const [refine, setRefine] = useState("");
   const [watermark, setWatermark] = useState("");
+
+  // ── Library / draft ──────────────────────────────────────────
+  const [hydrated, setHydrated] = useState(false);
+  const [papers, setPapers] = useState<SavedPaper[]>([]);
+  const [savedId, setSavedId] = useState<string | null>(null);
+  const [libOpen, setLibOpen] = useState(false);
+  const [saveMsg, setSaveMsg] = useState("");
+  const [restored, setRestored] = useState(false);
+
+  // ── Per-question regeneration ────────────────────────────────
+  const [regenAt, setRegenAt] = useState<{ si: number; qi: number } | null>(null);
+  const [regenText, setRegenText] = useState("");
+  const [regenBusy, setRegenBusy] = useState<string | null>(null);
+
+  // Restore the last working paper so a refresh never loses work.
+  useEffect(() => {
+    setPapers(listPapers());
+    const draft = readDraft();
+    if (draft) {
+      setExam(draft.exam);
+      setSavedId(draft.savedId ?? null);
+      setRestored(true);
+    }
+    setHydrated(true);
+  }, []);
+
+  // Keep the draft in step with whatever is on screen.
+  useEffect(() => {
+    if (!hydrated) return;
+    if (exam) writeDraft(exam, savedId ?? undefined);
+    else clearDraft();
+  }, [exam, savedId, hydrated]);
+
+  function saveToLibrary() {
+    if (!exam) return;
+    const paper = savePaper(exam, savedId ?? undefined);
+    if (!paper) {
+      setSaveMsg("Storage full");
+      setTimeout(() => setSaveMsg(""), 2500);
+      return;
+    }
+    setSavedId(paper.id);
+    setPapers(listPapers());
+    setSaveMsg("Saved ✓");
+    setTimeout(() => setSaveMsg(""), 1800);
+  }
+
+  function openPaper(id: string) {
+    const paper = getPaper(id);
+    if (!paper) return;
+    setExam(paper.exam);
+    setSavedId(paper.id);
+    setIssues([]);
+    setError("");
+    setRegenAt(null);
+    setLibOpen(false);
+    setRestored(false);
+  }
+
+  function removePaper(id: string) {
+    deletePaper(id);
+    setPapers(listPapers());
+    if (savedId === id) setSavedId(null);
+  }
+
+  /**
+   * Replace a single question in place. The API pins the replacement's number
+   * and marks to the original, so the rest of the paper — and its totals —
+   * survive untouched.
+   */
+  async function regenerateQuestion(si: number, qi: number, instruction?: string) {
+    if (!exam) return;
+    const section = exam.sections[si];
+    const question = section?.questions[qi];
+    if (!question) return;
+
+    setRegenBusy(`${si}:${qi}`);
+    setError("");
+    try {
+      const avoid = exam.sections.flatMap((s, i) =>
+        s.questions.filter((_, j) => !(i === si && j === qi)).map((q) => q.text),
+      );
+      const res = await fetch("/api/exams/question", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subject: exam.subject || subject.name,
+          level: exam.level || subject.level,
+          form: exam.form || form,
+          language: exam.language === "Kiswahili" ? "Kiswahili" : "English",
+          difficulty,
+          sectionName: section.name,
+          sectionInstructions: section.instructions ?? "",
+          question,
+          avoid,
+          instruction,
+          model,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? `HTTP ${res.status}`);
+
+      setExam({
+        ...exam,
+        sections: exam.sections.map((s, i) =>
+          i !== si ? s : { ...s, questions: s.questions.map((q, j) => (j === qi ? json.question : q)) },
+        ),
+      });
+      setRegenAt(null);
+      setRegenText("");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not regenerate that question.");
+    } finally {
+      setRegenBusy(null);
+    }
+  }
 
   const topicChoices = outline.find((f) => f.form === form)?.topics ?? [];
 
@@ -116,6 +242,10 @@ export default function ExamsPage() {
       setExam(json.exam);
       setIssues(Array.isArray(json.issues) ? json.issues : []);
       setRefine("");
+      // A freshly generated paper is a new document, not an edit of a saved one.
+      setSavedId(null);
+      setRestored(false);
+      setRegenAt(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Generation failed.");
     } finally {
@@ -159,6 +289,51 @@ export default function ExamsPage() {
         <section className="exam-workspace">
           {/* ── Config panel ── */}
           <aside className="exam-config">
+            <div className="exam-library">
+              <button
+                type="button"
+                className="exam-library-toggle"
+                onClick={() => setLibOpen((v) => !v)}
+                aria-expanded={libOpen}
+              >
+                <span>📚 My papers</span>
+                <span className="exam-library-count">{papers.length}</span>
+              </button>
+
+              {libOpen && (
+                papers.length === 0 ? (
+                  <p className="exam-library-empty">
+                    No saved papers yet. Generate a paper, then click <strong>Save</strong> to keep it here.
+                  </p>
+                ) : (
+                  <>
+                    <ul className="exam-library-list">
+                      {papers.map((p) => (
+                        <li key={p.id} className={p.id === savedId ? "on" : ""}>
+                          <button type="button" className="exam-library-open" onClick={() => openPaper(p.id)}>
+                            <span className="exam-library-name">{p.title}</span>
+                            <span className="exam-library-meta">
+                              {[p.subject, p.form, p.examType].filter(Boolean).join(" · ")} — {p.totalMarks} marks
+                            </span>
+                          </button>
+                          <button
+                            type="button"
+                            className="exam-library-del"
+                            onClick={() => removePaper(p.id)}
+                            title={`Delete “${p.title}”`}
+                            aria-label={`Delete ${p.title}`}
+                          >
+                            ×
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="exam-library-note">Saved on this device only.</p>
+                  </>
+                )
+              )}
+            </div>
+
             <h2 className="exam-config-title">Paper setup</h2>
 
             <label className="exam-field">
@@ -277,12 +452,22 @@ export default function ExamsPage() {
               </div>
             ) : (
               <>
+                {restored && (
+                  <div className="exam-restored">
+                    Restored the paper you were working on.
+                    <button type="button" onClick={() => setRestored(false)} aria-label="Dismiss">×</button>
+                  </div>
+                )}
+
                 <div className="exam-preview-bar">
                   <label className="exam-toggle">
                     <input type="checkbox" checked={showScheme} onChange={(e) => setShowScheme(e.target.checked)} />
                     Show marking scheme
                   </label>
                   <div className="exam-actions">
+                    <button className="btn-outline" onClick={saveToLibrary}>
+                      {saveMsg || (savedId ? "Update saved" : "Save")}
+                    </button>
                     <button className="btn-outline" onClick={() => window.print()}>Print / PDF</button>
                     <button className="btn-filled" onClick={() => download()}>Download .docx</button>
                   </div>
@@ -324,6 +509,48 @@ export default function ExamsPage() {
                             <div className="exam-q-answer">
                               <span className="exam-q-answer-label">Answer · {q.bloom}</span>
                               <MathText>{q.answer}</MathText>
+                            </div>
+                          )}
+
+                          <div className="exam-q-tools">
+                            <button
+                              type="button"
+                              className="exam-q-regen"
+                              disabled={regenBusy !== null}
+                              onClick={() => {
+                                const open = regenAt?.si === si && regenAt?.qi === qi;
+                                setRegenAt(open ? null : { si, qi });
+                                setRegenText("");
+                              }}
+                            >
+                              {regenBusy === `${si}:${qi}` ? "Regenerating…" : "↻ Regenerate this question"}
+                            </button>
+                          </div>
+
+                          {regenAt?.si === si && regenAt?.qi === qi && (
+                            <div className="exam-q-regen-panel">
+                              <input
+                                type="text"
+                                value={regenText}
+                                autoFocus
+                                placeholder='Optional — how should it change? e.g. "use larger numbers", "test Sets instead"'
+                                onChange={(e) => setRegenText(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") regenerateQuestion(si, qi, regenText.trim() || undefined);
+                                  if (e.key === "Escape") setRegenAt(null);
+                                }}
+                                disabled={regenBusy !== null}
+                              />
+                              <button
+                                className="btn-filled"
+                                disabled={regenBusy !== null}
+                                onClick={() => regenerateQuestion(si, qi, regenText.trim() || undefined)}
+                              >
+                                Replace
+                              </button>
+                              <button className="btn-outline" disabled={regenBusy !== null} onClick={() => setRegenAt(null)}>
+                                Cancel
+                              </button>
                             </div>
                           )}
                         </div>

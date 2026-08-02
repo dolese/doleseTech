@@ -4,7 +4,7 @@
  * /api/exams/generate route and the /exams UI. Tanzania (TIE/NECTA) oriented.
  */
 import { z } from "zod";
-import { blueprintPromptBlock, examStructureGoverned } from "./examBlueprints";
+import { blueprintPromptBlock, examStructureGoverned, blueprintFor } from "./examBlueprints";
 
 export const EXAM_TYPES = [
   "Quiz",
@@ -263,7 +263,44 @@ export const examConfigSchema = z.object({
   instruction: z.string().max(600).optional(), // optional refine instruction
 });
 
-// ── Prompt builder ──────────────────────────────────────────────
+// ── Prompt builders ─────────────────────────────────────────────
+/**
+ * JSON shape of ONE question. Shared by the full-paper prompt and the
+ * single-question regeneration prompt so the two can never drift apart.
+ * Note `\\n` is escaped so the rendered prompt shows the literal text "\n".
+ */
+const QUESTION_JSON_SHAPE = `{
+  "number": string,            // e.g. "1", "2(a)"
+  "type": string,              // one of the requested formats
+  "marks": number,
+  "bloom": string,             // Remember|Understand|Apply|Analyze|Evaluate|Create
+  "difficulty": string,
+  "text": string,              // the full question (use \\n for structured sub-parts)
+  "options": string[],         // ONLY for Multiple Choice; otherwise omit
+  "figure": {                  // OPTIONAL — include ONLY when the question needs a diagram
+    "type": "numberline" | "barchart" | "coordinates" | "table",
+    "caption": string,
+    // numberline: min, max, step, marks:[{value,label}]
+    // barchart:   labels:string[], values:number[], xLabel, yLabel
+    // coordinates:xMin,xMax,yMin,yMax, points:[{x,y,label}], segments:[{x1,y1,x2,y2,label}]
+    // table:      headers:string[], rows:string[][]
+  },
+  "answer": string             // model answer / marking scheme with mark breakdown
+}`;
+
+/** Indent every line after the first, so a shared block nests cleanly. */
+function indentBlock(block: string, pad: string): string {
+  return block.split("\n").map((l, i) => (i === 0 ? l : pad + l)).join("\n");
+}
+
+/** Shared question-writing rules used by both prompts. */
+const QUESTION_RULES = [
+  "Multiple Choice items need 4 options (A–D) or 5 options (A–E) — NECTA commonly uses 5 — and the answer states the correct letter.",
+  "Every question includes a correct, complete \"answer\" (model answer) with a brief mark breakdown.",
+  "Write ALL mathematical expressions in LaTeX: inline as $...$ and display as $$...$$ (e.g. fractions $\\frac{3}{4}$, powers $x^{2}$, roots $\\sqrt{x}$, $\\times$, $\\pm$, $\\leq$). Do not write math as plain ASCII.",
+  "Attach a \"figure\" ONLY when the question genuinely needs a diagram — a data table to read, a bar chart, a number line, or points/lines to plot on a coordinate plane. Use one of the four supported figure types with numeric data (never prose). Do not invent figure types. Most questions need no figure.",
+];
+
 export function buildExamPrompt(config: ExamConfig, refine?: string): { system: string; user: string } {
   const system = `You are a senior Tanzanian examiner and TIE curriculum expert who writes NECTA-standard, competence-based examination papers. You know the Tanzania 2023 competence-based curriculum, NECTA paper structure (Sections A/B/C with objective, short/structured, and essay items), marks allocation, timing, and Bloom's taxonomy balance.
 
@@ -285,24 +322,7 @@ You output ONLY a single valid JSON object (no markdown, no code fences, no comm
       "marks": number,                 // marks a candidate earns in this section
       "choose": number,                // OPTIONAL — for an optional section, how many of the printed questions to answer (e.g. 2 when "answer any two of four"); omit for compulsory sections
       "questions": [
-        {
-          "number": string,            // e.g. "1", "2(a)"
-          "type": string,              // one of the requested formats
-          "marks": number,
-          "bloom": string,             // Remember|Understand|Apply|Analyze|Evaluate|Create
-          "difficulty": string,
-          "text": string,              // the full question (use \n for structured sub-parts)
-          "options": string[],         // ONLY for Multiple Choice; otherwise omit
-          "figure": {                  // OPTIONAL — include ONLY when the question needs a diagram
-            "type": "numberline" | "barchart" | "coordinates" | "table",
-            "caption": string,
-            // numberline: min, max, step, marks:[{value,label}]
-            // barchart:   labels:string[], values:number[], xLabel, yLabel
-            // coordinates:xMin,xMax,yMin,yMax, points:[{x,y,label}], segments:[{x1,y1,x2,y2,label}]
-            // table:      headers:string[], rows:string[][]
-          },
-          "answer": string             // model answer / marking scheme with mark breakdown
-        }
+        ${indentBlock(QUESTION_JSON_SHAPE, "        ")}
       ]
     }
   ]
@@ -312,11 +332,9 @@ Rules:
 - The marks a candidate can earn MUST sum exactly to totalMarks. For a COMPULSORY section, its "marks" equals the sum of its question marks. For an OPTIONAL section, set "choose" to the number of questions answered and set the section "marks" to the marks earned by that many questions (NOT the sum of all printed questions), then include extra printed questions to choose from. State the choice in the section "instructions" (e.g. "Answer any two (2) questions from this section.").
 - Keep the whole paper doable within the given duration.
 - Balance Bloom's levels across the paper; do not make every item "Remember".
-- Only use the requested question formats. Multiple Choice items need 4 options (A–D) or 5 options (A–E) — NECTA commonly uses 5 — and the answer states the correct letter.
+- Only use the requested question formats.
 - Cover the requested topics; every question must be answerable from the stated subject/form syllabus.
-- Every question includes a correct, complete "answer" (model answer) with a brief mark breakdown.
-- Write ALL mathematical expressions in LaTeX: inline as $...$ and display as $$...$$ (e.g. fractions $\\frac{3}{4}$, powers $x^{2}$, roots $\\sqrt{x}$, $\\times$, $\\pm$, $\\leq$). Do not write math as plain ASCII.
-- Attach a "figure" ONLY when the question genuinely needs a diagram — a data table to read, a bar chart, a number line, or points/lines to plot on a coordinate plane. Use one of the four supported figure types with numeric data (never prose). Do not invent figure types. Most questions need no figure.
+${QUESTION_RULES.map((r) => `- ${r}`).join("\n")}
 - Write in the requested language.`;
 
   const blueprint = blueprintPromptBlock(config.subject, config.level, config.examType, config.totalMarks);
@@ -337,6 +355,94 @@ Rules:
     `\nReturn ONLY the JSON object.`,
   ];
   return { system, user: parts.filter(Boolean).join(" ") };
+}
+
+// ── Single-question regeneration ────────────────────────────────
+export const questionRegenSchema = z.object({
+  subject: z.string().min(1),
+  level: z.string().default(""),
+  form: z.string().default(""),
+  language: z.enum(LANGUAGES).default("English"),
+  difficulty: z.string().default("Balanced"),
+  sectionName: z.string().max(80).default(""),
+  sectionInstructions: z.string().max(600).default(""),
+  question: examQuestionSchema,
+  /** Text of the other questions in the paper, so the model does not repeat one. */
+  avoid: z.array(z.string()).max(80).default([]),
+  instruction: z.string().max(400).optional(),
+  model: z.string().optional(),
+});
+export type QuestionRegenRequest = z.infer<typeof questionRegenSchema>;
+
+function clip(s: string, n: number): string {
+  const t = (s || "").replace(/\s+/g, " ").trim();
+  return t.length > n ? `${t.slice(0, n - 1)}…` : t;
+}
+
+/**
+ * Prompt for replacing ONE question in place. The marks and number are pinned so
+ * swapping a question can never break the paper's totals, and the other
+ * questions are listed so the replacement is not a duplicate.
+ */
+export function buildQuestionPrompt(req: QuestionRegenRequest): { system: string; user: string } {
+  const q = req.question;
+  const blueprint = blueprintFor(req.subject, req.level);
+
+  const rules = [
+    `The question MUST be worth EXACTLY ${q.marks} mark(s). Do not change the mark allocation.`,
+    `Use exactly "${q.number}" as the "number".`,
+    `Keep the question type "${q.type}" unless the change request explicitly asks for a different type.`,
+    "Write a genuinely DIFFERENT question from the one being replaced and from every existing question listed by the user — same syllabus area and same standard.",
+    ...QUESTION_RULES,
+    `Write in ${req.language}.`,
+  ];
+
+  const system = `You are a senior Tanzanian examiner and TIE curriculum expert who writes NECTA-standard, competence-based examination questions.
+
+You output ONLY a single valid JSON object (no markdown, no code fences, no commentary) describing ONE examination question with this exact shape:
+${QUESTION_JSON_SHAPE}
+
+Rules:
+${rules.map((r) => `- ${r}`).join("\n")}${
+    blueprint ? `\n\nSUBJECT-SPECIFIC EXAMINING GUIDANCE (${blueprint.family}):\n${blueprint.guidance.map((g) => `- ${g}`).join("\n")}` : ""
+  }`;
+
+  const others = req.avoid.map((t) => clip(t, 160)).filter(Boolean);
+  const parts = [
+    `Subject: ${req.subject} — ${[req.level, req.form].filter(Boolean).join(" ")}.`,
+    req.sectionName ? `Section: ${req.sectionName}.` : "",
+    req.sectionInstructions ? `Section instructions: ${req.sectionInstructions}` : "",
+    `Overall difficulty of the paper: ${req.difficulty}.`,
+    `\nReplace this question (${q.marks} mark(s), type "${q.type}"):\n"""${clip(q.text, 700)}"""`,
+    others.length ? `\nOther questions already in the paper — do NOT duplicate or closely echo any of them:\n${others.map((t) => `- ${t}`).join("\n")}` : "",
+    req.instruction ? `\nChange request: ${req.instruction}` : "\nWrite a fresh alternative of equal standard.",
+    `\nReturn ONLY the JSON object for the replacement question.`,
+  ];
+
+  return { system, user: parts.filter(Boolean).join("\n") };
+}
+
+/**
+ * Extract a single question from a model response and pin its number/marks to
+ * the originals, so an in-place swap can never change the paper's totals.
+ */
+export function parseReplacementQuestion(raw: string, original: ExamQuestion): ExamQuestion | null {
+  let json: unknown;
+  try {
+    json = extractExamJson(raw);
+  } catch {
+    return null;
+  }
+  const parsed = examQuestionSchema.safeParse(json);
+  if (!parsed.success) return null;
+  const q: ExamQuestion = { ...parsed.data, number: original.number, marks: original.marks };
+  if (!q.text.trim() || isTrivialAnswer(q.answer)) return null;
+  // Objective items must keep a usable option list.
+  if (/multiple choice|mcq/i.test(q.type)) {
+    const n = q.options?.length ?? 0;
+    if (n < 4 || n > 5 || q.options!.some((o) => !o.trim())) return null;
+  }
+  return q;
 }
 
 // ── Exam variants (A/B/C/D) — anti-cheat randomisation ──────────

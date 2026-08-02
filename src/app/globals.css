@@ -2568,6 +2568,51 @@ table.sow-table, table.lp-table { width: 100%; border-collapse: collapse; backgr
 @media (max-width: 900px) { .ea-grid { grid-template-columns: 1fr; gap: 16px; } }
 @media print { .exam-analytics, .exam-quality { display: none !important; } }
 
+/* ── Saved-paper library (browser-local) ────────────────────── */
+.exam-library { border: 1px solid var(--border); border-radius: 12px; padding: 4px; background: var(--cream); }
+.exam-library-toggle { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  background: none; border: none; font-family: inherit; font-size: .88rem; font-weight: 600; color: var(--text);
+  padding: 8px 10px; cursor: pointer; border-radius: 9px; }
+.exam-library-toggle:hover { background: var(--white); }
+.exam-library-count { background: var(--green-lt); color: var(--green); font-size: .72rem; font-weight: 700;
+  min-width: 20px; text-align: center; padding: 2px 7px; border-radius: 100px; }
+.exam-library-empty { font-size: .8rem; color: var(--text-muted); padding: 4px 10px 10px; line-height: 1.5; }
+.exam-library-list { list-style: none; display: flex; flex-direction: column; gap: 3px; margin: 2px 0 0;
+  max-height: 210px; overflow-y: auto; }
+.exam-library-list li { display: flex; align-items: stretch; gap: 2px; border-radius: 9px; }
+.exam-library-list li:hover { background: var(--white); }
+.exam-library-list li.on { background: var(--green-lt); }
+.exam-library-open { flex: 1; min-width: 0; text-align: left; background: none; border: none; font-family: inherit;
+  cursor: pointer; padding: 7px 9px; display: flex; flex-direction: column; gap: 2px; border-radius: 9px; }
+.exam-library-name { font-size: .82rem; font-weight: 600; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.exam-library-meta { font-size: .72rem; color: var(--text-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.exam-library-del { flex-shrink: 0; background: none; border: none; color: var(--text-muted); font-size: 1.1rem;
+  line-height: 1; padding: 0 9px; cursor: pointer; border-radius: 9px; }
+.exam-library-del:hover { color: #C0392B; background: #FBEAE8; }
+.exam-library-note { font-size: .7rem; color: var(--text-muted); padding: 7px 10px 4px; font-style: italic; }
+
+.exam-restored { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  background: var(--green-lt); color: var(--green); border-radius: 10px; padding: 8px 14px;
+  font-size: .82rem; font-weight: 500; margin-bottom: 10px; }
+.exam-restored button { background: none; border: none; color: inherit; font-size: 1.1rem; line-height: 1;
+  cursor: pointer; padding: 0 2px; }
+
+/* ── Per-question regeneration ──────────────────────────────── */
+.exam-q-tools { margin-top: 5px; }
+.exam-q-regen { background: none; border: 1px dashed var(--border); color: var(--text-muted); font-family: inherit;
+  font-size: .72rem; padding: 3px 10px; border-radius: 100px; cursor: pointer; opacity: 0; transition: opacity .15s, all .15s; }
+.exam-q:hover .exam-q-regen, .exam-q-regen:focus { opacity: 1; }
+.exam-q-regen:hover { border-color: var(--green-mid); border-style: solid; color: var(--green); background: var(--green-lt); }
+.exam-q-regen:disabled { cursor: default; opacity: .55; }
+.exam-q-regen-panel { display: flex; gap: 7px; margin-top: 7px; }
+.exam-q-regen-panel input { flex: 1; min-width: 0; border: 1px solid var(--border); border-radius: 100px;
+  padding: 8px 14px; font-family: inherit; font-size: .82rem; background: var(--white); color: var(--text); }
+.exam-q-regen-panel input:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px var(--green-lt); }
+.exam-q-regen-panel .btn-filled, .exam-q-regen-panel .btn-outline { padding: 7px 14px; font-size: .8rem; }
+@media print { .exam-q-tools, .exam-q-regen-panel, .exam-restored, .exam-library { display: none !important; } }
+
 /* ── Quality-check notices (server-side normalisation) ───────── */
 .exam-quality { margin-top: 16px; background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 14px 20px 16px; box-shadow: var(--shadow); }
 .exam-quality > strong { display: block; font-size: .8rem; font-weight: 600; color: var(--text-mid); margin-bottom: 8px; text-transform: uppercase; letter-spacing: .04em; }

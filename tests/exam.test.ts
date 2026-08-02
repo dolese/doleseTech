@@ -9,8 +9,11 @@ import {
   latexToPlain,
   extractExamJson,
   makeVariant,
+  buildQuestionPrompt,
+  parseReplacementQuestion,
   type Exam,
   type ExamSection,
+  type ExamQuestion,
 } from "../src/lib/exams";
 import {
   blueprintFor,
@@ -215,6 +218,82 @@ test("moderateExam raises no marks-mismatch warning on a well-formed choice pape
   ], { totalMarks: 90 });
   const mod = moderateExam(normalizeExam(e).exam);
   assert.ok(!mod.some((m) => m.level === "warn" && /don't match|declares/.test(m.message)));
+});
+
+// ── single-question regeneration ────────────────────────────────────
+function regenReq(over: Record<string, unknown> = {}) {
+  return {
+    subject: "Basic Mathematics", level: "O-Level", form: "Form II",
+    language: "English" as const, difficulty: "Balanced",
+    sectionName: "SECTION A", sectionInstructions: "Answer all questions.",
+    question: q("4", 6, { type: "Structured", text: "Solve x + 1 = 3." }),
+    avoid: ["Solve x + 1 = 3.", "Factorize 2x^2 - 8."],
+    ...over,
+  };
+}
+
+test("buildQuestionPrompt pins the marks and number, and lists questions to avoid", () => {
+  const { system, user } = buildQuestionPrompt(regenReq() as never);
+  assert.match(system, /EXACTLY 6 mark/);
+  assert.match(system, /"4"/);
+  assert.match(user, /do NOT duplicate/i);
+  assert.match(user, /Factorize 2x\^2 - 8/);
+  // Maths family guidance must ride along so a replacement keeps house style.
+  assert.match(system, /no multiple-choice/i);
+});
+
+test("buildQuestionPrompt carries an explicit change request", () => {
+  const { user } = buildQuestionPrompt(regenReq({ instruction: "use larger numbers" }) as never);
+  assert.match(user, /Change request: use larger numbers/);
+});
+
+test("parseReplacementQuestion pins number and marks to the original", () => {
+  const original = q("7", 9, { type: "Structured" });
+  const raw = JSON.stringify({
+    number: "99", type: "Structured", marks: 42, bloom: "Apply", difficulty: "Medium",
+    text: "A new question.", answer: "A full model answer with breakdown.",
+  });
+  const out = parseReplacementQuestion(raw, original);
+  assert.ok(out);
+  assert.equal(out!.number, "7", "number is pinned");
+  assert.equal(out!.marks, 9, "marks are pinned");
+  assert.equal(out!.text, "A new question.");
+});
+
+test("parseReplacementQuestion rejects unusable replacements", () => {
+  const original = q("1", 1, { type: "Multiple Choice", options: ["a", "b", "c", "d"] });
+  const bad = [
+    "not json at all",
+    JSON.stringify({ number: "1", type: "Structured", marks: 1, text: "Q", answer: "" }),      // no scheme
+    JSON.stringify({ number: "1", type: "Structured", marks: 1, text: "Q", answer: "N/A" }),   // placeholder
+    JSON.stringify({ number: "1", type: "Multiple Choice", marks: 1, text: "Q", answer: "B", options: ["a", "b"] }), // too few options
+    JSON.stringify({ number: "1", type: "Multiple Choice", marks: 1, text: "Q", answer: "B", options: ["a", "b", "c", " "] }), // blank option
+  ];
+  for (const raw of bad) assert.equal(parseReplacementQuestion(raw, original), null, raw.slice(0, 40));
+});
+
+test("swapping a regenerated question in place leaves the paper's totals untouched", () => {
+  const e = exam([
+    section("A", [q("1", 10), q("2", 10), q("3", 10)], { marks: 30, instructions: "Answer all." }),
+    section("B", [q("4", 20), q("5", 20), q("6", 20), q("7", 20)], { choose: 2, marks: 40, instructions: "Answer any two." }),
+  ], { totalMarks: 70 });
+  const before = normalizeExam(e).exam;
+
+  const replacement = parseReplacementQuestion(
+    JSON.stringify({ number: "zzz", type: "Structured", marks: 999, text: "Replaced.", answer: "Model answer with breakdown." }),
+    before.sections[0].questions[1],
+  ) as ExamQuestion;
+
+  const after = normalizeExam({
+    ...before,
+    sections: before.sections.map((s, i) =>
+      i !== 0 ? s : { ...s, questions: s.questions.map((x, j) => (j === 1 ? replacement : x)) },
+    ),
+  }).exam;
+
+  assert.equal(after.totalMarks, before.totalMarks);
+  assert.deepEqual(after.sections.map((s) => s.marks), before.sections.map((s) => s.marks));
+  assert.equal(after.sections[0].questions[1].text, "Replaced.");
 });
 
 // ── model IDs ───────────────────────────────────────────────────────
