@@ -658,6 +658,9 @@ h2.section-title {
   margin-top: 28px; font-size: .85rem; color: rgba(255,255,255,.4);
 }
 .contact-alt a { color: rgba(255,255,255,.7); }
+.whatsapp-link { display: inline-flex !important; align-items: center; gap: 7px; }
+.whatsapp-link svg { flex-shrink: 0; color: #25D366; }
+.contact-alt .whatsapp-link { vertical-align: middle; margin-left: 4px; }
 
 /* ── FOOTER ────────────────────────────────── */
 footer {

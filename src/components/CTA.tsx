@@ -1,4 +1,5 @@
 import ContactForm from "./ContactForm";
+import WhatsAppLink from "./WhatsAppLink";
 
 export default function CTA() {
   return (
@@ -17,9 +18,9 @@ export default function CTA() {
       <ContactForm />
 
       <p className="contact-alt">
-        Prefer email or a call? <a href="mailto:support@dolese.tech">support@dolese.tech</a>
+        Prefer email or chat? <a href="mailto:support@dolese.tech">support@dolese.tech</a>
         {" · "}
-        <a href="tel:+255710611384">+255710611384</a>
+        <WhatsAppLink />
       </p>
     </section>
   );
