@@ -1,11 +1,12 @@
+import BrandLogo from "./BrandLogo";
+
 export default function Footer() {
   return (
     <footer>
       <div className="footer-top">
         <div>
           <a href="/" className="footer-wordmark">
-            <span className="fw-navy">DOLESE</span>
-            <span className="fw-green">TECH</span>
+            <BrandLogo tone="dark" markSize={40} />
           </a>
           <p className="footer-tagline">Your Marketplace. Your World.</p>
           <p className="footer-cats">Goods · Services · Technology</p>

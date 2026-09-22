@@ -5,8 +5,8 @@ import { renderFigurePng } from "@/lib/figureImage";
 
 export const runtime = "nodejs";
 
-const NAVY = "16235B";
-const GREEN = "1E9E48";
+const NAVY = "1B2435";
+const GREEN = "2E8B2A";
 
 const CELL_BORDER = { style: BorderStyle.SINGLE, size: 4, color: "C4CCD8" };
 const CELL_BORDERS = { top: CELL_BORDER, bottom: CELL_BORDER, left: CELL_BORDER, right: CELL_BORDER };

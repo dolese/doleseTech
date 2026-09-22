@@ -25,8 +25,8 @@ import {
 
 export const runtime = "nodejs";
 
-const NAVY = "16235B";
-const GREEN = "1E9E48";
+const NAVY = "1B2435";
+const GREEN = "2E8B2A";
 
 function cell(text: string | string[], opts: { header?: boolean } = {}): TableCell {
   const lines = Array.isArray(text) ? text : [text];

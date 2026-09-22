@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Nav from "@/components/Nav";
+import { BrandMark } from "@/components/BrandLogo";
 import { CHAT_MODELS, DEFAULT_MODEL, modelSupportsThinking } from "@/lib/chatModels";
 
 interface Message {
@@ -343,7 +344,7 @@ export default function ChatPage() {
         >
           <div className="chat-sidebar-head">
             <div className="chat-sidebar-brand">
-              <div className="chat-sidebar-dot" />
+              <BrandMark size={22} tone="dark" className="chat-sidebar-mark" />
               <span>Dolese Tech AI</span>
             </div>
             <button
@@ -473,10 +474,7 @@ export default function ChatPage() {
             {messages.length === 0 ? (
               <div className="chat-welcome">
                 <div className="chat-welcome-logo">
-                  <svg viewBox="0 0 40 40" fill="none">
-                    <circle cx="20" cy="20" r="20" fill="#16235B" />
-                    <path d="M12 20h16M20 12v16" stroke="#1E9E48" strokeWidth="2.5" strokeLinecap="round" />
-                  </svg>
+                  <BrandMark size={56} />
                 </div>
                 <h2 className="chat-welcome-title">How can I help you?</h2>
                 <p className="chat-welcome-sub">

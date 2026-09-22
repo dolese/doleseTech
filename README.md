@@ -8,7 +8,7 @@ The frontend is the marketing landing page; the backend is a small, production-s
 
 - **Next.js 14** (App Router) + **React 18** + **TypeScript**
 - **zod** for request validation
-- Plain CSS design system (see `src/app/globals.css`) — warm cream/orange palette
+- Plain CSS design system (see `src/app/globals.css`) — brand kit palette (Deep Navy, Growth Green, Sky Blue, Cloud White), Sora + Instrument Sans
 - No database required to run: leads fall back to a local JSONL file
 
 ## Getting started

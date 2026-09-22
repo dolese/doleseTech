@@ -1,8 +1,8 @@
 import type { Figure } from "@/lib/exams";
 
-const NAVY = "#16235B";
-const GREEN = "#1E9E48";
-const GRID = "#DBE2EC";
+const NAVY = "#1B2435";
+const GREEN = "#2E8B2A";
+const GRID = "#DDE2E8";
 
 /** Renders a controlled diagram spec as SVG / an HTML table. Deterministic & safe. */
 export default function ExamFigure({ figure }: { figure: Figure }) {
@@ -66,7 +66,7 @@ function renderNumberLine(f: Figure) {
       {ticks.map((t, i) => (
         <g key={i}>
           <line x1={x(t)} y1={y - 5} x2={x(t)} y2={y + 5} stroke={NAVY} strokeWidth={1.2} />
-          <text x={x(t)} y={y + 20} textAnchor="middle" fontSize={11} fill="#41506E">{t}</text>
+          <text x={x(t)} y={y + 20} textAnchor="middle" fontSize={11} fill="#4A5568">{t}</text>
         </g>
       ))}
       {(f.marks ?? []).map((m, i) => (
@@ -96,7 +96,7 @@ function renderBar(f: Figure) {
       {[0, 0.25, 0.5, 0.75, 1].map((t, i) => (
         <g key={i}>
           <line x1={padL} y1={padT + plotH * (1 - t)} x2={W - padR} y2={padT + plotH * (1 - t)} stroke={GRID} strokeWidth={1} />
-          <text x={padL - 6} y={padT + plotH * (1 - t) + 4} textAnchor="end" fontSize={10} fill="#7B879C">{Math.round(maxV * t)}</text>
+          <text x={padL - 6} y={padT + plotH * (1 - t) + 4} textAnchor="end" fontSize={10} fill="#7A8699">{Math.round(maxV * t)}</text>
         </g>
       ))}
       <line x1={padL} y1={padT} x2={padL} y2={padT + plotH} stroke={NAVY} strokeWidth={1.4} />
@@ -106,13 +106,13 @@ function renderBar(f: Figure) {
         return (
           <g key={i}>
             <rect x={bx} y={yFor(v)} width={bw} height={padT + plotH - yFor(v)} fill={GREEN} rx={2} />
-            <text x={bx + bw / 2} y={padT + plotH + 14} textAnchor="middle" fontSize={10} fill="#41506E">{labels[i] ?? ""}</text>
+            <text x={bx + bw / 2} y={padT + plotH + 14} textAnchor="middle" fontSize={10} fill="#4A5568">{labels[i] ?? ""}</text>
             <text x={bx + bw / 2} y={yFor(v) - 4} textAnchor="middle" fontSize={10} fill={NAVY}>{v}</text>
           </g>
         );
       })}
-      {f.yLabel ? <text x={12} y={padT + plotH / 2} transform={`rotate(-90 12 ${padT + plotH / 2})`} textAnchor="middle" fontSize={11} fill="#41506E">{f.yLabel}</text> : null}
-      {f.xLabel ? <text x={padL + plotW / 2} y={H - 6} textAnchor="middle" fontSize={11} fill="#41506E">{f.xLabel}</text> : null}
+      {f.yLabel ? <text x={12} y={padT + plotH / 2} transform={`rotate(-90 12 ${padT + plotH / 2})`} textAnchor="middle" fontSize={11} fill="#4A5568">{f.yLabel}</text> : null}
+      {f.xLabel ? <text x={padL + plotW / 2} y={H - 6} textAnchor="middle" fontSize={11} fill="#4A5568">{f.xLabel}</text> : null}
     </svg>
   );
 }

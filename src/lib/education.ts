@@ -19,8 +19,8 @@ export interface Subject {
 }
 
 const PALETTE = {
-  navy: "#16235B",
-  green: "#1E9E48",
+  navy: "#1B2435",
+  green: "#2E8B2A",
   teal: "#0E7C86",
   blue: "#2657C7",
   plum: "#6B3FA0",

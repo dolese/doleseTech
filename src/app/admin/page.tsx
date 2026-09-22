@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import Nav from "@/components/Nav";
+import { BrandMark } from "@/components/BrandLogo";
 import Footer from "@/components/Footer";
 
 const STATUSES = ["new", "contacted", "qualified", "won", "lost"] as const;
@@ -294,7 +295,7 @@ export default function AdminPage() {
         >
           <div className="admin-sidebar-head">
             <div className="admin-sidebar-brand">
-              <span className="admin-sidebar-dot" />
+              <BrandMark size={22} tone="dark" className="admin-sidebar-mark" />
               <span>Dolese Admin</span>
             </div>
             <button

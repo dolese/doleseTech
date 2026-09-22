@@ -8,10 +8,10 @@ export default function manifest(): MetadataRoute.Manifest {
       "Dolese Tech — software, cloud infrastructure, cybersecurity, and Tanzania education materials.",
     start_url: "/",
     display: "standalone",
-    background_color: "#ffffff",
-    theme_color: "#16235B",
+    background_color: "#F4F6F8",
+    theme_color: "#1B2435",
     icons: [
-      { src: "/dolese-logo.png", type: "image/png", sizes: "954x480", purpose: "any" },
+      { src: "/icon.svg", type: "image/svg+xml", sizes: "any", purpose: "any" },
     ],
   };
 }

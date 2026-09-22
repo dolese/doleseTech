@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import BrandLogo from "./BrandLogo";
 
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
@@ -37,8 +38,7 @@ export default function Nav() {
   return (
     <nav className={scrolled ? "scrolled" : ""}>
       <a href="/" className="nav-logo">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/dolese-logo.png" alt="Dolese Tech — Your Marketplace. Your World." className="nav-logo-img" />
+        <BrandLogo />
       </a>
       <div className="nav-links">
         <a href="/#services">Services</a>
@@ -83,8 +83,7 @@ export default function Nav() {
       >
         <div className="nav-drawer-head">
           <a href="/" className="nav-drawer-logo" onClick={closeMenu}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/dolese-logo.png" alt="Dolese Tech" className="nav-logo-img" />
+            <BrandLogo />
           </a>
           <button
             type="button"
