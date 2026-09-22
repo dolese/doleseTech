@@ -42,6 +42,7 @@ export default function Nav() {
       </a>
       <div className="nav-links">
         <a href="/#services">Services</a>
+        <a href="/#products">Products</a>
         <a href="/about">About</a>
         <a href="/#process">Process</a>
         <a href="/#team">Team</a>
@@ -98,6 +99,7 @@ export default function Nav() {
 
         <div className="nav-drawer-links">
           <a href="/#services" onClick={closeMenu}>Services</a>
+          <a href="/#products" onClick={closeMenu}>Products</a>
           <a href="/#about" onClick={closeMenu}>About</a>
           <a href="/#process" onClick={closeMenu}>Process</a>
           <a href="/#team" onClick={closeMenu}>Team</a>

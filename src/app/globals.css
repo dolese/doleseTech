@@ -429,6 +429,60 @@ h2.section-title {
 }
 .svc-card:hover .svc-link { opacity: 1; }
 
+/* ── PRODUCTS ──────────────────────────────── */
+#products { background: var(--cream); }
+.product-feature {
+  display: grid; grid-template-columns: 1.1fr 1fr; gap: 48px; align-items: center;
+  background: var(--white); border: 1px solid var(--border-lt);
+  border-radius: 24px; padding: 48px; box-shadow: var(--shadow);
+}
+.product-kicker {
+  font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--blue-ink); margin-bottom: 10px;
+}
+.product-name {
+  font-family: var(--font-display); font-weight: 700; letter-spacing: -.03em;
+  font-size: clamp(1.9rem, 3vw, 2.5rem); line-height: 1.1; color: var(--text);
+  margin-bottom: 14px;
+}
+.product-lead { color: var(--text-mid); font-size: 1.02rem; line-height: 1.7; margin-bottom: 22px; max-width: 520px; }
+.product-list { list-style: none; display: flex; flex-direction: column; gap: 11px; margin-bottom: 30px; }
+.product-list li { display: flex; align-items: flex-start; gap: 12px; font-size: .94rem; color: var(--text-mid); line-height: 1.55; }
+.product-list .svc-check svg { width: 12px; height: 12px; }
+.product-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+.product-preview {
+  background: var(--navy); border-radius: 18px; overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+.pp-head { display: flex; align-items: center; gap: 6px; padding: 12px 16px; background: rgba(255,255,255,.05); border-bottom: 1px solid rgba(255,255,255,.07); }
+.pp-dot { width: 9px; height: 9px; border-radius: 50%; background: rgba(255,255,255,.18); }
+.pp-url { margin-left: 10px; font-size: .75rem; color: rgba(255,255,255,.55); background: rgba(255,255,255,.06); padding: 3px 12px; border-radius: 100px; }
+.pp-body { padding: 24px 24px 22px; }
+.pp-title { font-family: var(--font-display); font-weight: 600; color: #F4F6F8; font-size: 1.05rem; }
+.pp-sub { font-size: .8rem; color: rgba(255,255,255,.5); margin-top: 2px; margin-bottom: 18px; }
+.pp-bars { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; height: 170px; }
+.pp-bar { display: flex; flex-direction: column; align-items: center; gap: 6px; min-height: 0; }
+.pp-bar-track { flex: 1; width: 100%; display: flex; align-items: flex-end; min-height: 0; }
+.pp-bar-fill { width: 100%; border-radius: 6px 6px 2px 2px; min-height: 4px; }
+.pp-bar-n { font-size: .78rem; font-weight: 600; color: #F4F6F8; }
+.pp-bar-l { font-size: .72rem; color: rgba(255,255,255,.55); white-space: nowrap; }
+.pp-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.08); }
+.pp-stats strong { display: block; font-family: var(--font-display); font-size: 1.2rem; color: var(--green-brand); }
+.pp-stats span { font-size: .72rem; color: rgba(255,255,255,.55); }
+
+.product-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+.product-card {
+  display: block; text-decoration: none; color: inherit;
+  background: var(--white); border: 1px solid var(--border-lt);
+  border-radius: 20px; padding: 30px 32px;
+  transition: border-color .25s, box-shadow .25s, transform .25s;
+}
+.product-card:hover { border-color: var(--green-mid); box-shadow: var(--shadow-md); transform: translateY(-4px); }
+.product-card h3 { font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; letter-spacing: -.02em; margin-bottom: 8px; }
+.product-card p { font-size: .9rem; color: var(--text-muted); line-height: 1.65; }
+.product-card:hover .svc-link { opacity: 1; }
+
 /* ── ABOUT ─────────────────────────────────── */
 #about {
   display: grid; grid-template-columns: 1fr 1fr;
@@ -612,7 +666,7 @@ footer {
   padding: 72px max(64px, calc((100% - 1200px) / 2)) 40px;
 }
 .footer-top {
-  display: grid; grid-template-columns: 1.7fr 1fr 1fr 1fr 1fr;
+  display: grid; grid-template-columns: 1.6fr repeat(5, 1fr);
   gap: 48px; margin-bottom: 56px;
 }
 /* Footer logo — dark-tone wordmark so it stays legible on the navy panel */
@@ -673,6 +727,11 @@ footer {
 }
 
 /* ── RESPONSIVE ────────────────────────────── */
+/* Eight nav links need ~1120px to breathe; below that use the menu drawer. */
+@media (max-width: 1120px) {
+  .nav-links, .nav-ghost { display: none; }
+  .nav-menu-btn { display: inline-flex; }
+}
 @media (max-width: 900px) {
   nav { padding: 0 16px; }
   .nav-logo .brand-logo-mark { width: 32px; height: 32px; }
@@ -691,6 +750,10 @@ footer {
   section { padding: 64px 24px; }
   .services-top { flex-direction: column; align-items: flex-start; }
   .services-grid { grid-template-columns: 1fr; }
+  .product-feature { grid-template-columns: 1fr; padding: 28px 22px; gap: 32px; }
+  .product-row { grid-template-columns: 1fr; }
+  .product-card .svc-link { opacity: 1; }
+  .pp-bars { gap: 8px; height: 150px; }
   #about { grid-template-columns: 1fr; }
   .about-panel { display: none; }
   .team-grid { grid-template-columns: 1fr 1fr; }
@@ -703,7 +766,7 @@ footer {
   .contact-row { grid-template-columns: 1fr; }
 }
 
-@media (min-width: 901px) {
+@media (min-width: 1121px) {
   .nav-overlay,
   .nav-drawer {
     display: none;
