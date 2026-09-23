@@ -5,7 +5,7 @@ const MEMBERS = [
     name: "Selu Doto Isenge",
     role: "Founder & CEO",
     initials: "SI",
-    photo: "",
+    photo: "/selu-isenge.webp",
     wrapBg: "#E7ECF6",
     avatarBg: "var(--navy)",
   },
