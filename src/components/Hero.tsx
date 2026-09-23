@@ -39,22 +39,6 @@ export default function Hero() {
             <circle cx="48" cy="118" r="4" fill="#1B2435" fillOpacity="0.5" stroke="none" />
           </g>
         </svg>
-        <div className="hero-stage-bar">
-          <div className="hsb-stat">
-            <strong>99.98%</strong>
-            <span>Uptime</span>
-          </div>
-          <div className="hsb-divider" />
-          <div className="hsb-stat">
-            <strong>200+</strong>
-            <span>Projects delivered</span>
-          </div>
-          <div className="hsb-divider" />
-          <div className="hsb-stat">
-            <strong>98%</strong>
-            <span>Client retention</span>
-          </div>
-        </div>
       </div>
     </section>
   );

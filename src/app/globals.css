@@ -319,50 +319,6 @@ nav.scrolled {
   to   { opacity: 1; transform: translateY(0); }
 }
 .hero-stage-art { display: block; width: 100%; height: 300px; }
-.hero-stage-bar {
-  display: flex; align-items: center; justify-content: center;
-  gap: clamp(28px, 6vw, 72px);
-  padding: 26px 32px;
-  border-top: 1px solid var(--border-lt);
-  background: rgba(255,255,255,.7);
-  backdrop-filter: blur(8px);
-}
-.hsb-stat { text-align: center; }
-.hsb-stat strong {
-  display: block;
-  font-size: 1.7rem; font-weight: 600; letter-spacing: -.02em;
-  color: var(--text);
-}
-.hsb-stat span {
-  display: block; margin-top: 2px;
-  font-size: .82rem; color: var(--text-muted);
-}
-.hsb-divider { width: 1px; height: 34px; background: var(--border); }
-
-/* ── LOGOS ─────────────────────────────────── */
-.logos-bar {
-  padding: 32px 64px;
-  border-top: 1px solid var(--border-lt);
-  border-bottom: 1px solid var(--border-lt);
-  background: var(--white);
-  display: flex; align-items: center; gap: 48px; overflow: hidden;
-}
-.logos-label {
-  font-size: .75rem; text-transform: uppercase; letter-spacing: .1em;
-  color: var(--text-muted); white-space: nowrap; flex-shrink: 0;
-}
-.logos-track {
-  display: flex; gap: 56px; align-items: center;
-  animation: slide 24s linear infinite;
-}
-.logos-track span {
-  font-size: .9rem; font-weight: 500; color: var(--border);
-  white-space: nowrap; letter-spacing: .01em;
-  transition: color .2s;
-}
-.logos-track span:hover { color: var(--text-muted); }
-@keyframes slide { to { transform: translateX(-50%); } }
-
 /* ── SECTION BASE ──────────────────────────── */
 /* Full-bleed backgrounds, but content centred and capped at 1200px. */
 section { padding: 96px max(64px, calc((100% - 1200px) / 2)); }
@@ -484,10 +440,7 @@ h2.section-title {
 .product-card:hover .svc-link { opacity: 1; }
 
 /* ── ABOUT ─────────────────────────────────── */
-#about {
-  display: grid; grid-template-columns: 1fr 1fr;
-  gap: 80px; align-items: center;
-}
+#about { max-width: 780px; margin: 0 auto; }
 .about-copy .section-sub { margin-top: 16px; margin-bottom: 36px; }
 .about-pillars {
   display: flex; flex-direction: column; gap: 2px;
@@ -504,40 +457,6 @@ h2.section-title {
 }
 .pillar-title { font-size: .95rem; font-weight: 600; margin-bottom: 3px; }
 .pillar-desc { font-size: .875rem; color: var(--text-muted); line-height: 1.6; }
-
-/* About visual — warm stat panel */
-.about-panel {
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: 20px; overflow: hidden;
-  box-shadow: var(--shadow-md);
-}
-.about-panel-header {
-  background: var(--green);
-  padding: 28px 32px;
-}
-.about-panel-header p {
-  font-size: .85rem; color: rgba(255,255,255,.75); margin-bottom: 6px;
-}
-.about-panel-header h3 {
-  font-size: 2rem; font-weight: 600; color: #fff; letter-spacing: -.03em;
-}
-.about-stats {
-  padding: 24px 32px;
-  display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
-}
-.astat-num {
-  font-size: 1.75rem; font-weight: 600;
-  letter-spacing: -.03em; color: var(--text);
-}
-.astat-label { font-size: .8rem; color: var(--text-muted); margin-top: 2px; }
-.about-panel-footer {
-  border-top: 1px solid var(--border-lt);
-  padding: 20px 32px;
-  display: flex; align-items: center; gap: 10px;
-}
-.apf-dot { width: 8px; height: 8px; border-radius: 50%; background: #3A8A52; }
-.about-panel-footer p { font-size: .8rem; color: var(--text-muted); }
 
 /* ── PROCESS ───────────────────────────────── */
 #process { background: var(--white); }
@@ -570,6 +489,7 @@ h2.section-title {
   margin-bottom: 52px; gap: 40px;
 }
 .team-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.team-grid.is-single { grid-template-columns: minmax(0, 300px); }
 .team-card {
   background: var(--white);
   border: 1px solid var(--border);
@@ -588,6 +508,7 @@ h2.section-title {
   font-size: 1.3rem; font-weight: 600; color: #fff;
   letter-spacing: -.01em;
 }
+.t-photo { width: 100%; height: 100%; object-fit: cover; display: block; }
 .team-info { padding: 18px 18px 20px; }
 .t-name { font-size: .95rem; font-weight: 600; margin-bottom: 3px; }
 .t-role { font-size: .8rem; color: var(--text-muted); }
@@ -747,9 +668,6 @@ footer {
   .hero { padding: 116px 24px 72px; }
   .hero-stage { margin-top: 56px; }
   .hero-stage-art { height: 190px; }
-  .hero-stage-bar { gap: 16px; padding: 20px 14px; }
-  .hsb-stat strong { font-size: 1.25rem; }
-  .hsb-stat span { font-size: .7rem; }
   section { padding: 64px 24px; }
   .services-top { flex-direction: column; align-items: flex-start; }
   .services-grid { grid-template-columns: 1fr; }
@@ -757,10 +675,7 @@ footer {
   .product-row { grid-template-columns: 1fr; }
   .product-card .svc-link { opacity: 1; }
   .pp-bars { gap: 8px; height: 150px; }
-  #about { grid-template-columns: 1fr; }
-  .about-panel { display: none; }
   .team-grid { grid-template-columns: 1fr 1fr; }
-  .logos-bar { padding: 24px; }
   .footer-top { grid-template-columns: 1fr 1fr; gap: 32px; }
   footer { padding: 48px 24px 28px; }
   .footer-bottom { flex-direction: column; gap: 12px; }
@@ -1031,21 +946,12 @@ table.sow-table, table.lp-table { width: 100%; border-collapse: collapse; backgr
 .value-card h3 { font-size: 1.05rem; font-weight: 600; color: var(--text); margin-bottom: 8px; }
 .value-card p { font-size: .9rem; line-height: 1.65; color: var(--text-muted); }
 
-.about-stats-band {
-  background: var(--navy); color: #fff;
-  padding: 56px max(64px, calc((100% - 1000px) / 2));
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; text-align: center;
-}
-.about-stat-num { font-size: 2.4rem; font-weight: 600; letter-spacing: -.03em; }
-.about-stat-label { font-size: .85rem; color: rgba(255,255,255,.6); margin-top: 4px; }
-
 @media (max-width: 900px) {
   .about-hero { padding: 108px 24px 40px; }
   .about-story { padding: 56px 24px; }
   .about-story-grid { grid-template-columns: 1fr; gap: 36px; }
   .about-values { padding: 16px 24px 56px; }
   .values-grid { grid-template-columns: 1fr; }
-  .about-stats-band { grid-template-columns: 1fr 1fr; gap: 28px; padding: 44px 24px; }
 }
 
 .detail-section { padding: 56px max(64px, calc((100% - 1000px) / 2)) 0; }

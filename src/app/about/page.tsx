@@ -21,15 +21,8 @@ const VALUES = [
   },
   {
     title: "Long-term partnership",
-    desc: "We measure success by your outcomes, not ours. Most of our clients have been with us for over five years.",
+    desc: "We measure success by your outcomes, not ours. We stay with a system after launch, not just until handover.",
   },
-];
-
-const STATS = [
-  { num: "12", label: "Years building" },
-  { num: "200+", label: "Projects delivered" },
-  { num: "18", label: "Industries served" },
-  { num: "98%", label: "Client retention" },
 ];
 
 export default function AboutPage() {
@@ -60,13 +53,12 @@ export default function AboutPage() {
             <div className="reveal">
               <h2 className="detail-h2">Our story</h2>
               <p>
-                Founded in 2013, Dolese Tech started as a small team with high standards. We took on
-                the work other teams shied away from — the systems that had to be reliable, secure
-                and built to last.
+                Dolese Tech started as a small team with high standards, taking on the work other
+                teams shied away from — the systems that had to be reliable, secure and built to
+                last.
               </p>
               <p>
-                Those standards haven&apos;t changed, just the scale at which we apply them. Today we
-                deliver across the full technology stack, and we&apos;ve extended the same care to
+                Those standards haven&apos;t changed. We deliver across the full technology stack, and we&apos;ve extended the same care to
                 education — building schemes of work, lesson plans and lesson notes aligned to
                 Tanzania&apos;s competence-based curriculum.
               </p>
@@ -102,15 +94,6 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* ── STATS ──────────────────────────────────────── */}
-        <section className="about-stats-band">
-          {STATS.map((s) => (
-            <div className="about-stat" key={s.label}>
-              <div className="about-stat-num">{s.num}</div>
-              <div className="about-stat-label">{s.label}</div>
-            </div>
-          ))}
-        </section>
 
         {/* ── TEAM ───────────────────────────────────────── */}
         <Team />

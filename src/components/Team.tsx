@@ -1,8 +1,14 @@
+/* The people behind Dolese Tech. `photo` is a path under public/; without one
+   the card falls back to initials on a brand-navy tile. */
 const MEMBERS = [
-  { name: "Marcus Dolese", role: "Founder & CEO", initials: "MD", wrapBg: "#E7ECF6", avatarBg: "var(--navy)" },
-  { name: "Sofia Reyes", role: "Chief Technology Officer", initials: "SR", wrapBg: "#EAE8F4", avatarBg: "#6366F1" },
-  { name: "James Kim", role: "Head of Engineering", initials: "JK", wrapBg: "#E8F2F5", avatarBg: "#0891B2" },
-  { name: "Amara Li", role: "Director of Product", initials: "AL", wrapBg: "#E8F4EC", avatarBg: "#16A34A" },
+  {
+    name: "Selu Doto Isenge",
+    role: "Founder & CEO",
+    initials: "SI",
+    photo: "",
+    wrapBg: "#E7ECF6",
+    avatarBg: "var(--navy)",
+  },
 ];
 
 export default function Team() {
@@ -15,13 +21,17 @@ export default function Team() {
             <strong>People</strong> behind the work
           </h2>
         </div>
-        <a href="/#cta" className="btn-outline">We&apos;re hiring →</a>
       </div>
-      <div className="team-grid">
+      <div className={`team-grid${MEMBERS.length === 1 ? " is-single" : ""}`}>
         {MEMBERS.map((m) => (
           <div className="team-card reveal" key={m.name}>
             <div className="team-avatar-wrap" style={{ background: m.wrapBg }}>
-              <div className="t-avatar" style={{ background: m.avatarBg }}>{m.initials}</div>
+              {m.photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={m.photo} alt={m.name} className="t-photo" />
+              ) : (
+                <div className="t-avatar" style={{ background: m.avatarBg }}>{m.initials}</div>
+              )}
             </div>
             <div className="team-info">
               <div className="t-name">{m.name}</div>
