@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { contactSchema } from "@/lib/validation";
-import { saveLead, type Lead } from "@/lib/leads";
+import type { Lead } from "@/lib/leads";
+import { storeLead } from "@/lib/leadStore";
 import { sendLeadNotification } from "@/lib/email";
 import { rateLimit } from "@/lib/rateLimit";
 
@@ -57,7 +58,7 @@ export async function POST(req: NextRequest) {
   // failed write on its own must not turn the visitor away.
   let stored = false;
   try {
-    stored = await saveLead(lead);
+    stored = (await storeLead(lead)) !== "none";
   } catch (err) {
     console.error("Failed to persist lead:", err);
   }

@@ -1468,6 +1468,61 @@ table.sow-table, table.lp-table { width: 100%; border-collapse: collapse; backgr
 }
 .admin-search:focus { border-color: var(--navy); }
 .admin-count { font-size: .85rem; color: var(--text-muted); white-space: nowrap; }
+/* ── ADMIN: overview alerts, recent rows, systems ─────────── */
+/* The main column is light (only the sidebar is navy), so these follow the
+   page's light surface tokens rather than the sidebar's. */
+.admin-section-h { margin: 34px 0 14px; }
+.admin-alerts { display: flex; flex-direction: column; gap: 8px; margin-bottom: 22px; }
+.admin-alert {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; border-radius: 12px; font-size: .88rem;
+  border: 1px solid var(--border);
+  background: var(--white); color: var(--text-mid);
+}
+.admin-alert-warn { border-color: #FDE68A; background: #FFFBEB; color: #92400E; }
+.admin-alert-bad { border-color: #FECACA; background: #FEF2F2; color: #B42318; }
+.admin-alert-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+.admin-nav-count-alert { background: rgba(248,113,113,.22); color: #FCA5A5; }
+
+.admin-recent { display: flex; flex-direction: column; gap: 8px; }
+.admin-recent-row {
+  display: grid; grid-template-columns: 96px 1.1fr 1.4fr auto; gap: 14px; align-items: center;
+  width: 100%; text-align: left; cursor: pointer;
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px 16px; font: inherit; color: var(--text);
+  transition: border-color .2s, box-shadow .2s;
+}
+.admin-recent-row:hover { border-color: var(--green-mid); box-shadow: var(--shadow); }
+.admin-recent-name { font-weight: 600; font-size: .9rem; }
+.admin-recent-co { font-size: .85rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-recent-date { font-size: .78rem; color: var(--text-muted); white-space: nowrap; }
+
+.admin-sys-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.admin-sys-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.admin-sys-row { display: grid; grid-template-columns: 10px 1fr auto; gap: 12px; align-items: center; font-size: .88rem; }
+.admin-sys-dot { width: 10px; height: 10px; border-radius: 50%; }
+.admin-sys-ok { background: #16A34A; }
+.admin-sys-bad { background: #DC2626; }
+.admin-sys-neutral { background: var(--text-muted); }
+.admin-sys-unknown { background: var(--border); }
+.admin-sys-label { color: var(--text); }
+.admin-sys-value { color: var(--text-muted); font-size: .82rem; text-align: right; }
+.admin-sys-cta { margin-top: 18px; display: inline-flex; font-size: .85rem; padding: 9px 18px; }
+.admin-sys-note { font-size: .82rem; color: var(--text-muted); margin: 10px 0 18px; max-width: 640px; line-height: 1.6; }
+
+.admin-console-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.admin-console-card {
+  display: flex; flex-direction: column; gap: 4px; text-decoration: none;
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 14px; padding: 18px 20px; color: var(--text);
+  transition: border-color .2s, box-shadow .2s, transform .2s;
+}
+.admin-console-card:hover { border-color: var(--green-mid); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.admin-console-name { font-weight: 600; font-size: .92rem; }
+.admin-console-desc { font-size: .8rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 10px; }
+.admin-console-card .svc-link { opacity: 1; color: var(--green); margin-top: auto; }
+.admin-count-muted { color: var(--text-muted); }
+
 .admin-empty { text-align: center; color: var(--text-muted); padding: 64px 0; font-size: .95rem; }
 
 .admin-leads { display: flex; flex-direction: column; gap: 10px; }
@@ -1584,7 +1639,12 @@ table.sow-table, table.lp-table { width: 100%; border-collapse: collapse; backgr
 .admin-chart-label { font-size: .62rem; color: var(--text-muted); white-space: nowrap; }
 
 .admin-pipeline { display: flex; flex-direction: column; gap: 12px; }
-.admin-pipeline-row { display: flex; align-items: center; gap: 10px; }
+.admin-pipeline-row {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; background: none; border: 0; padding: 2px 0;
+  font: inherit; color: inherit; text-align: left; cursor: pointer;
+}
+.admin-pipeline-row:hover .admin-pipeline-track { background: var(--cream-dark); }
 .admin-pipeline-row .admin-badge { min-width: 80px; justify-content: center; }
 .admin-pipeline-track { flex: 1; height: 8px; background: var(--cream-dark); border-radius: 999px; overflow: hidden; }
 .admin-pipeline-fill { height: 100%; border-radius: 999px; transition: width .25s ease; }
@@ -2617,3 +2677,9 @@ table.sow-table, table.lp-table { width: 100%; border-collapse: collapse; backgr
 .math-p { display: inline; }
 .exam-q-text .katex, .exam-q-answer .katex, .exam-q-options .katex { font-size: 1.04em; }
 .exam-q-answer .katex-display, .exam-q-text .katex-display { margin: 6px 0; }
+
+@media (max-width: 900px) {
+  .admin-sys-grid { grid-template-columns: 1fr; }
+  .admin-recent-row { grid-template-columns: 80px 1fr; row-gap: 6px; }
+  .admin-recent-date { grid-column: 2; }
+}
