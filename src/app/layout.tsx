@@ -1,11 +1,32 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import ChatLauncher from "@/components/ChatLauncher";
 
+const TITLE = "Dolese Tech — Technology that works as hard as you do";
+
 export const metadata: Metadata = {
-  title: "Dolese Tech — Technology that works as hard as you do",
-  description:
-    "Dolese Tech builds software, cloud systems, and data infrastructure for organizations that need things done right.",
+  metadataBase: new URL(SITE_URL),
+  title: TITLE,
+  description: SITE_DESCRIPTION,
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    title: TITLE,
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
+    locale: "en_US",
+    // Absolute: some scrapers ignore metadataBase, and a relative URL also
+    // resolves against localhost in development.
+    images: [{ url: `${SITE_URL}/og.png`, width: 1200, height: 630, alt: SITE_NAME }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: SITE_DESCRIPTION,
+    images: [`${SITE_URL}/og.png`],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

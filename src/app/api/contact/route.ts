@@ -52,21 +52,34 @@ export async function POST(req: NextRequest) {
     userAgent: req.headers.get("user-agent"),
   };
 
+  // An enquiry counts as received once EITHER path holds it: written to disk,
+  // or emailed. A host with a read-only filesystem has only the second, so a
+  // failed write on its own must not turn the visitor away.
+  let stored = false;
   try {
-    await saveLead(lead);
+    stored = await saveLead(lead);
   } catch (err) {
     console.error("Failed to persist lead:", err);
-    return NextResponse.json(
-      { ok: false, error: "We couldn't save your message. Please try again." },
-      { status: 500 },
-    );
   }
 
-  // Email is best-effort: a delivery failure must not lose a saved lead.
+  let emailed = false;
   try {
-    await sendLeadNotification(lead);
+    emailed = await sendLeadNotification(lead);
   } catch (err) {
-    console.error("Lead saved but email notification failed:", err);
+    console.error("Lead email notification failed:", err);
+  }
+
+  if (!stored && !emailed) {
+    // Nothing is holding this message, so say so rather than accept it and
+    // drop it. The contact section offers email and WhatsApp as a way through.
+    console.error("Lead not retained: no writable storage, no email configured.", { id: lead.id });
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "We couldn't save your message. Please email or WhatsApp us instead.",
+      },
+      { status: 500 },
+    );
   }
 
   return NextResponse.json({ ok: true }, { status: 201 });
