@@ -12,15 +12,36 @@ import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
 let client: NeonQueryFunction<false, false> | null | undefined;
 let schemaReady: Promise<void> | null = null;
 
+/**
+ * Vercel's Neon integration injects the connection string under its own
+ * names, so accept those as well as a hand-set DATABASE_URL. The unpooled
+ * variant is last: fine for the few queries this app makes, and it avoids
+ * failing outright when only that one is present.
+ */
+const URL_VARS = [
+  "DATABASE_URL",
+  "POSTGRES_URL",
+  "DATABASE_POSTGRES_URL",
+  "POSTGRES_URL_NON_POOLING",
+] as const;
+
+function connectionString(): string | null {
+  for (const name of URL_VARS) {
+    const value = process.env[name]?.trim();
+    if (value) return value;
+  }
+  return null;
+}
+
 export function db(): NeonQueryFunction<false, false> | null {
   if (client !== undefined) return client;
-  const url = process.env.DATABASE_URL?.trim();
+  const url = connectionString();
   client = url ? neon(url) : null;
   return client;
 }
 
 export function isDbConfigured(): boolean {
-  return Boolean(process.env.DATABASE_URL?.trim());
+  return connectionString() !== null;
 }
 
 /**
