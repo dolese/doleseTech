@@ -24,9 +24,9 @@ export default function About() {
           <strong>for people who ship</strong>
         </h2>
         <p className="section-sub">
-          Dolese Tech is a small team with high standards, building software
-          for organizations that need things done right — and teaching
-          materials for Tanzania&apos;s classrooms.
+          Founded in 2024, Dolese Tech is a small team with high standards,
+          building software for organizations that need things done right — and
+          teaching materials for Tanzania&apos;s classrooms.
         </p>
 
         <div className="about-pillars">

@@ -53,9 +53,9 @@ export default function AboutPage() {
             <div className="reveal">
               <h2 className="detail-h2">Our story</h2>
               <p>
-                Dolese Tech started as a small team with high standards, taking on the work other
-                teams shied away from — the systems that had to be reliable, secure and built to
-                last.
+                Founded in 2024, Dolese Tech started as a small team with high standards, taking on
+                the work other teams shied away from — the systems that had to be reliable, secure
+                and built to last.
               </p>
               <p>
                 Those standards haven&apos;t changed. We deliver across the full technology stack, and we&apos;ve extended the same care to
