@@ -26,7 +26,7 @@ export default function Footer() {
         </div>
         <div className="footer-col">
           <h4>Products</h4>
-          <a href="https://results.dolese.tech">ResultsPortal</a>
+          <a href="/products/resultsportal">ResultsPortal</a>
           <a href="https://sokoplus.co.tz">SokoPlus Marketplace</a>
           <a href="/exams">Exams Composer</a>
         </div>

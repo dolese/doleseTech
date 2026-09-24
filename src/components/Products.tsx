@@ -62,7 +62,7 @@ export default function Products() {
             <a href={RESULTS_URL} className="btn-filled" target="_blank" rel="noopener">
               Visit ResultsPortal →
             </a>
-            <a href="#cta" className="btn-outline">Talk to us</a>
+            <a href="/products/resultsportal" className="btn-outline">What it does →</a>
           </div>
         </div>
 
