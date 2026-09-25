@@ -647,7 +647,7 @@ footer {
 .footer-social { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
 .footer-col .footer-social-link {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 32px; height: 32px; margin-bottom: 0;
+  width: 30px; height: 30px; margin-bottom: 0;
   border-radius: 10px; border: 1px solid rgba(255,255,255,.12);
   color: rgba(255,255,255,.62);
   transition: color .15s, border-color .15s, background .15s;
@@ -661,6 +661,12 @@ footer {
   transition: color .15s;
 }
 .f-nav a:hover { color: rgba(255,255,255,.7); }
+
+/* Between phone and full desktop, six footer columns are too narrow: text
+   wraps mid-link and the icon row breaks. Three columns by two rows instead. */
+@media (max-width: 1200px) and (min-width: 901px) {
+  .footer-top { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 40px; }
+}
 
 /* ── SCROLL REVEAL ─────────────────────────── */
 .reveal {
@@ -705,6 +711,8 @@ footer {
   .pp-bars { gap: 8px; height: 150px; }
   .team-grid { grid-template-columns: 1fr 1fr; }
   .footer-top { grid-template-columns: 1fr 1fr; gap: 32px; }
+  /* Connect is last: give its icon row the full width so it stays on one line. */
+  .footer-top > .footer-col:last-child { grid-column: 1 / -1; }
   footer { padding: 48px 24px 28px; }
   .footer-bottom { flex-direction: column; gap: 12px; }
   .process-row { grid-template-columns: 40px 1fr; }
