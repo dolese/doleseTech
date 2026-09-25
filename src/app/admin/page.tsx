@@ -245,6 +245,45 @@ export default function AdminPage() {
     }
   }
 
+  async function removeLead(lead: Lead) {
+    // Deleting is permanent, so name the lead in the question.
+    const ok = window.confirm(
+      `Delete the enquiry from ${lead.name}${lead.company ? ` (${lead.company})` : ""}?\n\n` +
+        "This removes it from the dashboard for good. The notification email already sent is not affected.",
+    );
+    if (!ok) return;
+
+    setSavingId(lead.id);
+    setError("");
+    try {
+      const res = await fetch("/api/admin/leads", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: lead.id }),
+      });
+      if (res.status === 401) {
+        setAuthed(false);
+        return;
+      }
+      if (!res.ok && res.status !== 404) {
+        setError("Could not delete that enquiry.");
+        return;
+      }
+      // 404 means it is already gone, which is the outcome asked for.
+      setLeads((prev) => prev.filter((l) => l.id !== lead.id));
+      setNoteDrafts((prev) => {
+        const next = { ...prev };
+        delete next[lead.id];
+        return next;
+      });
+      setExpanded(null);
+    } catch {
+      setError("Could not reach the server.");
+    } finally {
+      setSavingId(null);
+    }
+  }
+
   // ── Derived analytics ───────────────────────────────────
   const stats = useMemo(() => {
     const now = new Date();
@@ -401,7 +440,7 @@ export default function AdminPage() {
         >
           <div className="admin-sidebar-head">
             <div className="admin-sidebar-brand">
-              <BrandMark size={22} tone="dark" className="admin-sidebar-mark" />
+              <BrandMark size={24} tone="light" className="admin-sidebar-mark" />
               <span>Dolese Admin</span>
             </div>
             <button
@@ -420,14 +459,20 @@ export default function AdminPage() {
               className={`admin-nav-item ${section === "overview" ? "active" : ""}`}
               onClick={() => goTo("overview")}
             >
-              <span>Overview</span>
+              <span className="admin-nav-label">
+                <NavIcon d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z" />
+                Overview
+              </span>
               {alerts.length > 0 && <span className="admin-nav-count admin-nav-count-alert">{alerts.length}</span>}
             </button>
             <button
               className={`admin-nav-item ${section === "systems" ? "active" : ""}`}
               onClick={() => goTo("systems")}
             >
-              <span>Systems</span>
+              <span className="admin-nav-label">
+                <NavIcon d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                Systems
+              </span>
             </button>
 
             <span className="admin-sidebar-heading">Pipeline</span>
@@ -435,7 +480,10 @@ export default function AdminPage() {
               className={`admin-nav-item ${section === "leads" && statusFilter === "all" ? "active" : ""}`}
               onClick={() => goTo("leads", "all")}
             >
-              <span>All leads</span>
+              <span className="admin-nav-label">
+                <NavIcon d="M22 12h-6l-2 3h-4l-2-3H2M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+                All leads
+              </span>
               <span className="admin-nav-count">{total}</span>
             </button>
             {STATUSES.map((s) => (
@@ -720,6 +768,14 @@ export default function AdminPage() {
                             >
                               Reply by email
                             </a>
+                            <button
+                              type="button"
+                              className="admin-delete-btn"
+                              disabled={savingId === lead.id}
+                              onClick={() => removeLead(lead)}
+                            >
+                              {savingId === lead.id ? "Working…" : "Delete"}
+                            </button>
                           </div>
                         </div>
                       )}
@@ -815,6 +871,26 @@ export default function AdminPage() {
       </div>
       <Footer />
     </>
+  );
+}
+
+/** Small stroke icon for the sidebar's main items (Feather-style, 24px grid). */
+function NavIcon({ d }: { d: string }) {
+  return (
+    <svg
+      className="admin-nav-icon"
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d={d} />
+    </svg>
   );
 }
 

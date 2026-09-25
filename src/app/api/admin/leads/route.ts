@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminConfigured, requestHasAdminSession } from "@/lib/adminAuth";
 import { isLeadStatus } from "@/lib/leadStatus";
-import { listLeads, storageMode, updateLeadMeta } from "@/lib/leadStore";
+import { deleteLead, listLeads, storageMode, updateLeadMeta } from "@/lib/leadStore";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -66,5 +66,33 @@ export async function PATCH(req: NextRequest) {
   } catch (err) {
     console.error("Failed to update lead status:", err);
     return NextResponse.json({ error: "Failed to update lead" }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  const denied = authorize(req);
+  if (denied) return denied;
+
+  let body: { id?: unknown };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  const id = typeof body?.id === "string" ? body.id.trim() : "";
+  if (!id) {
+    return NextResponse.json({ error: "A lead id is required." }, { status: 400 });
+  }
+
+  try {
+    const removed = await deleteLead(id);
+    if (!removed) {
+      return NextResponse.json({ error: "Lead not found." }, { status: 404 });
+    }
+    return NextResponse.json({ id, deleted: true });
+  } catch (err) {
+    console.error("Failed to delete lead:", err);
+    return NextResponse.json({ error: "Failed to delete lead" }, { status: 500 });
   }
 }

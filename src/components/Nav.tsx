@@ -36,7 +36,7 @@ export default function Nav() {
   const closeMenu = () => setMenuOpen(false);
 
   return (
-    <nav className={scrolled ? "scrolled" : ""}>
+    <nav className={`site-nav${scrolled ? " scrolled" : ""}`}>
       <a href="/" className="nav-logo">
         <BrandLogo />
       </a>

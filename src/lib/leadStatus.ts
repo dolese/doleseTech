@@ -64,3 +64,11 @@ export async function updateLeadMeta(
   await fs.writeFile(file, JSON.stringify(store, null, 2), "utf8");
   return meta;
 }
+
+/** Drop a deleted lead's status and note, so none is left orphaned. */
+export async function removeLeadMeta(id: string): Promise<void> {
+  const store = await readStatusStore();
+  if (!(id in store)) return;
+  delete store[id];
+  await fs.writeFile(statusFilePath(), JSON.stringify(store, null, 2), "utf8");
+}

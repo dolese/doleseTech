@@ -5,6 +5,7 @@ import { saveLead as appendToFile, type Lead } from "./leads";
 import {
   DEFAULT_STATUS,
   readStatusStore,
+  removeLeadMeta as removeFileMeta,
   updateLeadMeta as updateFileMeta,
   type LeadMeta,
   type LeadStatus,
@@ -114,14 +115,53 @@ export async function updateLeadMeta(
   return updateFileMeta(id, patch);
 }
 
+/**
+ * Remove a lead for good — for spam, tests and duplicates. Returns false when
+ * no lead had that id. The notification email already sent is untouched.
+ */
+export async function deleteLead(id: string): Promise<boolean> {
+  const sql = db();
+  if (sql) {
+    await ensureSchema();
+    const rows = (await sql`DELETE FROM leads WHERE id = ${id} RETURNING id`) as unknown[];
+    return rows.length > 0;
+  }
+
+  // File store: rewrite the log without the line, then drop its status entry.
+  const file = leadsFilePath();
+  const raw = await fs.readFile(file, "utf8").catch(() => "");
+  let found = false;
+  const kept = raw
+    .split("\n")
+    .filter(Boolean)
+    .filter((line) => {
+      try {
+        if ((JSON.parse(line) as Lead).id === id) {
+          found = true;
+          return false;
+        }
+      } catch {
+        /* keep lines we cannot parse rather than silently lose them */
+      }
+      return true;
+    });
+  if (!found) return false;
+  await fs.writeFile(file, kept.length ? kept.join("\n") + "\n" : "", "utf8");
+  await removeFileMeta(id);
+  return true;
+}
+
 /** Where this deployment keeps leads, for the admin systems view. */
 export function storageMode(): "postgres" | "file" {
   return isDbConfigured() ? "postgres" : "file";
 }
 
+function leadsFilePath(): string {
+  return process.env.LEADS_FILE?.trim() || path.join(process.cwd(), "data", "leads.jsonl");
+}
+
 async function readFileLeads(): Promise<LeadRecord[]> {
-  const file = process.env.LEADS_FILE?.trim() || path.join(process.cwd(), "data", "leads.jsonl");
-  const raw = await fs.readFile(file, "utf8").catch(() => "");
+  const raw = await fs.readFile(leadsFilePath(), "utf8").catch(() => "");
   const meta = await readStatusStore();
 
   return raw
