@@ -4,20 +4,28 @@ import { z } from "zod";
 import { isAllowedModel, DEFAULT_MODEL, modelSupportsThinking, modelProvider } from "@/lib/chatModels";
 import { geminiKey, geminiStream } from "@/lib/gemini";
 import { classifyAiError } from "@/lib/aiErrors";
+import { guardAi } from "@/lib/limits";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+/** Whole-conversation ceiling. Every message is re-sent each turn, so a long
+ *  chat costs more per reply; this caps the input of any single call. */
+const MAX_CONVERSATION_CHARS = 24_000;
 
 const chatBodySchema = z.object({
   messages: z
     .array(
       z.object({
         role: z.enum(["user", "assistant"]),
-        content: z.string().min(1).max(8000),
+        content: z.string().min(1).max(6000),
       }),
     )
     .min(1)
-    .max(40),
+    .max(30)
+    .refine((msgs) => msgs.reduce((n, m) => n + m.content.length, 0) <= MAX_CONVERSATION_CHARS, {
+      message: "This conversation is too long. Please start a new chat.",
+    }),
   model: z.string().optional(),
   thinking: z.boolean().optional(),
 });
@@ -41,14 +49,19 @@ export async function POST(req: NextRequest) {
 
   const parse = chatBodySchema.safeParse(body);
   if (!parse.success) {
+    // Surface a readable reason (e.g. "conversation too long") rather than a generic one.
+    const reason = parse.error.issues.find((i) => i.code === "custom")?.message;
     return NextResponse.json(
-      { error: "Invalid request body", details: parse.error.flatten() },
+      { error: reason ?? "Invalid request body", details: parse.error.flatten() },
       { status: 422 },
     );
   }
 
   const model = parse.data.model && isAllowedModel(parse.data.model) ? parse.data.model : DEFAULT_MODEL;
   const provider = modelProvider(model);
+
+  const denied = await guardAi(req, "chat", model);
+  if (denied) return denied;
   const encoder = new TextEncoder();
   const sseHeaders = {
     "Content-Type": "text/event-stream; charset=utf-8",

@@ -12,6 +12,7 @@ import {
   type ExamConfig,
 } from "@/lib/exams";
 import { classifyAiError } from "@/lib/aiErrors";
+import { guardAi } from "@/lib/limits";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -64,6 +65,10 @@ export async function POST(req: NextRequest) {
   const model = cfg.model && isAllowedModel(cfg.model) ? cfg.model : DEFAULT_EXAM_MODEL;
   const configError = providerConfigError(modelProvider(model));
   if (configError) return NextResponse.json({ error: configError }, { status: 503 });
+
+  // A paper can take a generation call plus a repair pass, so it is charged as two.
+  const denied = await guardAi(req, "exams", model, { calls: 2 });
+  if (denied) return denied;
 
   try {
     const { system, user } = buildExamPrompt(cfg, cfg.instruction);

@@ -4,7 +4,7 @@ import { contactSchema } from "@/lib/validation";
 import type { Lead } from "@/lib/leads";
 import { storeLead } from "@/lib/leadStore";
 import { sendLeadNotification } from "@/lib/email";
-import { rateLimit } from "@/lib/rateLimit";
+import { hit } from "@/lib/limits";
 
 export const runtime = "nodejs";
 
@@ -17,7 +17,7 @@ function clientIp(req: NextRequest): string | null {
 export async function POST(req: NextRequest) {
   const ip = clientIp(req);
 
-  const limit = rateLimit(`contact:${ip ?? "unknown"}`, { limit: 5, windowMs: 60_000 });
+  const limit = await hit(`contact:${ip ?? "unknown"}`, { limit: 5, windowMs: 60_000 });
   if (!limit.allowed) {
     return NextResponse.json(
       { ok: false, error: "Too many requests. Please try again shortly." },

@@ -70,6 +70,15 @@ export function ensureSchema(): Promise<void> {
         )
       `;
       await sql`CREATE INDEX IF NOT EXISTS leads_created_at_idx ON leads (created_at DESC)`;
+      // Fixed-window counters shared by every serverless instance (see limits.ts).
+      await sql`
+        CREATE TABLE IF NOT EXISTS rate_limits (
+          key          TEXT NOT NULL,
+          window_start BIGINT NOT NULL,
+          count        INTEGER NOT NULL DEFAULT 0,
+          PRIMARY KEY (key, window_start)
+        )
+      `;
     })().catch((err) => {
       // Let the next request try again rather than caching the failure.
       schemaReady = null;

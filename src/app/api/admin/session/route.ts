@@ -7,7 +7,7 @@ import {
   requestHasAdminSession,
   sessionCookieOptions,
 } from "@/lib/adminAuth";
-import { rateLimit } from "@/lib/rateLimit";
+import { hit } from "@/lib/limits";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,9 +34,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Slow down guessing. The window is per IP, which is the most a single
-  // instance can do without shared state.
-  const limit = rateLimit(`admin-login:${clientIp(req)}`, { limit: 5, windowMs: 5 * 60_000 });
+  // Slow down guessing: five attempts per address per five minutes, counted
+  // across every instance.
+  const limit = await hit(`admin-login:${clientIp(req)}`, { limit: 5, windowMs: 5 * 60_000 });
   if (!limit.allowed) {
     return NextResponse.json(
       { error: "Too many attempts. Try again shortly." },

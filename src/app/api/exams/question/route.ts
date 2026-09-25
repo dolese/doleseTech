@@ -3,6 +3,7 @@ import { isAllowedModel, modelProvider } from "@/lib/chatModels";
 import { complete, providerConfigError, QUESTION_MAX_TOKENS } from "@/lib/aiComplete";
 import { buildQuestionPrompt, parseReplacementQuestion, questionRegenSchema } from "@/lib/exams";
 import { classifyAiError } from "@/lib/aiErrors";
+import { guardAi } from "@/lib/limits";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -36,6 +37,9 @@ export async function POST(req: NextRequest) {
 
   const configError = providerConfigError(modelProvider(model));
   if (configError) return NextResponse.json({ error: configError }, { status: 503 });
+
+  const denied = await guardAi(req, "exams", model);
+  if (denied) return denied;
 
   try {
     const { system, user } = buildQuestionPrompt(reqData);
