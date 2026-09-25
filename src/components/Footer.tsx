@@ -1,5 +1,4 @@
 import BrandLogo from "./BrandLogo";
-import WhatsAppLink from "./WhatsAppLink";
 import SocialLinks from "./SocialLinks";
 
 export default function Footer() {
@@ -47,7 +46,6 @@ export default function Footer() {
         <div className="footer-col">
           <h4>Connect</h4>
           <a href="mailto:support@dolese.tech">support@dolese.tech</a>
-          <WhatsAppLink />
           <SocialLinks />
         </div>
       </div>
