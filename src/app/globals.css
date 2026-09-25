@@ -118,14 +118,6 @@ body {
   background: var(--white) !important;
 }
 .nav-chat-link:hover { border-color: var(--navy) !important; background: var(--cream) !important; }
-.nav-ghost {
-  padding: 9px 18px; border-radius: 100px;
-  background: transparent; color: var(--text-mid);
-  font-size: .9rem; font-weight: 500;
-  text-decoration: none;
-  transition: background .15s, color .15s;
-}
-.nav-ghost:hover { background: var(--cream-dark); color: var(--text); }
 .nav-cta {
   padding: 9px 20px; border-radius: 100px;
   background: var(--text); color: #fff;
@@ -689,7 +681,7 @@ footer {
 /* ── RESPONSIVE ────────────────────────────── */
 /* Eight nav links need ~1120px to breathe; below that use the menu drawer. */
 @media (max-width: 1120px) {
-  .nav-links, .nav-ghost { display: none; }
+  .nav-links { display: none; }
   .nav-menu-btn { display: inline-flex; }
 }
 @media (max-width: 900px) {
@@ -697,7 +689,6 @@ footer {
   .nav-logo .brand-logo-mark { width: 32px; height: 32px; }
   .nav-logo .brand-logo-name { font-size: 1.3rem; }
   .nav-links { display: none; }
-  .nav-ghost { display: none; }
   .nav-menu-btn { display: inline-flex; }
   .nav-right { gap: 12px; }
   .nav-cta { padding: 9px 18px; }

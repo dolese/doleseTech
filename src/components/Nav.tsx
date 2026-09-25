@@ -56,7 +56,6 @@ export default function Nav() {
         </a>
       </div>
       <div className="nav-right">
-        <a href="#" className="nav-ghost">Log in</a>
         <a href="/#cta" className="nav-cta">Get started</a>
         <button
           type="button"
@@ -106,7 +105,6 @@ export default function Nav() {
           <a href="/education" onClick={closeMenu}>Education</a>
           <a href="/exams" onClick={closeMenu}>Exams</a>
           <a href="/chat" onClick={closeMenu}>AI Chat</a>
-          <a href="#" onClick={closeMenu}>Log in</a>
         </div>
 
         <a href="/#cta" className="nav-drawer-cta" onClick={closeMenu}>
