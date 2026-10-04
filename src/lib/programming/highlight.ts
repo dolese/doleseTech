@@ -9,6 +9,8 @@ const SHIKI_LANGS: Record<CodeSample["lang"], string> = {
   js: "javascript",
   html: "html",
   python: "python",
+  java: "java",
+  xml: "xml",
   sql: "sql",
   json: "json",
   toml: "toml",

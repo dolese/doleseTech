@@ -5,6 +5,7 @@ import { advanced } from "./typescript/advanced";
 import * as python from "./python";
 import * as postgresql from "./postgresql";
 import * as javascript from "./javascript";
+import * as java from "./java";
 
 export * from "./types";
 
@@ -62,9 +63,11 @@ export const LANGUAGES: LanguageTrack[] = [
     name: "Java",
     code: "JAVA",
     color: "#6B3FA0",
-    runtime: "JVM",
-    tagline: "Object-oriented programming for enterprise and Android.",
-    description: "Object-oriented design, collections, concurrency and Spring Boot services.",
+    runtime: "Java 21+",
+    tagline: "Object-oriented programming for enterprise systems, Android and the JVM.",
+    description:
+      "Learn modern Java from your first program to production services — classes, records, collections, streams, exceptions, Maven and JUnit, concurrency and virtual threads, JDBC, Spring Boot and the JVM.",
+    levels: java.levels,
   },
 ];
 

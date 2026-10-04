@@ -7,6 +7,8 @@ const LANG_LABELS: Record<CodeSample["lang"], string> = {
   js: "JavaScript",
   html: "HTML",
   python: "Python",
+  java: "Java",
+  xml: "XML",
   sql: "SQL",
   json: "JSON",
   toml: "TOML",
