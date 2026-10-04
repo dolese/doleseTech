@@ -1,4 +1,5 @@
 import type { LevelTrack } from "../types";
+import { testingJavascript, introToReact } from "./more";
 
 export const advanced: LevelTrack = {
   intro:
@@ -241,6 +242,7 @@ setTimeout(() => {
       exercise:
         "Connect `createStore` to a page: show `present` and `absent` counts, with buttons that change them. Then make the store deep-reactive, so changing `state.classes[0].count` also triggers a render.",
     },
+    testingJavascript,
     {
       slug: "performance",
       title: "Performance: Debounce, Throttle & Observers",
@@ -646,5 +648,6 @@ console.log(escapeHTML(comment));
       exercise:
         "Revisit your to-do app and search for every use of `innerHTML`. Add a CSP meta tag to it, then try adding a task containing `<img src=x onerror=alert(1)>` and confirm it is displayed as text and nothing runs.",
     },
+    introToReact,
   ],
 };

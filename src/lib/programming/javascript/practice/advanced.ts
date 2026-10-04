@@ -1,4 +1,5 @@
 import type { Practice } from "../../types";
+import { testingJavascript as testingJavascriptPractice, introToReact as introToReactPractice } from "./more";
 
 export const advanced: Record<string, Practice> = {
   "event-loop": {
@@ -793,4 +794,6 @@ const RISKY = [/\\.innerHTML\\s*=/, /\\.outerHTML\\s*=/, /insertAdjacentHTML\\(/
       },
     ],
   },
+  "testing-javascript": testingJavascriptPractice,
+  "intro-to-react": introToReactPractice,
 };

@@ -7,6 +7,7 @@ import type { RunSpec } from "@/lib/programming/run";
 const LANG_LABELS: Record<CodeSample["lang"], string> = {
   ts: "TypeScript",
   js: "JavaScript",
+  jsx: "JSX",
   html: "HTML",
   python: "Python",
   java: "Java",

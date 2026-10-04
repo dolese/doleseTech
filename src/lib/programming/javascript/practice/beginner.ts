@@ -1,4 +1,5 @@
 import type { Practice } from "../../types";
+import { datesNumbersIntl as datesNumbersIntlPractice } from "./more";
 
 export const beginner: Record<string, Practice> = {
   setup: {
@@ -429,4 +430,5 @@ for (const button of document.querySelectorAll("[data-percent]")) {
       },
     ],
   },
+  "dates-numbers-and-intl": datesNumbersIntlPractice,
 };

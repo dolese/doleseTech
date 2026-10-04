@@ -1,4 +1,5 @@
 import type { LevelTrack } from "../types";
+import { datesNumbersIntl } from "./more";
 
 export const beginner: LevelTrack = {
   intro:
@@ -276,6 +277,7 @@ console.log(Object.keys(students[0]), Object.entries({ a: 1, b: 2 }));
       exercise:
         "Given an array of products (name, price, quantity, category), produce: the names under 5,000 TSh, the total stock value, the most expensive product, and an object counting products per category (hint: `reduce`).",
     },
+    datesNumbersIntl,
     {
       slug: "dom-basics",
       title: "Your First Interactive Page",

@@ -1,4 +1,5 @@
 import type { LevelTrack } from "../types";
+import { regularExpressions, workingWithApis, accessibility } from "./more";
 
 export const intermediate: LevelTrack = {
   intro:
@@ -97,6 +98,7 @@ list.addEventListener("click", (event) => {
       exercise:
         "Extend the form with an email field (validate it contains \"@\" and a dot after it) and a form selector (1–4). Show each field's error under that field instead of one shared message, and add an \"Edit\" button per row using delegation.",
     },
+    regularExpressions,
     {
       slug: "closures-and-this",
       title: "Closures & `this`",
@@ -353,6 +355,7 @@ loadEverything();
       exercise:
         "Add a search box that filters the loaded list as you type, and a \"Form\" dropdown filter. Then point the fetch at a wrong file name and check your error message and retry button work.",
     },
+    workingWithApis,
     {
       slug: "modules-and-tooling",
       title: "ES Modules & Build Tools",
@@ -535,6 +538,7 @@ draft.addEventListener("input", () => {
       exercise:
         "Add a \"font size\" setting (small / normal / large) saved in preferences. Add a \"Reset preferences\" button that clears the key with `localStorage.removeItem` and reloads the defaults.",
     },
+    accessibility,
     {
       slug: "project-todo-app",
       title: "Project: A Complete To-Do App",

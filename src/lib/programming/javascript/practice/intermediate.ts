@@ -1,4 +1,5 @@
 import type { Practice } from "../../types";
+import { regularExpressions as regularExpressionsPractice, workingWithApis as workingWithApisPractice, accessibility as accessibilityPractice } from "./more";
 
 export const intermediate: Record<string, Practice> = {
   "events-and-forms": {
@@ -915,4 +916,7 @@ render();
       },
     ],
   },
+  "regular-expressions": regularExpressionsPractice,
+  "working-with-apis": workingWithApisPractice,
+  "accessibility": accessibilityPractice,
 };

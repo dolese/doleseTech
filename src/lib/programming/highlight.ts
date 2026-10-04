@@ -7,6 +7,7 @@ const THEME = "dark-plus";
 const SHIKI_LANGS: Record<CodeSample["lang"], string> = {
   ts: "typescript",
   js: "javascript",
+  jsx: "jsx",
   html: "html",
   python: "python",
   java: "java",
