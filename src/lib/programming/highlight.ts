@@ -6,15 +6,23 @@ const THEME = "dark-plus";
 
 const SHIKI_LANGS: Record<CodeSample["lang"], string> = {
   ts: "typescript",
+  python: "python",
+  sql: "sql",
   json: "json",
+  toml: "toml",
   bash: "bash",
   dockerfile: "dockerfile",
+  text: "text",
 };
 
 let highlighter: Promise<Highlighter> | undefined;
 
 function getHighlighter(): Promise<Highlighter> {
-  highlighter ??= createHighlighter({ themes: [THEME], langs: Object.values(SHIKI_LANGS) });
+  highlighter ??= createHighlighter({
+    themes: [THEME],
+    // "text" is built in (plain, uncoloured) and is not a loadable grammar.
+    langs: Object.values(SHIKI_LANGS).filter((l) => l !== "text"),
+  });
   return highlighter;
 }
 

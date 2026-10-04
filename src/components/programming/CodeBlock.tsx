@@ -4,9 +4,13 @@ import CopyButton from "./CopyButton";
 
 const LANG_LABELS: Record<CodeSample["lang"], string> = {
   ts: "TypeScript",
+  python: "Python",
+  sql: "SQL",
   json: "JSON",
+  toml: "TOML",
   bash: "Shell",
   dockerfile: "Dockerfile",
+  text: "Text",
 };
 
 export default async function CodeBlock({ sample }: { sample: CodeSample }) {

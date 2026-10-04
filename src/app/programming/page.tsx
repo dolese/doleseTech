@@ -63,7 +63,7 @@ export default function ProgrammingPage() {
               Choose a <strong>language</strong>
             </h2>
             <p className="section-sub">
-              Start with TypeScript on Node.js. More languages are being written and will appear here.
+              TypeScript (Node.js), Python and PostgreSQL are ready now. More languages are being written and will appear here.
             </p>
           </div>
 

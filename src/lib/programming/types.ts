@@ -17,7 +17,7 @@ export interface CodeSample {
   /** Shown above the block, e.g. "src/hello.ts" or "Terminal". */
   filename: string;
   /** Used for the badge and to decide which samples are type-checked. */
-  lang: "ts" | "json" | "bash" | "dockerfile";
+  lang: "ts" | "python" | "sql" | "json" | "toml" | "bash" | "dockerfile" | "text";
   source: string;
 }
 

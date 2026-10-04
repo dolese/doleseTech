@@ -2,6 +2,8 @@ import type { LanguageTrack, LevelKey, LevelTrack } from "./types";
 import { beginner } from "./typescript/beginner";
 import { intermediate } from "./typescript/intermediate";
 import { advanced } from "./typescript/advanced";
+import * as python from "./python";
+import * as postgresql from "./postgresql";
 
 export * from "./types";
 
@@ -26,9 +28,22 @@ export const LANGUAGES: LanguageTrack[] = [
     name: "Python",
     code: "PY",
     color: "#0E7C86",
-    runtime: "CPython",
-    tagline: "Readable scripting, data analysis and automation.",
-    description: "Python fundamentals through to data processing, web APIs and automation.",
+    runtime: "Python 3.11+",
+    tagline: "Readable code for automation, data, web APIs and AI.",
+    description:
+      "Learn Python from your first script to production services — data structures, files, classes, testing, type hints, asyncio, FastAPI, PostgreSQL and deployment.",
+    levels: python.levels,
+  },
+  {
+    slug: "postgresql",
+    name: "PostgreSQL",
+    code: "PG",
+    color: "#3D5A80",
+    runtime: "PostgreSQL 16+",
+    tagline: "Design, query and run relational databases with SQL.",
+    description:
+      "Learn SQL and PostgreSQL by building a school results database — tables, queries, joins, window functions, indexes, transactions, JSONB, security and operations.",
+    levels: postgresql.levels,
   },
   {
     slug: "javascript",
@@ -47,15 +62,6 @@ export const LANGUAGES: LanguageTrack[] = [
     runtime: "JVM",
     tagline: "Object-oriented programming for enterprise and Android.",
     description: "Object-oriented design, collections, concurrency and Spring Boot services.",
-  },
-  {
-    slug: "sql",
-    name: "SQL",
-    code: "SQL",
-    color: "#3D5A80",
-    runtime: "PostgreSQL",
-    tagline: "Query and model data in relational databases.",
-    description: "Querying, joins, aggregation, schema design, indexes and transactions.",
   },
 ];
 
