@@ -1,4 +1,5 @@
 import type { Practice } from "../../types";
+import { datesAndCase as datesAndCasePractice } from "./more";
 
 export const beginner: Record<string, Practice> = {
   setup: {
@@ -401,4 +402,5 @@ ORDER BY best_score DESC;
       },
     ],
   },
+  "dates-and-case": datesAndCasePractice,
 };

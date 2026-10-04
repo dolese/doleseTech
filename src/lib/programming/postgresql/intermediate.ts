@@ -1,4 +1,5 @@
 import type { LevelTrack } from "../types";
+import { designAndNormalisation, upserts, arraysEnumsDomains } from "./more";
 
 export const intermediate: LevelTrack = {
   intro:
@@ -137,6 +138,7 @@ ORDER BY total_paid DESC, s.full_name;
       exercise:
         "List every subject with the number of students who sat it in term 1 (including subjects nobody sat). Then find students who have results in Maths but not in Biology.",
     },
+    designAndNormalisation,
     {
       slug: "subqueries-and-ctes",
       title: "Subqueries & CTEs",
@@ -398,6 +400,7 @@ COMMIT;
       exercise:
         "Write a transaction that transfers a student from Form 3 stream A to stream B and logs the change in a new `transfers` table. Then make it fail on purpose and confirm with SELECT that nothing changed.",
     },
+    upserts,
     {
       slug: "views-and-functions",
       title: "Views, Materialized Views & Functions",
@@ -533,5 +536,6 @@ GROUP BY s.id;
       exercise:
         "Add a `settings jsonb` column to teachers (e.g. preferred language, notification options). Write queries that find teachers who want SMS notifications, and produce one JSON array of all subjects with their teacher's name and settings.",
     },
+    arraysEnumsDomains,
   ],
 };

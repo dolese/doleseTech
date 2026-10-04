@@ -1,4 +1,5 @@
 import type { Practice } from "../../types";
+import { designAndNormalisation as designAndNormalisationPractice, upserts as upsertsPractice, arraysEnumsDomains as arraysEnumsDomainsPractice } from "./more";
 
 export const intermediate: Record<string, Practice> = {
   joins: {
@@ -550,4 +551,7 @@ LEFT JOIN teachers t ON t.id = sub.teacher_id;
       },
     ],
   },
+  "design-and-normalisation": designAndNormalisationPractice,
+  "upserts": upsertsPractice,
+  "arrays-enums-domains": arraysEnumsDomainsPractice,
 };

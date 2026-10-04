@@ -1,4 +1,5 @@
 import type { Practice } from "../../types";
+import { writableCtesAndLateral as writableCtesAndLateralPractice, migrations as migrationsPractice } from "./more";
 
 export const advanced: Record<string, Practice> = {
   "performance-tuning": {
@@ -611,4 +612,6 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_guardians_student ON guardians (stud
       },
     ],
   },
+  "writable-ctes-and-lateral": writableCtesAndLateralPractice,
+  "schema-migrations": migrationsPractice,
 };

@@ -1,4 +1,5 @@
 import type { LevelTrack } from "../types";
+import { datesAndCase } from "./more";
 
 export const beginner: LevelTrack = {
   intro:
@@ -190,6 +191,7 @@ SELECT DISTINCT form FROM students ORDER BY form;
       exercise:
         "Write queries for: students in Form 3 or 4 with a fee balance; students whose name starts with 'R'; the two youngest students; and every student's name in upper case with their email or 'missing'.",
     },
+    datesAndCase,
     {
       slug: "keys-and-relationships",
       title: "Keys, Constraints & Relationships",

@@ -1,4 +1,5 @@
 import type { LevelTrack } from "../types";
+import { writableCtesAndLateral, migrations } from "./more";
 
 export const advanced: LevelTrack = {
   intro:
@@ -141,6 +142,7 @@ WHERE datname = current_database();
       exercise:
         "Open two psql sessions. In both, `BEGIN` and `SELECT ... FOR UPDATE` the same student; observe the second one wait until the first commits. Then repeat with `SKIP LOCKED` on `sms_jobs` and confirm each session gets different jobs.",
     },
+    writableCtesAndLateral,
     {
       slug: "triggers",
       title: "Triggers & Audit Logs",
@@ -457,5 +459,6 @@ VACUUM (ANALYZE) exam_entries;
       exercise:
         "Back up your `school` database with `pg_dump -Fc`, restore it into `school_restore`, and verify row counts match with a query on both. Then write a numbered migration (`002_add_guardians.sql`) that adds a guardians table safely.",
     },
+    migrations,
   ],
 };
