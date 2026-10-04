@@ -1,4 +1,5 @@
 import type { LevelTrack } from "../types";
+import { commandLineTools, projectResultsAnalysis } from "./more";
 
 export const advanced: LevelTrack = {
   intro:
@@ -504,6 +505,7 @@ if __name__ == "__main__":
       exercise:
         "Connect the FastAPI app from the previous lesson to PostgreSQL: create a `students` table, use a `psycopg_pool.ConnectionPool` opened at startup, and replace the in-memory store with SQL queries.",
     },
+    commandLineTools,
     {
       slug: "packaging-and-deployment",
       title: "Project Structure, Quality Tools & Deployment",
@@ -612,5 +614,6 @@ docker build -t results-api . && docker run -p 8000:8000 -e DATABASE_URL=... res
       exercise:
         "Restructure your FastAPI + PostgreSQL project into the layout above, add the quality tools, make `ruff`, `mypy` and `pytest` pass, then build and run the Docker image locally.",
     },
+    projectResultsAnalysis,
   ],
 };

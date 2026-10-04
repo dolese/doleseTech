@@ -1,4 +1,5 @@
 import type { Practice } from "../../types";
+import { commandLineTools as commandLineToolsPractice, projectResultsAnalysis as projectResultsAnalysisPractice } from "./more";
 
 export const advanced: Record<string, Practice> = {
   "decorators-and-context-managers": {
@@ -790,4 +791,6 @@ docker run -p 8000:8000 -e DATABASE_URL="postgresql://..." results-api
       },
     ],
   },
+  "command-line-tools": commandLineToolsPractice,
+  "project-results-analysis": projectResultsAnalysisPractice,
 };

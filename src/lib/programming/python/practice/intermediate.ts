@@ -1,4 +1,5 @@
 import type { Practice } from "../../types";
+import { regularExpressions as regularExpressionsPractice, pandasBasics as pandasBasicsPractice } from "./more";
 
 export const intermediate: Record<string, Practice> = {
   exceptions: {
@@ -658,4 +659,6 @@ def test_invalid_lines(line: str, message: str) -> None:
       },
     ],
   },
+  "regular-expressions": regularExpressionsPractice,
+  "pandas-basics": pandasBasicsPractice,
 };

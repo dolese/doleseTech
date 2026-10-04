@@ -23,7 +23,7 @@ export interface LessonRunSpecs {
 // ── Python ──────────────────────────────────────────────────────────────
 // Network clients, servers, threads/processes and asyncio.run (which needs
 // WebAssembly stack switching, not yet available in every browser).
-const PY_UNSUPPORTED = /^\s*(?:import|from)\s+(requests|httpx|fastapi|psycopg|psycopg_pool|pydantic|pytest|concurrent|threading|multiprocessing|uvicorn|mypy|asyncio)\b/m;
+const PY_UNSUPPORTED = /^\s*(?:import|from)\s+(requests|httpx|fastapi|psycopg|psycopg_pool|pydantic|pytest|concurrent|threading|multiprocessing|uvicorn|mypy|asyncio|pandas|argparse)\b/m;
 
 function pythonSpec(sample: CodeSample, group: CodeSample[]): RunSpec | undefined {
   if (sample.lang !== "python" || !sample.filename.endsWith(".py")) return undefined;

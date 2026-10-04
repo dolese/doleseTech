@@ -1,4 +1,5 @@
 import type { LevelTrack } from "../types";
+import { stringsAndText, datesAndTimes } from "./more";
 
 export const beginner: LevelTrack = {
   intro:
@@ -215,6 +216,7 @@ print(sorted(["Neema", "Ali", "Baraka"], key=len), square(9))
       exercise:
         "Write `area_of_rectangle(width, height)` and `area_of_circle(radius)` with type hints and docstrings. Then write `describe_area(area, units=\"cm\")` that returns a string like \"Area: 12.00 cm²\".",
     },
+    stringsAndText,
     {
       slug: "collections",
       title: "Lists, Tuples, Dictionaries & Sets",
@@ -338,5 +340,6 @@ pip install -r requirements.txt # recreate on another machine
       exercise:
         "Create `text_tools.py` with `word_count(text)` and `longest_word(text)`. In `main.py`, read a .txt file, print both results, and append a summary line to `report.txt`.",
     },
+    datesAndTimes,
   ],
 };

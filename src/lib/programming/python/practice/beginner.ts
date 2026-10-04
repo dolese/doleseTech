@@ -1,4 +1,5 @@
 import type { Practice } from "../../types";
+import { stringsAndText as stringsAndTextPractice, datesAndTimes as datesAndTimesPractice } from "./more";
 
 export const beginner: Record<string, Practice> = {
   setup: {
@@ -425,4 +426,6 @@ if __name__ == "__main__":
       },
     ],
   },
+  "strings-and-text": stringsAndTextPractice,
+  "dates-and-times": datesAndTimesPractice,
 };

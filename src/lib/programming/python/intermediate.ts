@@ -1,4 +1,5 @@
 import type { LevelTrack } from "../types";
+import { regularExpressions, pandasBasics } from "./more";
 
 export const intermediate: LevelTrack = {
   intro:
@@ -201,6 +202,7 @@ print([p.name for p in sorted(data_dir.glob("*"))])
       exercise:
         "Write a script that reads every `.csv` file in a folder, combines them, and writes a `summary.json` with each student's average and best subject.",
     },
+    regularExpressions,
     {
       slug: "iterators-and-generators",
       title: "Iterators, Generators & Comprehensions",
@@ -256,6 +258,7 @@ print(total)
       exercise:
         "Write a generator `chunks(items, size)` that yields lists of `size` items. Use it to process a list of 1,000 student IDs in batches of 100 and print each batch's first and last ID.",
     },
+    pandasBasics,
     {
       slug: "type-hints",
       title: "Type Hints & mypy",
