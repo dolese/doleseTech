@@ -4,6 +4,7 @@ import { intermediate } from "./typescript/intermediate";
 import { advanced } from "./typescript/advanced";
 import * as python from "./python";
 import * as postgresql from "./postgresql";
+import * as javascript from "./javascript";
 
 export * from "./types";
 
@@ -50,9 +51,11 @@ export const LANGUAGES: LanguageTrack[] = [
     name: "JavaScript",
     code: "JS",
     color: "#B5541E",
-    runtime: "Browser & Node.js",
-    tagline: "The language of the web.",
-    description: "Core JavaScript, the DOM and building interactive web pages.",
+    runtime: "Browser",
+    tagline: "The language of the web — interactive pages and apps.",
+    description:
+      "Learn JavaScript in the browser from your first script to advanced front-end engineering — the DOM, events, fetch, modules, storage, the event loop, Web Workers, Web Components and security.",
+    levels: javascript.levels,
   },
   {
     slug: "java",

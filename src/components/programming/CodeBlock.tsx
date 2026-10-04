@@ -4,6 +4,8 @@ import CopyButton from "./CopyButton";
 
 const LANG_LABELS: Record<CodeSample["lang"], string> = {
   ts: "TypeScript",
+  js: "JavaScript",
+  html: "HTML",
   python: "Python",
   sql: "SQL",
   json: "JSON",
