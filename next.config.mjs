@@ -30,6 +30,21 @@ const csp = [
   ...(isDev ? [] : ["upgrade-insecure-requests"]),
 ].join("; ");
 
+/**
+ * The in-browser code runners (/runners/*) are Web Workers that run learners'
+ * Python, SQL and JavaScript. Only these worker scripts may evaluate code and
+ * compile WebAssembly; a worker has no access to the page, its cookies or its
+ * DOM, and everything it loads comes from this origin. Pages keep the strict
+ * policy above.
+ */
+const runnerCsp = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval'",
+  "connect-src 'self'",
+  "object-src 'none'",
+  "base-uri 'none'",
+].join("; ");
+
 const securityHeaders = [
   { key: "Content-Security-Policy", value: csp },
   // Two years of HTTPS-only, subdomains included (results.dolese.tech is HTTPS too).
@@ -50,7 +65,11 @@ const nextConfig = {
   // Don't advertise the framework in every response.
   poweredByHeader: false,
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      // Later entries override earlier ones for the same header key.
+      { source: "/runners/:path*", headers: [{ key: "Content-Security-Policy", value: runnerCsp }] },
+    ];
   },
 };
 

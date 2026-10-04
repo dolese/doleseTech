@@ -1,6 +1,8 @@
 import type { CodeSample } from "@/lib/programming";
 import { highlight } from "@/lib/programming/highlight";
 import CopyButton from "./CopyButton";
+import Runner from "./Runner";
+import type { RunSpec } from "@/lib/programming/run";
 
 const LANG_LABELS: Record<CodeSample["lang"], string> = {
   ts: "TypeScript",
@@ -17,7 +19,7 @@ const LANG_LABELS: Record<CodeSample["lang"], string> = {
   text: "Text",
 };
 
-export default async function CodeBlock({ sample }: { sample: CodeSample }) {
+export default async function CodeBlock({ sample, run }: { sample: CodeSample; run?: RunSpec }) {
   const html = await highlight(sample);
 
   return (
@@ -29,6 +31,7 @@ export default async function CodeBlock({ sample }: { sample: CodeSample }) {
       </figcaption>
       {/* Shiki output is generated at build time from our own lesson source. */}
       <div className="code-block-body" dangerouslySetInnerHTML={{ __html: html }} />
+      {run && <Runner spec={run} />}
     </figure>
   );
 }

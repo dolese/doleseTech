@@ -13,6 +13,7 @@ import {
   lessonHref,
   lessonsInOrder,
 } from "@/lib/programming";
+import { runSpecsFor } from "@/lib/programming/run";
 
 interface Params {
   params: { lang: string; level: string; lesson: string };
@@ -40,6 +41,7 @@ export default function LessonPage({ params }: Params) {
   if (!ctx) notFound();
   const { lang, level, track, lesson, index, prev, next } = ctx;
   const levelHref = `/programming/${lang.slug}/${level}`;
+  const runs = runSpecsFor(lang.slug, level, lesson.slug);
 
   return (
     <>
@@ -88,7 +90,7 @@ export default function LessonPage({ params }: Params) {
               ))}
 
               {lesson.code.map((sample, j) => (
-                <CodeBlock sample={sample} key={j} />
+                <CodeBlock sample={sample} run={runs.lesson[j]} key={j} />
               ))}
 
               <div className="prog-keypoints">
@@ -121,7 +123,7 @@ export default function LessonPage({ params }: Params) {
                     </p>
                   ))}
                   {lesson.practice.solution.code.map((sample, j) => (
-                    <CodeBlock sample={sample} key={j} />
+                    <CodeBlock sample={sample} run={runs.solution[j]} key={j} />
                   ))}
                 </details>
               )}

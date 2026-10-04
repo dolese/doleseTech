@@ -110,3 +110,55 @@ test("unknown lessons are not found", () => {
   assert.equal(getLessonContext("typescript", "expert", "setup"), undefined);
   assert.equal(getLessonContext("cobol", "beginner", "setup"), undefined);
 });
+
+// ── In-browser runners ──────────────────────────────────────────────────
+import { splitSql } from "../public/runners/sql-split.mjs";
+import { runSpecsFor } from "../src/lib/programming/run";
+
+test("splitSql splits like psql: quotes, dollar-quoted bodies, comments and backslash commands", () => {
+  const script = [
+    "CREATE TABLE t (note text DEFAULT 'a;b');",
+    "-- a comment; with a semicolon",
+    "CREATE FUNCTION f() RETURNS int LANGUAGE plpgsql AS $$ BEGIN RETURN 1; END; $$;",
+    "\\d t",
+    'SELECT "odd;name" FROM t; /* block; comment */',
+    "SELECT 1",
+  ].join("\n");
+  const statements = splitSql(script);
+  assert.equal(statements.length, 4);
+  assert.match(statements[0], /'a;b'/);
+  assert.match(statements[1], /\$\$ BEGIN RETURN 1; END; \$\$;$/);
+  assert.ok(!statements.some((s) => s.includes("\\d")));
+  assert.match(statements[3], /SELECT 1$/);   // a preceding comment travels with its statement, as in psql
+});
+
+test("run buttons appear only where the browser can run the code", () => {
+  for (const lang of tracks) {
+    for (const { level, lesson } of lessonsInOrder(lang)) {
+      const specs = runSpecsFor(lang.slug, level, lesson.slug);
+      const all = [...specs.lesson, ...specs.solution];
+      assert.equal(specs.lesson.length, lesson.code.length);
+      assert.equal(specs.solution.length, lesson.practice?.solution.code.length ?? 0);
+      if (lang.slug === "typescript" || lang.slug === "java") {
+        assert.ok(all.every((s) => s === undefined), `${lang.slug} has no browser runtime`);
+      }
+      for (const s of all) {
+        if (s?.kind === "python") assert.doesNotMatch(s.source + s.files.map((f) => f.source).join("\n"), /^\s*(import|from)\s+(requests|fastapi|psycopg|asyncio)\b/m);
+        if (s?.kind === "page") assert.ok(Object.keys(s.scripts).length > 0);
+      }
+    }
+  }
+});
+
+test("every runnable PostgreSQL sample splits into statements, with setup from earlier lessons", () => {
+  let runnable = 0;
+  for (const { level, lesson } of lessonsInOrder(tracks.find((l) => l.slug === "postgresql")!)) {
+    for (const s of [...runSpecsFor("postgresql", level, lesson.slug).lesson, ...runSpecsFor("postgresql", level, lesson.slug).solution]) {
+      if (s?.kind !== "sql") continue;
+      runnable++;
+      assert.ok(splitSql(s.source).length > 0, `${level}/${lesson.slug}: no statements`);
+      if (level !== "beginner" && lesson.slug !== "joins") assert.ok(s.setup.length > 0, `${level}/${lesson.slug}: missing setup`);
+    }
+  }
+  assert.ok(runnable >= 30, `expected most SQL samples to be runnable, got ${runnable}`);
+});

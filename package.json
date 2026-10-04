@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/copy-runtimes.mjs",
     "dev": "next dev",
+    "prebuild": "node scripts/copy-runtimes.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -12,11 +14,13 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.105.0",
+    "@electric-sql/pglite": "^0.5.8",
     "@google/generative-ai": "^0.24.1",
     "@neondatabase/serverless": "^1.1.0",
     "docx": "^8.5.0",
     "katex": "^0.16.11",
     "next": "14.2.35",
+    "pyodide": "^314.0.7",
     "react": "^18",
     "react-dom": "^18",
     "react-markdown": "^9.1.0",
