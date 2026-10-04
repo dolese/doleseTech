@@ -2715,3 +2715,68 @@ table.sow-table, table.lp-table { width: 100%; border-collapse: collapse; backgr
   .admin-recent-row { grid-template-columns: 80px 1fr; row-gap: 6px; }
   .admin-recent-date { grid-column: 2; }
 }
+
+/* ── PROGRAMMING PAGES ─────────────────────────────────────── */
+.prog-level-badge { display: inline-block; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; padding: 5px 12px; border-radius: 100px; margin-bottom: 12px; }
+.subj-detail-meta .prog-level-badge { margin-bottom: 0; }
+.prog-level-badge.is-beginner { color: var(--green); background: var(--green-lt); }
+.prog-level-badge.is-intermediate { color: var(--blue-ink); background: var(--blue-lt); }
+.prog-level-badge.is-advanced { color: #6B3FA0; background: #F1EAFA; }
+
+.prog-lang-card { text-decoration: none; color: inherit; }
+.prog-lang-card.is-soon { opacity: .7; box-shadow: none; }
+.prog-lang-card.is-soon:hover { transform: none; box-shadow: none; border-color: var(--border); }
+.prog-soon { font-size: .68rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); background: var(--cream-dark); padding: 4px 10px; border-radius: 100px; }
+.prog-lang-tagline { font-size: .88rem; color: var(--text-mid); line-height: 1.55; margin-bottom: 16px; }
+
+.prog-lang-desc { max-width: 720px; margin-top: 20px; color: var(--text-mid); font-size: 1rem; line-height: 1.65; }
+.prog-level-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.prog-level-head .prog-level-badge { margin-bottom: 0; font-size: .8rem; }
+.prog-level-count { font-size: .85rem; color: var(--text-muted); }
+.prog-level-intro { max-width: 760px; margin: 14px 0 22px; color: var(--text-mid); line-height: 1.65; }
+.prog-outcomes, .prog-lesson-index { padding-left: 20px; display: flex; flex-direction: column; gap: 8px; font-size: .9rem; color: var(--text-mid); line-height: 1.5; }
+.prog-lesson-index a { color: var(--text); text-decoration: none; }
+.prog-lesson-index a:hover { color: var(--green); text-decoration: underline; }
+.prog-level-cta { margin-top: 20px; }
+
+.prog-layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 48px; padding: 48px max(64px, calc((100% - 1100px) / 2)) 96px; align-items: start; }
+.prog-toc { position: sticky; top: 96px; background: var(--white); border: 1px solid var(--border-lt); border-radius: 16px; padding: 20px; box-shadow: var(--shadow-sm); }
+.prog-toc-title { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); margin-bottom: 12px; }
+.prog-toc ol { padding-left: 18px; display: flex; flex-direction: column; gap: 8px; font-size: .85rem; line-height: 1.4; color: var(--text-muted); }
+.prog-toc a { color: var(--text-mid); text-decoration: none; }
+.prog-toc a:hover { color: var(--green); }
+
+.prog-lessons { display: flex; flex-direction: column; gap: 32px; min-width: 0; }
+.prog-lesson { background: var(--white); border: 1px solid var(--border-lt); border-radius: 20px; padding: 32px; box-shadow: var(--shadow); scroll-margin-top: 96px; }
+.prog-lesson-num { font-size: .74rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--green); }
+.prog-lesson h2 { font-family: var(--font-display); font-size: 1.5rem; font-weight: 600; letter-spacing: -.02em; color: var(--text); margin: 6px 0 6px; }
+.prog-lesson-summary { color: var(--text-muted); font-size: .95rem; margin-bottom: 20px; }
+.prog-para { color: var(--text-mid); font-size: .97rem; line-height: 1.75; margin-bottom: 14px; }
+.prog-lesson code, .prog-exercise code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .86em; background: var(--cream-dark); color: var(--text); padding: 1px 6px; border-radius: 5px; }
+
+.code-block { margin: 20px 0; border-radius: 14px; overflow: hidden; background: var(--navy-deep); border: 1px solid var(--navy); }
+.code-block-head { display: flex; align-items: center; gap: 10px; padding: 9px 14px; background: var(--navy); color: #C9D3E3; font-size: .78rem; }
+.code-block-file { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.code-block-lang { margin-left: auto; text-transform: uppercase; letter-spacing: .06em; font-size: .68rem; color: var(--green-brand); }
+.code-block-copy { font-family: inherit; font-size: .74rem; font-weight: 600; color: #fff; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18); border-radius: 7px; padding: 3px 10px; cursor: pointer; }
+.code-block-copy:hover { background: rgba(255,255,255,.16); }
+.code-block pre { margin: 0; padding: 16px 18px; overflow-x: auto; }
+.prog-lesson .code-block pre code { display: block; background: none; padding: 0; border-radius: 0; color: #E7ECF6; font-size: .84rem; line-height: 1.6; white-space: pre; }
+
+.prog-keypoints { margin-top: 22px; padding: 18px 20px; background: var(--cream); border: 1px solid var(--border-lt); border-radius: 12px; }
+.prog-keypoints h3, .prog-exercise h3 { font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 10px; }
+.prog-keypoints h3 { color: var(--text); }
+.prog-keypoints ul { padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: .92rem; color: var(--text-mid); line-height: 1.55; }
+.prog-exercise { margin-top: 14px; padding: 18px 20px; background: var(--green-lt); border-radius: 12px; }
+.prog-exercise h3 { color: var(--green); }
+.prog-exercise p { font-size: .93rem; color: var(--text-mid); line-height: 1.6; }
+.prog-exercise code { background: rgba(255,255,255,.7); }
+
+.prog-level-nav { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+@media (max-width: 900px) {
+  .prog-layout { grid-template-columns: 1fr; gap: 24px; padding: 32px 16px 64px; }
+  .prog-toc { position: static; }
+  .prog-lesson { padding: 22px 18px; }
+  .prog-lesson h2 { font-size: 1.3rem; }
+}
