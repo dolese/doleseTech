@@ -17,7 +17,7 @@ export const beginner: LevelTrack = {
       body: [
         "Node.js is a runtime that lets JavaScript run outside the browser — on servers, laptops and command-line tools. TypeScript is JavaScript plus a type system: you write `.ts` files, and the TypeScript compiler checks your types before the code runs, catching many bugs early.",
         "Install the current LTS (long-term support) version of Node.js from nodejs.org. It comes with `npm`, the package manager. Check the install with `node -v` and `npm -v`.",
-        "In a new folder, create a project with `npm init -y`, then install TypeScript, `tsx` (a fast runner for .ts files) and the Node.js type definitions as development dependencies. `npx tsc --init` creates a `tsconfig.json` that controls how strict the type checker is — keep `strict` on.",
+        "In a new folder, create a project with `npm init -y`, then install TypeScript, `tsx` (a fast runner for .ts files) and the Node.js type definitions as development dependencies. Then add the `tsconfig.json` below: it controls how the type checker works. It tells TypeScript to use the Node.js type definitions and to be `strict` — keep that on.",
       ],
       code: [
         {
@@ -27,7 +27,24 @@ export const beginner: LevelTrack = {
 mkdir hello-ts && cd hello-ts
 npm init -y
 npm install --save-dev typescript tsx @types/node
-npx tsc --init
+`,
+        },
+        {
+          filename: "tsconfig.json",
+          lang: "json",
+          source: `
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "moduleDetection": "force",
+    "types": ["node"],
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true
+  }
+}
 `,
         },
         {

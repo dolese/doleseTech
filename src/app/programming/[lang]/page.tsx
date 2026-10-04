@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import ScrollReveal from "@/components/ScrollReveal";
-import { LANGUAGES, LEVELS, LEVEL_LABELS, getLanguage, isAvailable } from "@/lib/programming";
+import { LANGUAGES, LEVELS, LEVEL_LABELS, getLanguage, isAvailable, lessonHref } from "@/lib/programming";
 
 interface Params {
   params: { lang: string };
@@ -80,7 +80,7 @@ export default function LanguagePage({ params }: Params) {
                   <ol className="prog-lesson-index">
                     {track.lessons.map((l) => (
                       <li key={l.slug}>
-                        <a href={`/programming/${lang.slug}/${lvl}#${l.slug}`}>{l.title}</a>
+                        <a href={lessonHref(lang.slug, lvl, l.slug)}>{l.title}</a>
                       </li>
                     ))}
                   </ol>

@@ -2,9 +2,16 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import CodeBlock from "@/components/programming/CodeBlock";
-import RichText from "@/components/programming/RichText";
-import { LANGUAGES, LEVELS, LEVEL_LABELS, getLanguage, getLevel, isAvailable } from "@/lib/programming";
+import ScrollReveal from "@/components/ScrollReveal";
+import {
+  LANGUAGES,
+  LEVELS,
+  LEVEL_LABELS,
+  getLanguage,
+  getLevel,
+  isAvailable,
+  lessonHref,
+} from "@/lib/programming";
 
 interface Params {
   params: { lang: string; level: string };
@@ -67,75 +74,55 @@ export default function LevelPage({ params }: Params) {
           <p className="prog-lang-desc">{track.intro}</p>
         </section>
 
-        <div className="prog-layout">
-          <aside className="prog-toc" aria-label="Lessons in this level">
-            <p className="prog-toc-title">Lessons</p>
-            <ol>
-              {track.lessons.map((l) => (
-                <li key={l.slug}>
-                  <a href={`#${l.slug}`}>{l.title}</a>
-                </li>
-              ))}
-            </ol>
-          </aside>
-
-          <div className="prog-lessons">
+        <section className="detail-section">
+          <h2 className="detail-h2">Lessons</h2>
+          <ol className="prog-lesson-cards">
             {track.lessons.map((lesson, i) => (
-              <article className="prog-lesson" id={lesson.slug} key={lesson.slug}>
-                <p className="prog-lesson-num">Lesson {i + 1}</p>
-                <h2>{lesson.title}</h2>
-                <p className="prog-lesson-summary">{lesson.summary}</p>
-
-                {lesson.body.map((para, j) => (
-                  <p className="prog-para" key={j}>
-                    <RichText text={para} />
-                  </p>
-                ))}
-
-                {lesson.code.map((sample, j) => (
-                  <CodeBlock sample={sample} key={j} />
-                ))}
-
-                <div className="prog-keypoints">
-                  <h3>Key points</h3>
-                  <ul>
-                    {lesson.keyPoints.map((k) => (
-                      <li key={k}>
-                        <RichText text={k} />
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="prog-exercise">
-                  <h3>Exercise</h3>
-                  <p>
-                    <RichText text={lesson.exercise} />
-                  </p>
-                </div>
-              </article>
+              <li key={lesson.slug} id={lesson.slug} className="reveal">
+                <a className="prog-lesson-card" href={lessonHref(lang.slug, level, lesson.slug)}>
+                  <span className="prog-lesson-card-num">{i + 1}</span>
+                  <span className="prog-lesson-card-body">
+                    <span className="prog-lesson-card-title">{lesson.title}</span>
+                    <span className="prog-lesson-card-summary">{lesson.summary}</span>
+                    {lesson.practice && (
+                      <span className="prog-lesson-card-tags">
+                        <span>Solution</span>
+                        <span>{lesson.practice.quiz.length}-question quiz</span>
+                      </span>
+                    )}
+                  </span>
+                  <span className="prog-lesson-card-go" aria-hidden="true">→</span>
+                </a>
+              </li>
             ))}
+          </ol>
 
-            <nav className="prog-level-nav" aria-label="Other levels">
-              {prev ? (
-                <a href={`/programming/${lang.slug}/${prev}`} className="btn-outline">
-                  ← {LEVEL_LABELS[prev]}
-                </a>
-              ) : (
-                <a href={`/programming/${lang.slug}`} className="btn-outline">← {lang.name} overview</a>
-              )}
-              {next ? (
-                <a href={`/programming/${lang.slug}/${next}`} className="btn-outline">
-                  Next: {LEVEL_LABELS[next]} →
-                </a>
-              ) : (
-                <a href="/programming" className="btn-outline">All languages →</a>
-              )}
-            </nav>
-          </div>
-        </div>
+          <a href={lessonHref(lang.slug, level, track.lessons[0].slug)} className="btn-outline prog-level-cta">
+            Start with lesson 1 →
+          </a>
+        </section>
+
+        <section className="detail-back">
+          <nav className="prog-level-nav" aria-label="Other levels">
+            {prev ? (
+              <a href={`/programming/${lang.slug}/${prev}`} className="btn-outline">
+                ← {LEVEL_LABELS[prev]}
+              </a>
+            ) : (
+              <a href={`/programming/${lang.slug}`} className="btn-outline">← {lang.name} overview</a>
+            )}
+            {next ? (
+              <a href={`/programming/${lang.slug}/${next}`} className="btn-outline">
+                Next: {LEVEL_LABELS[next]} →
+              </a>
+            ) : (
+              <a href="/programming" className="btn-outline">All languages →</a>
+            )}
+          </nav>
+        </section>
       </main>
       <Footer />
+      <ScrollReveal />
     </>
   );
 }

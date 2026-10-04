@@ -1,7 +1,5 @@
-import type { LanguageTrack, LevelKey, LevelTrack } from "./types";
-import { beginner } from "./typescript/beginner";
-import { intermediate } from "./typescript/intermediate";
-import { advanced } from "./typescript/advanced";
+import { LEVELS, type LanguageTrack, type Lesson, type LevelKey, type LevelTrack } from "./types";
+import * as typescript from "./typescript";
 import * as python from "./python";
 import * as postgresql from "./postgresql";
 import * as javascript from "./javascript";
@@ -23,7 +21,7 @@ export const LANGUAGES: LanguageTrack[] = [
     tagline: "Typed JavaScript for servers, APIs and tools.",
     description:
       "Learn TypeScript on Node.js from your first program to production services — types, async code, HTTP APIs, testing, streams, architecture and deployment.",
-    levels: { beginner, intermediate, advanced },
+    levels: typescript.levels,
   },
   {
     slug: "python",
@@ -82,4 +80,49 @@ export function getLevel(slug: string, level: string): LevelTrack | undefined {
 
 export function isAvailable(lang: LanguageTrack): lang is LanguageTrack & { levels: Record<LevelKey, LevelTrack> } {
   return Boolean(lang.levels);
+}
+
+export interface LessonLocation {
+  level: LevelKey;
+  lesson: Lesson;
+}
+
+export interface LessonContext extends LessonLocation {
+  lang: LanguageTrack & { levels: Record<LevelKey, LevelTrack> };
+  track: LevelTrack;
+  /** Position within its level, from 0. */
+  index: number;
+  /** Neighbours across the whole language, crossing level boundaries. */
+  prev?: LessonLocation;
+  next?: LessonLocation;
+}
+
+/** All lessons of a language in reading order: beginner → advanced. */
+export function lessonsInOrder(lang: LanguageTrack & { levels: Record<LevelKey, LevelTrack> }): LessonLocation[] {
+  return LEVELS.flatMap((level) => lang.levels[level].lessons.map((lesson) => ({ level, lesson })));
+}
+
+export function getLessonContext(langSlug: string, level: string, lessonSlug: string): LessonContext | undefined {
+  const lang = getLanguage(langSlug);
+  if (!lang || !isAvailable(lang)) return undefined;
+  const track = getLevel(langSlug, level);
+  if (!track) return undefined;
+  const index = track.lessons.findIndex((l) => l.slug === lessonSlug);
+  if (index === -1) return undefined;
+
+  const all = lessonsInOrder(lang);
+  const pos = all.findIndex((l) => l.level === level && l.lesson.slug === lessonSlug);
+  return {
+    lang,
+    track,
+    level: level as LevelKey,
+    lesson: track.lessons[index],
+    index,
+    prev: all[pos - 1],
+    next: all[pos + 1],
+  };
+}
+
+export function lessonHref(langSlug: string, level: LevelKey, lessonSlug: string): string {
+  return `/programming/${langSlug}/${level}/${lessonSlug}`;
 }

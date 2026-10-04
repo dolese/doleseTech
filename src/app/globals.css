@@ -444,7 +444,7 @@ h2.section-title {
 .prod-step-title { font-size: .98rem; font-weight: 600; margin-bottom: 4px; }
 .prod-step p { font-size: .9rem; color: var(--text-muted); line-height: 1.65; }
 
-.product-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+.product-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px; }
 .product-card {
   display: block; text-decoration: none; color: inherit;
   background: var(--white); border: 1px solid var(--border-lt);
@@ -2779,4 +2779,64 @@ table.sow-table, table.lp-table { width: 100%; border-collapse: collapse; backgr
   .prog-toc { position: static; }
   .prog-lesson { padding: 22px 18px; }
   .prog-lesson h2 { font-size: 1.3rem; }
+}
+
+/* Programming: lesson list, single-lesson pages, solutions and quizzes */
+.prog-lesson-cards { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.prog-lesson-cards li { scroll-margin-top: 96px; }
+.prog-lesson-card { display: flex; align-items: center; gap: 18px; padding: 20px 22px; background: var(--white); border: 1px solid var(--border-lt); border-radius: 16px; box-shadow: var(--shadow-sm); text-decoration: none; color: inherit; transition: border-color .15s, box-shadow .15s, transform .15s; }
+.prog-lesson-card:hover { border-color: var(--green-mid); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.prog-lesson-card-num { flex-shrink: 0; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--green-lt); color: var(--green); font-weight: 700; }
+.prog-lesson-card-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.prog-lesson-card-title { font-weight: 600; color: var(--text); font-size: 1.02rem; }
+.prog-lesson-card-summary { color: var(--text-muted); font-size: .9rem; line-height: 1.5; }
+.prog-lesson-card-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.prog-lesson-card-tags span { font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--blue-ink); background: var(--blue-lt); padding: 3px 8px; border-radius: 100px; }
+.prog-lesson-card-go { margin-left: auto; color: var(--green); font-size: 1.2rem; }
+
+.prog-lesson-hero .subj-detail-meta { margin: 0 0 10px; }
+.prog-lesson-title { font-family: var(--font-display); font-weight: 600; font-size: clamp(1.8rem, 3.6vw, 2.6rem); line-height: 1.15; letter-spacing: -.02em; color: var(--text); }
+.prog-toc-current { color: var(--green); font-weight: 600; }
+
+.prog-solution { margin-top: 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--white); }
+.prog-solution > summary { cursor: pointer; padding: 14px 18px; font-weight: 600; color: var(--text); list-style: none; display: flex; align-items: center; gap: 8px; }
+.prog-solution > summary::-webkit-details-marker { display: none; }
+.prog-solution > summary::before { content: "▸"; color: var(--green); transition: transform .15s; }
+.prog-solution[open] > summary::before { transform: rotate(90deg); }
+.prog-solution[open] > summary { border-bottom: 1px solid var(--border-lt); }
+.prog-solution > :not(summary) { margin-left: 18px; margin-right: 18px; }
+.prog-solution > :last-child { margin-bottom: 18px; }
+.prog-solution-hint { font-size: .88rem; color: var(--text-muted); font-style: italic; margin: 14px 18px 10px; }
+
+.prog-quiz { background: var(--white); border: 1px solid var(--border-lt); border-radius: 20px; padding: 28px 32px; box-shadow: var(--shadow); }
+.prog-quiz h2 { font-family: var(--font-display); font-size: 1.3rem; font-weight: 600; margin-bottom: 18px; color: var(--text); }
+.prog-quiz-list { padding-left: 20px; display: flex; flex-direction: column; gap: 22px; }
+.prog-quiz-question { font-weight: 600; color: var(--text); margin-bottom: 10px; line-height: 1.5; }
+.prog-quiz-question code, .prog-quiz-option code, .prog-quiz-explain code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .86em; background: var(--cream-dark); padding: 1px 5px; border-radius: 5px; }
+.prog-quiz-options { display: flex; flex-direction: column; gap: 8px; }
+.prog-quiz-option { display: flex; align-items: flex-start; gap: 10px; width: 100%; text-align: left; font: inherit; font-size: .93rem; color: var(--text-mid); background: var(--cream); border: 1.5px solid var(--border); border-radius: 10px; padding: 10px 12px; cursor: pointer; transition: border-color .12s, background .12s; }
+.prog-quiz-option:hover:not(:disabled) { border-color: var(--green-mid); }
+.prog-quiz-option:disabled { cursor: default; }
+.prog-quiz-option.is-chosen { border-color: var(--blue-ink); background: var(--blue-lt); color: var(--text); }
+.prog-quiz-option.is-correct { border-color: var(--green); background: var(--green-lt); color: var(--text); }
+.prog-quiz-option.is-wrong { border-color: #b00020; background: #fdecee; color: var(--text); }
+.prog-quiz-letter { flex-shrink: 0; width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; font-size: .75rem; font-weight: 700; background: var(--white); border: 1px solid var(--border); }
+.prog-quiz-explain { margin-top: 10px; font-size: .9rem; line-height: 1.55; padding: 10px 12px; border-radius: 10px; }
+.prog-quiz-explain.is-correct { background: var(--green-lt); color: var(--text-mid); }
+.prog-quiz-explain.is-wrong { background: #fdecee; color: var(--text-mid); }
+.prog-quiz-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 22px; }
+.prog-quiz-actions .btn-outline:disabled { opacity: .55; cursor: not-allowed; transform: none; box-shadow: none; }
+.prog-quiz-score { font-weight: 700; color: var(--text); }
+
+.prog-pager { align-items: stretch; }
+.prog-pager-link { flex: 1 1 240px; display: flex; flex-direction: column; gap: 4px; padding: 16px 20px; background: var(--white); border: 1px solid var(--border-lt); border-radius: 14px; text-decoration: none; transition: border-color .15s, box-shadow .15s; }
+.prog-pager-link:hover { border-color: var(--green-mid); box-shadow: var(--shadow-md); }
+.prog-pager-link.is-next { text-align: right; }
+.prog-pager-dir { font-size: .78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--green); }
+.prog-pager-title { font-weight: 600; color: var(--text); }
+
+@media (max-width: 900px) {
+  .prog-quiz { padding: 22px 18px; }
+  .prog-lesson-card { padding: 16px; gap: 14px; }
+  .prog-pager-link.is-next { text-align: left; }
 }

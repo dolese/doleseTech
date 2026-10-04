@@ -107,6 +107,12 @@ export default function Products() {
           <p>Generate NECTA-style exam papers and download them as Word documents.</p>
           <span className="svc-link">Open Exams Composer →</span>
         </a>
+        <a className="product-card reveal" href="/programming">
+          <div className="product-kicker">Learn to code</div>
+          <h3>Programming Courses</h3>
+          <p>Free beginner-to-advanced lessons in TypeScript, Python, PostgreSQL, JavaScript and Java.</p>
+          <span className="svc-link">Start learning →</span>
+        </a>
       </div>
     </section>
   );

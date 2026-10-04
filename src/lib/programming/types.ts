@@ -30,6 +30,47 @@ export interface Lesson {
   code: CodeSample[];
   keyPoints: string[];
   exercise: string;
+  /** Worked solution and quiz; attached from the track's practice files. */
+  practice?: Practice;
+}
+
+export interface QuizQuestion {
+  question: string;
+  options: string[];
+  /** Index into `options` of the correct answer. */
+  answer: number;
+  /** Why the answer is right; shown after checking. */
+  explanation: string;
+}
+
+export interface Solution {
+  /** Paragraphs explaining the approach; `backticks` render as inline code. */
+  notes: string[];
+  code: CodeSample[];
+}
+
+export interface Practice {
+  solution: Solution;
+  quiz: QuizQuestion[];
+}
+
+/** Practice content for one track, keyed by level and then lesson slug. */
+export type TrackPractice = Partial<Record<LevelKey, Record<string, Practice>>>;
+
+/** Returns the levels with each lesson's practice content attached. */
+export function attachPractice(
+  levels: Record<LevelKey, LevelTrack>,
+  practice: TrackPractice,
+): Record<LevelKey, LevelTrack> {
+  const out = {} as Record<LevelKey, LevelTrack>;
+  for (const level of LEVELS) {
+    const byLesson = practice[level] ?? {};
+    out[level] = {
+      ...levels[level],
+      lessons: levels[level].lessons.map((l) => (byLesson[l.slug] ? { ...l, practice: byLesson[l.slug] } : l)),
+    };
+  }
+  return out;
 }
 
 export interface LevelTrack {

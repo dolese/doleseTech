@@ -3,7 +3,7 @@ import { SERVICES } from "@/lib/services";
 import { SUBJECTS, subjectSlug } from "@/lib/education";
 import { MATERIALS } from "@/lib/materials";
 import { SITE_URL } from "@/lib/site";
-import { LANGUAGES, LEVELS, isAvailable } from "@/lib/programming";
+import { LANGUAGES, LEVELS, isAvailable, lessonHref, lessonsInOrder } from "@/lib/programming";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
@@ -29,6 +29,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...LANGUAGES.filter(isAvailable).flatMap((l) => [
       page(`/programming/${l.slug}`, 0.7),
       ...LEVELS.map((level) => page(`/programming/${l.slug}/${level}`, 0.6)),
+      ...lessonsInOrder(l).map(({ level, lesson }) => page(lessonHref(l.slug, level, lesson.slug), 0.6)),
     ]),
     ...SUBJECTS.flatMap((s) =>
       MATERIALS.map((m) => page(`/education/${subjectSlug(s)}/${m.key}`, 0.5)),
