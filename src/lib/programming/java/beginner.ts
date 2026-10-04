@@ -248,7 +248,7 @@ public class Methods {
         "Arguments are passed by value — object contents can still be changed through a reference.",
       ],
       exercise:
-        "Write `areaOfRectangle(double w, double h)`, `areaOfCircle(double r)` and an overloaded `describe(double area)` / `describe(double area, String units)` that returns \"Area: 12.00 cm²\".",
+        "Write `areaOfRectangle(double w, double h)`, `areaOfCircle(double r)` and an overloaded `describe(double area)` / `describe(double area, String units)` that returns \"Area: 12.00 sq cm\".",
     },
     {
       slug: "arrays-and-strings",
