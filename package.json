@@ -23,6 +23,7 @@
     "rehype-katex": "^7.0.1",
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
+    "shiki": "^3.23.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

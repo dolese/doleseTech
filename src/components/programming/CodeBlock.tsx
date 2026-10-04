@@ -1,7 +1,6 @@
-"use client";
-
-import { useState } from "react";
 import type { CodeSample } from "@/lib/programming";
+import { highlight } from "@/lib/programming/highlight";
+import CopyButton from "./CopyButton";
 
 const LANG_LABELS: Record<CodeSample["lang"], string> = {
   ts: "TypeScript",
@@ -10,32 +9,18 @@ const LANG_LABELS: Record<CodeSample["lang"], string> = {
   dockerfile: "Dockerfile",
 };
 
-export default function CodeBlock({ sample }: { sample: CodeSample }) {
-  const [copied, setCopied] = useState(false);
-  const source = sample.source.trim();
-
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(source);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      // Clipboard can be unavailable (insecure context); selecting manually still works.
-    }
-  };
+export default async function CodeBlock({ sample }: { sample: CodeSample }) {
+  const html = await highlight(sample);
 
   return (
     <figure className="code-block">
       <figcaption className="code-block-head">
         <span className="code-block-file">{sample.filename}</span>
         <span className="code-block-lang">{LANG_LABELS[sample.lang]}</span>
-        <button type="button" className="code-block-copy" onClick={copy}>
-          {copied ? "Copied" : "Copy"}
-        </button>
+        <CopyButton text={sample.source.trim()} />
       </figcaption>
-      <pre>
-        <code>{source}</code>
-      </pre>
+      {/* Shiki output is generated at build time from our own lesson source. */}
+      <div className="code-block-body" dangerouslySetInnerHTML={{ __html: html }} />
     </figure>
   );
 }

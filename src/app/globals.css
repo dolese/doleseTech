@@ -2754,14 +2754,14 @@ table.sow-table, table.lp-table { width: 100%; border-collapse: collapse; backgr
 .prog-para { color: var(--text-mid); font-size: .97rem; line-height: 1.75; margin-bottom: 14px; }
 .prog-lesson code, .prog-exercise code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .86em; background: var(--cream-dark); color: var(--text); padding: 1px 6px; border-radius: 5px; }
 
-.code-block { margin: 20px 0; border-radius: 14px; overflow: hidden; background: var(--navy-deep); border: 1px solid var(--navy); }
-.code-block-head { display: flex; align-items: center; gap: 10px; padding: 9px 14px; background: var(--navy); color: #C9D3E3; font-size: .78rem; }
+.code-block { margin: 20px 0; border-radius: 14px; overflow: hidden; background: #1E1E1E; border: 1px solid #2D2D2D; }
+.code-block-head { display: flex; align-items: center; gap: 10px; padding: 9px 14px; background: #252526; border-bottom: 1px solid #2D2D2D; color: #C9D3E3; font-size: .78rem; }
 .code-block-file { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .code-block-lang { margin-left: auto; text-transform: uppercase; letter-spacing: .06em; font-size: .68rem; color: var(--green-brand); }
 .code-block-copy { font-family: inherit; font-size: .74rem; font-weight: 600; color: #fff; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18); border-radius: 7px; padding: 3px 10px; cursor: pointer; }
 .code-block-copy:hover { background: rgba(255,255,255,.16); }
-.code-block pre { margin: 0; padding: 16px 18px; overflow-x: auto; }
-.prog-lesson .code-block pre code { display: block; background: none; padding: 0; border-radius: 0; color: #E7ECF6; font-size: .84rem; line-height: 1.6; white-space: pre; }
+.code-block pre.shiki { margin: 0; padding: 16px 18px; overflow-x: auto; }
+.prog-lesson .code-block pre code { display: block; background: none; color: inherit; padding: 0; border-radius: 0; font-size: .84rem; line-height: 1.6; white-space: pre; }
 
 .prog-keypoints { margin-top: 22px; padding: 18px 20px; background: var(--cream); border: 1px solid var(--border-lt); border-radius: 12px; }
 .prog-keypoints h3, .prog-exercise h3 { font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 10px; }
