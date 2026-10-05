@@ -1,4 +1,5 @@
 import type { Practice } from "../../types";
+import { springDataJpa as springDataJpaPractice, projectResultsPortal as projectResultsPortalPractice } from "./more";
 
 export const advanced: Record<string, Practice> = {
   "maven-and-junit": {
@@ -823,4 +824,6 @@ docker stop results-api                      # graceful shutdown in the logs
       },
     ],
   },
+  "spring-data-jpa": springDataJpaPractice,
+  "project-results-portal-api": projectResultsPortalPractice,
 };

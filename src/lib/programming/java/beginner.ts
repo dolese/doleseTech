@@ -1,4 +1,5 @@
 import type { LevelTrack } from "../types";
+import { readingInput, datesAndTimes } from "./more";
 
 export const beginner: LevelTrack = {
   intro:
@@ -403,5 +404,7 @@ class Student {
       exercise:
         "Create a `BankAccount` class with a private balance, `deposit` and `withdraw` methods that reject invalid amounts, and a `toString`. Create two accounts in `main`, transfer money between them and print both.",
     },
+    readingInput,
+    datesAndTimes,
   ],
 };

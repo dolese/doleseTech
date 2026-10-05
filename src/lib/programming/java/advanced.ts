@@ -1,4 +1,5 @@
 import type { LevelTrack } from "../types";
+import { springDataJpa, projectResultsPortal } from "./more";
 
 export const advanced: LevelTrack = {
   intro:
@@ -719,6 +720,7 @@ curl -X POST localhost:8080/api/students -H "Content-Type: application/json" \\
       exercise:
         "Add `GET /api/students?form=4`, `PUT /api/students/{id}` and `DELETE /api/students/{id}` with tests. Then replace the in-memory map with Spring Data JDBC or JPA backed by PostgreSQL.",
     },
+    springDataJpa,
     {
       slug: "production-jvm",
       title: "Packaging, the JVM & Production",
@@ -809,5 +811,6 @@ docker build -t results-api . && docker run -p 8080:8080 -m 512m results-api
       exercise:
         "Package the Spring Boot API from the previous lesson as a jar and a Docker image, add Spring Boot Actuator, run the container with a 512 MB memory limit, and capture a 30-second JFR recording while sending it requests.",
     },
+    projectResultsPortal,
   ],
 };

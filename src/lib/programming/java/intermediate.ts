@@ -1,4 +1,5 @@
 import type { LevelTrack } from "../types";
+import { equalityAndOrdering, regexAndText } from "./more";
 
 export const intermediate: LevelTrack = {
   intro:
@@ -285,6 +286,7 @@ public class CollectionsDemo {
       exercise:
         "Read a list of words (from an array) and print: the number of unique words, the 5 most frequent words with counts (using a `Map` and sorting its entries), and the words grouped by their first letter in a `TreeMap`.",
     },
+    equalityAndOrdering,
     {
       slug: "generics",
       title: "Generics",
@@ -529,6 +531,7 @@ public class Streams {
       exercise:
         "From the results list, use streams to find: each subject's highest scorer, students who passed every subject, and a `Map<String, List<Integer>>` of student → scores sorted descending.",
     },
+    regexAndText,
     {
       slug: "files-and-io",
       title: "Files & I/O with java.nio",

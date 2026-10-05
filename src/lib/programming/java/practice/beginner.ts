@@ -1,4 +1,5 @@
 import type { Practice } from "../../types";
+import { readingInput as readingInputPractice, datesAndTimes as datesAndTimesPractice } from "./more";
 
 export const beginner: Record<string, Practice> = {
   setup: {
@@ -449,4 +450,6 @@ class BankAccount {
       },
     ],
   },
+  "reading-input": readingInputPractice,
+  "dates-and-times": datesAndTimesPractice,
 };

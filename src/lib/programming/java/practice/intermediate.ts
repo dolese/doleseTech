@@ -1,4 +1,5 @@
 import type { Practice } from "../../types";
+import { equalityAndOrdering as equalityAndOrderingPractice, regexAndText as regexAndTextPractice } from "./more";
 
 export const intermediate: Record<string, Practice> = {
   "inheritance-and-interfaces": {
@@ -643,4 +644,6 @@ public class Summarise {
       },
     ],
   },
+  "equals-hashcode-comparable": equalityAndOrderingPractice,
+  "regex-and-text": regexAndTextPractice,
 };
