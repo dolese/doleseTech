@@ -1,4 +1,5 @@
 import type { Practice } from "../../types";
+import { restApiExpress as restApiExpressPractice, postgresWithPg as postgresWithPgPractice } from "./more";
 
 export const intermediate: Record<string, Practice> = {
   "unions-and-narrowing": {
@@ -673,4 +674,6 @@ describe("parseAge", () => {
       },
     ],
   },
+  "rest-api-express": restApiExpressPractice,
+  "postgres-with-pg": postgresWithPgPractice,
 };

@@ -1,4 +1,5 @@
 import type { LevelTrack } from "../types";
+import { textAndDates } from "./more";
 
 export const beginner: LevelTrack = {
   intro:
@@ -282,6 +283,7 @@ console.log(summary);
       exercise:
         "Define a `Product` interface (name, price, quantity, optional category). From an array of products compute: the names of products under 5,000 TSh, the total stock value (price × quantity), and the most expensive product.",
     },
+    textAndDates,
     {
       slug: "modules-and-npm",
       title: "Modules, Node.js Built-ins & npm Scripts",

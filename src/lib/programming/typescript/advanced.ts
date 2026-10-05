@@ -1,4 +1,5 @@
 import type { LevelTrack } from "../types";
+import { authentication, cachingAndRateLimiting, projectResultsPortal } from "./more";
 
 export const advanced: LevelTrack = {
   intro:
@@ -433,6 +434,8 @@ main();
       exercise:
         "Add an HTTP layer on top of `ReportService` (using the server from the Intermediate track) and map `StudentNotFoundError` → 404 and `RangeError` → 400. Write tests for `ReportService` using the in-memory repository.",
     },
+    authentication,
+    cachingAndRateLimiting,
     {
       slug: "production",
       title: "Production: Build, Configure, Observe & Deploy",
@@ -540,5 +543,6 @@ CMD ["node", "dist/main.js"]
       exercise:
         "Take your task API from the earlier lessons, add a `/health` endpoint, structured logging and graceful shutdown, build it with the Dockerfile above, run it with `docker run -p 3000:3000`, and confirm `docker stop` triggers a clean shutdown in the logs.",
     },
+    projectResultsPortal,
   ],
 };

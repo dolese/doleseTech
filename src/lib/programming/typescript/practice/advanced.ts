@@ -1,4 +1,5 @@
 import type { Practice } from "../../types";
+import { authentication as authenticationPractice, cachingAndRateLimiting as cachingAndRateLimitingPractice, projectResultsPortal as projectResultsPortalPractice } from "./more";
 
 export const advanced: Record<string, Practice> = {
   "advanced-types": {
@@ -676,4 +677,7 @@ docker stop task-api                # logs: "shutting down" (SIGTERM) then "clos
       },
     ],
   },
+  "authentication-and-authorization": authenticationPractice,
+  "caching-and-rate-limiting": cachingAndRateLimitingPractice,
+  "project-results-portal-api": projectResultsPortalPractice,
 };

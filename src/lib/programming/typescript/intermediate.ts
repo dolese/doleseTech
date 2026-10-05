@@ -1,4 +1,5 @@
 import type { LevelTrack } from "../types";
+import { restApiExpress, postgresWithPg } from "./more";
 
 export const intermediate: LevelTrack = {
   intro:
@@ -483,5 +484,7 @@ node --import tsx --test grade.test.ts
       exercise:
         "Write tests for the `parseAge` function from the Error Handling lesson: a valid age, a decimal, a negative number, text input and the boundaries 0 and 120. Add a `test` script to package.json.",
     },
+    restApiExpress,
+    postgresWithPg,
   ],
 };
