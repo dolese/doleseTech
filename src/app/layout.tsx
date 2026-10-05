@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import ChatLauncher from "@/components/ChatLauncher";
+import { Analytics } from "@vercel/analytics/next";
 
 const TITLE = "Dolese Tech — Technology that works as hard as you do";
 
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         {children}
         <ChatLauncher />
+        <Analytics />
       </body>
     </html>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@vercel/analytics";
 import { useEffect, useRef, useState } from "react";
 import type { RunSpec } from "@/lib/programming/run";
 
@@ -61,6 +62,7 @@ function CodeRunner({ spec }: { spec: Exclude<RunSpec, { kind: "page" }> }) {
   };
 
   const run = () => {
+    track("Code run", { kind: spec.kind, page: window.location.pathname });
     const id = nextRunId++;
     const worker = workerFor(spec.kind);
     setRunning(true);
@@ -264,6 +266,7 @@ function PageRunner({ spec }: { spec: Extract<RunSpec, { kind: "page" }> }) {
   }, []);
 
   const run = (keepData: boolean) => {
+    track("Code run", { kind: "page", page: window.location.pathname });
     if (!keepData) stored.current = {};
     setLogs([]);
     setRunCount((n) => n + 1);

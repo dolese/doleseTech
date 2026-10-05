@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@vercel/analytics";
 import { useState } from "react";
 import type { QuizQuestion } from "@/lib/programming";
 import RichText from "./RichText";
@@ -83,7 +84,10 @@ export default function Quiz({ questions }: { questions: QuizQuestion[] }) {
           <button
             type="button"
             className="btn-outline"
-            onClick={() => setChecked(true)}
+            onClick={() => {
+              setChecked(true);
+              track("Quiz checked", { page: window.location.pathname, score, total: questions.length });
+            }}
             disabled={answered < questions.length}
           >
             {answered < questions.length ? `Answer all ${questions.length} questions` : "Check answers"}

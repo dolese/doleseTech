@@ -17,6 +17,7 @@
     "@electric-sql/pglite": "^0.5.8",
     "@google/generative-ai": "^0.24.1",
     "@neondatabase/serverless": "^1.1.0",
+    "@vercel/analytics": "^2.0.1",
     "docx": "^8.5.0",
     "katex": "^0.16.11",
     "next": "14.2.35",
