@@ -81,8 +81,26 @@ export async function createSmsChallenge(phone: string): Promise<string> {
   return code;
 }
 
+/**
+ * Where an emailed sign-in link should point.
+ *
+ * Production always uses the configured site address and never anything taken
+ * from the request: a link built from a forged Host header would send a
+ * teacher's sign-in token to someone else's site. Previews use their own
+ * branch address, so a link opens the preview it was requested from; local
+ * development uses whatever address the developer is on.
+ */
+export function linkOrigin(requestOrigin: string): string {
+  if (process.env.VERCEL_ENV === "production") return SITE_URL;
+  if (process.env.VERCEL_ENV === "preview") {
+    const branch = process.env.VERCEL_BRANCH_URL?.trim();
+    return branch ? `https://${branch}` : SITE_URL;
+  }
+  return process.env.NODE_ENV === "production" ? SITE_URL : requestOrigin;
+}
+
 /** Create a one-time sign-in link for an email address. Returns the URL. */
-export async function createEmailChallenge(email: string): Promise<string> {
+export async function createEmailChallenge(email: string, origin: string = SITE_URL): Promise<string> {
   const sql = requireDb();
   await ensureSchema();
   const token = randomBytes(32).toString("base64url");
@@ -91,7 +109,7 @@ export async function createEmailChallenge(email: string): Promise<string> {
     VALUES (${randomUUID()}, 'email', ${email}, ${hmac(`email:${token}`)},
             now() + make_interval(mins => ${LINK_MINUTES}))
   `;
-  return `${SITE_URL}/api/account/email-link?token=${encodeURIComponent(token)}`;
+  return `${origin}/api/account/email-link?token=${encodeURIComponent(token)}`;
 }
 
 export type VerifyResult =

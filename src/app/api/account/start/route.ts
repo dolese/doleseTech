@@ -7,6 +7,7 @@ import {
   accountsAvailable,
   createEmailChallenge,
   createSmsChallenge,
+  linkOrigin,
   normaliseEmail,
 } from "@/lib/teacherAuth";
 
@@ -71,7 +72,7 @@ export async function POST(req: NextRequest) {
     if (!perTarget.allowed) {
       return tooMany("We've sent several links to that address. Wait a few minutes, then try again.", perTarget.retryAfterSeconds);
     }
-    const link = await createEmailChallenge(email);
+    const link = await createEmailChallenge(email, linkOrigin(req.nextUrl.origin));
     try {
       await sendEmail({
         to: email,
