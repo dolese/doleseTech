@@ -3,8 +3,11 @@
 // from its own origin. Runs automatically before `next dev` and `next build`.
 import { cpSync, existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const root = new URL("..", import.meta.url).pathname;
+// fileURLToPath, not URL.pathname: on Windows .pathname is "/D:/..." with a
+// leading slash, which no file call accepts, so the check below always failed.
+const root = fileURLToPath(new URL("..", import.meta.url));
 const vendor = join(root, "public", "vendor");
 
 function copy(fromDir, toDir, keep) {
