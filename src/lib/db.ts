@@ -1,16 +1,43 @@
-import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
+import { neon } from "@neondatabase/serverless";
+import { Pool } from "pg";
 
 /**
- * Postgres (Neon) behind the contact pipeline and the admin inbox.
+ * Postgres behind the contact pipeline, the admin inbox, accounts and
+ * payments.
  *
- * Optional by design: with no DATABASE_URL the app falls back to the JSONL
- * file store, which is what local development uses. On a host with a
- * read-only filesystem — Vercel — the database is the only durable store, so
- * without it leads live only in the notification email.
+ * Production runs on Neon through its HTTP driver. Neon's driver only speaks
+ * to Neon, so any other address — a local Postgres in development or tests —
+ * goes through the standard `pg` driver instead. Both are wrapped in the same
+ * tagged-template shape, so no caller knows or cares which one it has.
+ *
+ * Optional by design: with no DATABASE_URL the contact form falls back to the
+ * JSONL file store. Accounts and payments need a real database.
  */
 
-let client: NeonQueryFunction<false, false> | null | undefined;
+/** A query as a tagged template: sql`SELECT … WHERE id = ${id}` → rows. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Sql = (strings: TemplateStringsArray, ...values: unknown[]) => Promise<any[]>;
+
+let client: Sql | null | undefined;
 let schemaReady: Promise<void> | null = null;
+
+function isNeonUrl(url: string): boolean {
+  try {
+    return new URL(url).hostname.endsWith(".neon.tech");
+  } catch {
+    return false;
+  }
+}
+
+/** Turn a tagged template into a `pg` parameterised query ($1, $2, …). */
+function pgSql(url: string): Sql {
+  const pool = new Pool({ connectionString: url, max: 5 });
+  return async (strings, ...values) => {
+    const text = strings.reduce((acc, part, i) => acc + part + (i < values.length ? `$${i + 1}` : ""), "");
+    const result = await pool.query(text, values);
+    return result.rows;
+  };
+}
 
 /**
  * Vercel's Neon integration injects the connection string under its own
@@ -33,10 +60,17 @@ function connectionString(): string | null {
   return null;
 }
 
-export function db(): NeonQueryFunction<false, false> | null {
+export function db(): Sql | null {
   if (client !== undefined) return client;
   const url = connectionString();
-  client = url ? neon(url) : null;
+  if (!url) {
+    client = null;
+  } else if (isNeonUrl(url)) {
+    const neonSql = neon(url);
+    client = (strings, ...values) => neonSql(strings, ...values) as Promise<Record<string, unknown>[]>;
+  } else {
+    client = pgSql(url);
+  }
   return client;
 }
 
@@ -70,6 +104,35 @@ export function ensureSchema(): Promise<void> {
         )
       `;
       await sql`CREATE INDEX IF NOT EXISTS leads_created_at_idx ON leads (created_at DESC)`;
+      // Teacher accounts (see teacherAuth.ts). A teacher signs in by phone,
+      // by email, or both; each is unique when present.
+      await sql`
+        CREATE TABLE IF NOT EXISTS teachers (
+          id              TEXT PRIMARY KEY,
+          phone           TEXT UNIQUE,
+          email           TEXT UNIQUE,
+          name            TEXT,
+          created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+          last_sign_in_at TIMESTAMPTZ
+        )
+      `;
+      // One row per code or link sent. Only a keyed hash of the secret is kept.
+      await sql`
+        CREATE TABLE IF NOT EXISTS sign_in_challenges (
+          id          TEXT PRIMARY KEY,
+          channel     TEXT NOT NULL,
+          target      TEXT NOT NULL,
+          secret_hash TEXT NOT NULL,
+          expires_at  TIMESTAMPTZ NOT NULL,
+          attempts    INTEGER NOT NULL DEFAULT 0,
+          consumed_at TIMESTAMPTZ,
+          created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+        )
+      `;
+      await sql`CREATE INDEX IF NOT EXISTS sign_in_challenges_target_idx
+                ON sign_in_challenges (channel, target, created_at DESC)`;
+      await sql`CREATE INDEX IF NOT EXISTS sign_in_challenges_secret_idx
+                ON sign_in_challenges (secret_hash)`;
       // Fixed-window counters shared by every serverless instance (see limits.ts).
       await sql`
         CREATE TABLE IF NOT EXISTS rate_limits (

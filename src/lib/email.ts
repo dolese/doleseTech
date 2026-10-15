@@ -1,5 +1,51 @@
 import type { Lead } from "./leads";
 
+export class EmailUnavailableError extends Error {
+  constructor() {
+    super("Email is not configured on this server.");
+  }
+}
+
+export function emailAvailable(): boolean {
+  return Boolean(process.env.RESEND_API_KEY?.trim()) || process.env.NODE_ENV !== "production";
+}
+
+/**
+ * Send one email to one person — sign-in links, receipts.
+ *
+ * Same rule as SMS: development prints it to the terminal when Resend is not
+ * configured; production never does (a sign-in link in the logs is a leaked
+ * key) and fails instead, so the caller can say email sign-in is unavailable.
+ */
+export async function sendEmail({
+  to,
+  subject,
+  text,
+}: {
+  to: string;
+  subject: string;
+  text: string;
+}): Promise<"resend" | "log"> {
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  if (!apiKey) {
+    if (process.env.NODE_ENV === "production") throw new EmailUnavailableError();
+    console.info(`[email:log] to ${to} — ${subject}\n${text}`);
+    return "log";
+  }
+
+  const from = process.env.CONTACT_FROM?.trim() || "Dolese Tech <onboarding@resend.dev>";
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ from, to, subject, text }),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`Resend API error ${res.status}: ${body.slice(0, 200)}`);
+  }
+  return "resend";
+}
+
 /**
  * Send a notification email for a new lead via the Resend HTTP API.
  *
