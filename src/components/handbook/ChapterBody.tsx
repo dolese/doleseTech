@@ -2,6 +2,8 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkSmartypants from "remark-smartypants";
 import type { Element, ElementContent } from "hast";
+import { headingId } from "@/content/handbook";
+import "./content.css";
 
 /**
  * A handbook chapter's Markdown, laid out for the page and for print.
@@ -41,6 +43,10 @@ export default function ChapterBody({ markdown }: { markdown: string }) {
         // outside code, so chapters can be edited with an ordinary keyboard.
         remarkPlugins={[remarkGfm, remarkSmartypants]}
         components={{
+          // Sections can be linked to: /handbook/python#5-4-grades-and-divisions
+          h2({ node, children }) {
+            return <h2 id={headingId(text(node as ElementContent))}>{children}</h2>;
+          },
           blockquote({ node, children }) {
             const callout = calloutOf(node as Element | undefined);
             if (!callout) return <blockquote>{children}</blockquote>;

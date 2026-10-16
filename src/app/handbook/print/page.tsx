@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { BrandMark } from "@/components/BrandLogo";
 import ChapterBody from "@/components/handbook/ChapterBody";
-import { CHAPTERS, HANDBOOK, type Chapter } from "@/content/handbook";
+import { CHAPTERS, HANDBOOK, glossaryMarkdown, type Chapter } from "@/content/handbook";
 import "./handbook.css";
 
 /**
@@ -26,6 +26,8 @@ function selected(param: string | undefined): Chapter[] {
 
 export default function HandbookPrint({ searchParams }: { searchParams: { chapters?: string } }) {
   const chapters = selected(searchParams.chapters);
+  // The glossary closes the whole book, not a single printed chapter.
+  const wholeBook = !searchParams.chapters || searchParams.chapters === "all";
 
   return (
     <div className="hb-book">
@@ -66,6 +68,13 @@ export default function HandbookPrint({ searchParams }: { searchParams: { chapte
               {!c.body && <span className="hb-contents-tag">In preparation</span>}
             </li>
           ))}
+          <li>
+            <span className="hb-contents-num">A</span>
+            <span className="hb-contents-title">
+              Kiswahili glossary
+              <small>Every key term in the book, in English and Kiswahili.</small>
+            </span>
+          </li>
         </ol>
         <p className="hb-contents-note">
           Every chapter builds part of one project: a small school results system. Code examples are tested
@@ -83,6 +92,17 @@ export default function HandbookPrint({ searchParams }: { searchParams: { chapte
           <ChapterBody markdown={c.body!} />
         </article>
       ))}
+
+      {wholeBook && (
+        <article className="hb-chapter">
+          <header className="hb-chapter-head">
+            <span className="hb-chapter-num">Appendix</span>
+            <h1>Kiswahili glossary</h1>
+            <p>Every key term in the book, in alphabetical order, with the chapter that explains it.</p>
+          </header>
+          <ChapterBody markdown={glossaryMarkdown()} />
+        </article>
+      )}
     </div>
   );
 }

@@ -1,0 +1,88 @@
+/* Dolese Tech IT Handbook — the reading pages (/handbook, /handbook/<chapter>,
+   /handbook/glossary). The chapter text itself is styled by
+   src/components/handbook/content.css. */
+
+.hbr { padding: 96px 16px 72px; }
+
+/* ── Home ─────────────────────────────────────────────── */
+.hbr-hero { max-width: 760px; margin: 0 auto; padding: 32px 0 24px; text-align: center; }
+.hbr-hero h1 {
+  font-family: var(--font-display); font-weight: 600; font-size: clamp(2rem, 5vw, 3.2rem);
+  letter-spacing: -.02em; line-height: 1.1; margin-bottom: 12px;
+}
+.hbr-hero h1 strong { font-weight: 600; color: var(--green); }
+.hbr-hero-sub { font-size: 1.15rem; color: var(--text); margin-bottom: 12px; }
+.hbr-hero-text { color: var(--text-mid); max-width: 640px; margin: 0 auto; }
+.hbr-hero-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 24px; }
+
+.hbr-chapters {
+  max-width: 1000px; margin: 24px auto 0;
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px;
+}
+.hbr-chapter-card {
+  display: flex; gap: 16px; align-items: flex-start; text-decoration: none; color: var(--text);
+  background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 18px 20px;
+  box-shadow: var(--shadow-sm); transition: border-color .15s, box-shadow .15s, transform .15s;
+}
+a.hbr-chapter-card:hover { border-color: var(--green-mid); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.hbr-chapter-card.is-soon { opacity: .6; }
+.hbr-chapter-num {
+  flex-shrink: 0; min-width: 44px; font-family: var(--font-display); font-weight: 700; font-size: 1.4rem;
+  color: var(--green); line-height: 1.2;
+}
+.hbr-chapter-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.hbr-chapter-text strong { font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; }
+.hbr-chapter-text span { font-size: .9rem; color: var(--text-mid); line-height: 1.5; }
+.hbr-chapter-text small { font-size: .78rem; color: var(--text-muted); margin-top: 4px; }
+.hbr-glossary-card { grid-column: 1 / -1; background: var(--green-lt); border-color: var(--green-mid); }
+
+.hbr-about { max-width: 760px; margin: 40px auto 0; color: var(--text-mid); }
+.hbr-about h2 { font-family: var(--font-display); font-size: 1.3rem; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+.hbr-about p { margin-bottom: 10px; }
+.hbr-about a, .hbr-note a, .hbr-meta a { color: var(--blue-ink); }
+.hbr-edition { font-size: .85rem; color: var(--text-muted); }
+
+/* ── Chapter ──────────────────────────────────────────── */
+.hbr-breadcrumb { max-width: 1120px; margin: 16px auto 0; }
+.hbr-layout {
+  max-width: 1120px; margin: 16px auto 0;
+  display: grid; grid-template-columns: minmax(0, 1fr) 240px; gap: 40px; align-items: start;
+}
+.hbr-layout-single { grid-template-columns: minmax(0, 1fr); max-width: 900px; }
+.hbr-article {
+  background: var(--white); border: 1px solid var(--border); border-radius: 18px;
+  padding: 36px 44px; box-shadow: var(--shadow-sm); min-width: 0;
+}
+.hbr-chapter-head { border-bottom: 3px solid var(--navy); padding-bottom: 14px; margin-bottom: 20px; }
+.hbr-kicker { font-family: var(--font-display); font-weight: 600; font-size: .8rem; letter-spacing: .14em; text-transform: uppercase; color: var(--green); }
+.hbr-chapter-head h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.8rem, 4vw, 2.5rem); letter-spacing: -.02em; line-height: 1.15; margin: 4px 0 6px; }
+.hbr-chapter-head p { color: var(--text-mid); }
+.hbr-meta { font-size: .85rem; color: var(--text-muted) !important; margin-top: 6px; }
+.hbr-note { font-size: .88rem; color: var(--text-mid); margin-top: 18px; }
+
+.hbr-toc { position: sticky; top: 88px; font-size: .85rem; max-height: calc(100vh - 110px); overflow-y: auto; }
+.hbr-toc p { font-weight: 600; text-transform: uppercase; letter-spacing: .08em; font-size: .72rem; color: var(--text-muted); margin-bottom: 8px; }
+.hbr-toc ol { list-style: none; display: flex; flex-direction: column; gap: 2px; border-left: 2px solid var(--border); }
+.hbr-toc a { display: block; padding: 4px 0 4px 12px; color: var(--text-mid); text-decoration: none; line-height: 1.4; }
+.hbr-toc a:hover { color: var(--green); }
+
+.hbr-pager { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border-lt); }
+.hbr-pager-link {
+  display: flex; flex-direction: column; gap: 2px; text-decoration: none; color: var(--text); font-weight: 600;
+  border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px;
+}
+.hbr-pager-link:hover { border-color: var(--green); }
+.hbr-pager-link small { font-weight: 500; color: var(--text-muted); font-size: .78rem; }
+.hbr-pager-next { text-align: right; grid-column: 2; }
+
+@media (max-width: 960px) {
+  .hbr-layout { grid-template-columns: minmax(0, 1fr); }
+  .hbr-toc { display: none; }
+}
+@media (max-width: 700px) {
+  .hbr-chapters { grid-template-columns: 1fr; }
+  .hbr-article { padding: 22px 18px; border-radius: 14px; }
+  .hbr-pager { grid-template-columns: 1fr; }
+  .hbr-pager-next { grid-column: auto; }
+  .hbr .hb-prose { font-size: 11.5pt; }
+}

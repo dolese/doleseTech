@@ -94,3 +94,72 @@ export const CHAPTERS: Chapter[] = [
 export function chapterBySlug(slug: string): Chapter | undefined {
   return CHAPTERS.find((c) => c.slug === slug);
 }
+
+export function chapterWithNeighbours(slug: string): { chapter: Chapter; previous?: Chapter; next?: Chapter } | undefined {
+  const i = CHAPTERS.findIndex((c) => c.slug === slug);
+  if (i < 0) return undefined;
+  return { chapter: CHAPTERS[i], previous: CHAPTERS[i - 1], next: CHAPTERS[i + 1] };
+}
+
+/** "7.1 Why this matters" → "7-1-why-this-matters": the id of a heading. */
+export function headingId(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[`*_]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+/** A chapter's sections (its ## headings), for an "on this page" list. */
+export function chapterSections(markdown: string): { id: string; title: string }[] {
+  return [...markdown.matchAll(/^## (.+)$/gm)].map((m) => {
+    const title = m[1].replace(/`/g, "").trim();
+    return { id: headingId(title), title };
+  });
+}
+
+/** Minutes to read, at a careful 180 words a minute. */
+export function readingMinutes(markdown: string): number {
+  return Math.max(1, Math.round(markdown.split(/\s+/).length / 180));
+}
+
+export interface GlossaryEntry {
+  english: string;
+  kiswahili: string;
+  meaning: string;
+  chapters: number[];
+}
+
+/**
+ * Every chapter's "Key terms" table, merged into one alphabetical glossary.
+ * A term defined in several chapters is listed once, with each chapter.
+ */
+export function glossary(): GlossaryEntry[] {
+  const byTerm = new Map<string, GlossaryEntry>();
+  for (const chapter of CHAPTERS) {
+    const body = chapter.body?.replace(/\r\n/g, "\n");
+    const start = body?.indexOf("\n## Key terms\n") ?? -1;
+    if (!body || start < 0) continue;
+    const rows = body
+      .slice(start)
+      .split("\n")
+      .filter((line) => line.startsWith("|"))
+      .slice(2); // the heading row and the |---| row
+    for (const row of rows) {
+      const [english, kiswahili, meaning] = row.slice(1, -1).split(" | ").map((cell) => cell.trim());
+      if (!english || !kiswahili) continue;
+      const key = english.toLowerCase();
+      const known = byTerm.get(key);
+      if (known) known.chapters.push(chapter.number);
+      else byTerm.set(key, { english, kiswahili, meaning, chapters: [chapter.number] });
+    }
+  }
+  return [...byTerm.values()].sort((a, b) => a.english.localeCompare(b.english));
+}
+
+/** The glossary as a Markdown table, for the book and the web page. */
+export function glossaryMarkdown(): string {
+  const lines = ["| English | Kiswahili | Meaning | Chapter |", "|---|---|---|---|"];
+  for (const e of glossary()) lines.push(`| ${e.english} | ${e.kiswahili} | ${e.meaning} | ${e.chapters.join(", ")} |`);
+  return lines.join("\n");
+}

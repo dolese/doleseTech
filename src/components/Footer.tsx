@@ -36,6 +36,7 @@ export default function Footer() {
           <a href="/education">Schemes of Work</a>
           <a href="/education">Lesson Plans</a>
           <a href="/education">Lesson Notes</a>
+          <a href="/handbook">IT Handbook</a>
         </div>
         <div className="footer-col">
           <h4>Company</h4>
