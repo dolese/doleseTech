@@ -3,6 +3,7 @@ import { emailAvailable } from "@/lib/email";
 import { displayPhone } from "@/lib/phone";
 import { smsAvailable } from "@/lib/sms";
 import { accountsAvailable, getTeacher, sessionTeacherId } from "@/lib/teacherAuth";
+import { sellingEnabled } from "@/lib/entitlements";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,6 +18,8 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     available,
+    // Paid features are on: exams need sign-in and count against an allowance.
+    selling: sellingEnabled(),
     methods,
     teacher: teacher && {
       id: teacher.id,

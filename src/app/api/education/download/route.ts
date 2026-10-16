@@ -22,6 +22,9 @@ import {
   buildLessonNotes,
   type MaterialKey,
 } from "@/lib/materials";
+import { packFor } from "@/lib/catalog";
+import { hasPackAccess, sellingEnabled } from "@/lib/entitlements";
+import { sessionTeacherId } from "@/lib/teacherAuth";
 
 export const runtime = "nodejs";
 
@@ -163,6 +166,17 @@ export async function GET(req: NextRequest) {
   }
   if (!hasContent(slug)) {
     return NextResponse.json({ error: "Full content for this subject is not available yet." }, { status: 404 });
+  }
+
+  // The Word files of a sold subject come with its pack.
+  const pack = packFor(slug);
+  if (pack && sellingEnabled()) {
+    const teacherId = sessionTeacherId(req);
+    if (!(await hasPackAccess(teacherId, slug))) {
+      const next = `/checkout?product=${pack.id}`;
+      const to = teacherId ? next : `/account/sign-in?next=${encodeURIComponent(next)}`;
+      return NextResponse.redirect(new URL(to, req.nextUrl.origin));
+    }
   }
 
   const doc = new Document({

@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import PrintButton from "@/components/education/PrintButton";
-import { SUBJECTS, subjectSlug, getSubjectBySlug } from "@/lib/education";
+import { getSubjectBySlug } from "@/lib/education";
 import {
-  MATERIALS,
   isMaterialKey,
   materialLabel,
   hasContent,
@@ -14,16 +14,20 @@ import {
   buildLessonNotes,
   type MaterialKey,
 } from "@/lib/materials";
+import { formatTzs, packFor, saleTerm, termLabel } from "@/lib/catalog";
+import { hasPackAccess, sellingEnabled } from "@/lib/entitlements";
+import { SESSION_COOKIE, readSession } from "@/lib/teacherAuth";
 
 interface Params {
   params: { slug: string; material: string };
 }
 
-export function generateStaticParams() {
-  return SUBJECTS.flatMap((s) =>
-    MATERIALS.map((m) => ({ slug: subjectSlug(s), material: m.key })),
-  );
-}
+// Rendered per request: sold subjects show the full material only to
+// teachers with the pack, and everyone else sees the preview.
+export const dynamic = "force-dynamic";
+
+/** How much of a sold subject anyone can read: enough to judge it by. */
+const PREVIEW = { schemeRows: 2, plansPerForm: 1, noteTopicsPerForm: 1 };
 
 export function generateMetadata({ params }: Params): Metadata {
   const subject = getSubjectBySlug(params.slug);
@@ -34,13 +38,17 @@ export function generateMetadata({ params }: Params): Metadata {
   };
 }
 
-export default function MaterialPage({ params }: Params) {
+export default async function MaterialPage({ params }: Params) {
   const subject = getSubjectBySlug(params.slug);
   if (!subject || !isMaterialKey(params.material)) notFound();
 
   const material = params.material as MaterialKey;
   const downloadHref = `/api/education/download?slug=${params.slug}&material=${material}`;
   const available = hasContent(params.slug);
+
+  const pack = sellingEnabled() ? packFor(params.slug) : undefined;
+  const teacherId = pack ? readSession(cookies().get(SESSION_COOKIE)?.value) : null;
+  const preview = Boolean(pack) && !(await hasPackAccess(teacherId, params.slug));
 
   return (
     <>
@@ -62,7 +70,7 @@ export default function MaterialPage({ params }: Params) {
                 {subject.level} · {subject.forms} · TIE / NECTA aligned
               </p>
             </div>
-            {available && (
+            {available && !preview && (
               <div className="mat-actions">
                 <a className="btn-filled" href={downloadHref}>Download .docx</a>
                 <PrintButton />
@@ -79,11 +87,31 @@ export default function MaterialPage({ params }: Params) {
               <a href="/education#samples">Education page</a>.
             </p>
           ) : material === "scheme-of-work" ? (
-            <SchemeOfWorkView slug={params.slug} subject={subject.name} level={subject.level} forms={subject.forms} />
+            <SchemeOfWorkView slug={params.slug} subject={subject.name} level={subject.level} forms={subject.forms} preview={preview} />
           ) : material === "lesson-plans" ? (
-            <LessonPlansView slug={params.slug} subject={subject.name} />
+            <LessonPlansView slug={params.slug} subject={subject.name} preview={preview} />
           ) : (
-            <LessonNotesView slug={params.slug} />
+            <LessonNotesView slug={params.slug} preview={preview} />
+          )}
+          {available && preview && pack && (
+            <aside className="pack-lock" aria-label="Preview">
+              <p className="pack-lock-kicker">You&apos;re reading a preview</p>
+              <h2>Get the full {subject.name} pack</h2>
+              <p>
+                Every week of the scheme of work, every lesson plan and all the lesson notes for {subject.forms},
+                with editable Word downloads. {formatTzs(pack.price)} for {termLabel(saleTerm())}.
+              </p>
+              <div className="pack-lock-actions">
+                {teacherId ? (
+                  <a className="btn-filled" href={`/checkout?product=${pack.id}`}>Buy the pack</a>
+                ) : (
+                  <a className="btn-filled" href={`/account/sign-in?next=${encodeURIComponent(`/checkout?product=${pack.id}`)}`}>
+                    Sign in to buy
+                  </a>
+                )}
+                <a className="btn-outline" href="/pricing">See prices</a>
+              </div>
+            </aside>
           )}
         </section>
 
@@ -96,10 +124,13 @@ export default function MaterialPage({ params }: Params) {
   );
 }
 
-function SchemeOfWorkView({ slug, subject, level, forms }: { slug: string; subject: string; level: string; forms: string }) {
+function SchemeOfWorkView({ slug, subject, level, forms, preview }: { slug: string; subject: string; level: string; forms: string; preview: boolean }) {
+  const sections = buildSchemeOfWork(slug, subject).map((section) =>
+    preview ? { ...section, rows: section.rows.slice(0, PREVIEW.schemeRows) } : section,
+  );
   return (
     <>
-      {buildSchemeOfWork(slug, subject).map((section) => (
+      {sections.map((section) => (
         <article className="sample-doc" key={section.form}>
           <header className="doc-head">
             <h3>{section.form} — Scheme of Work</h3>
@@ -148,10 +179,15 @@ function SchemeOfWorkView({ slug, subject, level, forms }: { slug: string; subje
   );
 }
 
-function LessonPlansView({ slug, subject }: { slug: string; subject: string }) {
+function LessonPlansView({ slug, subject, preview }: { slug: string; subject: string; preview: boolean }) {
+  const all = buildLessonPlans(slug, subject);
+  // In a preview, the first plans of each form.
+  const plans = preview
+    ? all.filter((p, i) => all.slice(0, i).filter((q) => q.form === p.form).length < PREVIEW.plansPerForm)
+    : all;
   return (
     <>
-      {buildLessonPlans(slug, subject).map((plan) => (
+      {plans.map((plan) => (
         <article className="sample-doc" key={`${plan.form}-${plan.topic}`}>
           <header className="doc-head">
             <span className="doc-kind">{plan.form} · IDDR</span>
@@ -198,10 +234,13 @@ function LessonPlansView({ slug, subject }: { slug: string; subject: string }) {
   );
 }
 
-function LessonNotesView({ slug }: { slug: string }) {
+function LessonNotesView({ slug, preview }: { slug: string; preview: boolean }) {
+  const sections = buildLessonNotes(slug).map((section) =>
+    preview ? { ...section, topics: section.topics.slice(0, PREVIEW.noteTopicsPerForm) } : section,
+  );
   return (
     <>
-      {buildLessonNotes(slug).map((section) => (
+      {sections.map((section) => (
         <article className="sample-doc" key={section.form}>
           <header className="doc-head">
             <span className="doc-kind">{section.form}</span>

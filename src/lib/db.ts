@@ -142,6 +142,60 @@ export function ensureSchema(): Promise<void> {
           PRIMARY KEY (key, window_start)
         )
       `;
+      // Purchases (see orders.ts). The id is the pawaPay deposit id, chosen by
+      // us before the payment is requested, so a payment can never exist
+      // without its order. status: pending | paid | failed | review.
+      await sql`
+        CREATE TABLE IF NOT EXISTS orders (
+          id             TEXT PRIMARY KEY,
+          reference      TEXT NOT NULL UNIQUE,
+          teacher_id     TEXT NOT NULL REFERENCES teachers (id),
+          product        TEXT NOT NULL,
+          description    TEXT NOT NULL,
+          amount         INTEGER NOT NULL CHECK (amount > 0),
+          term           TEXT,
+          phone          TEXT NOT NULL,
+          network        TEXT NOT NULL,
+          status         TEXT NOT NULL DEFAULT 'pending',
+          failure_reason TEXT,
+          provider_txn   TEXT,
+          created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+          checked_at     TIMESTAMPTZ,
+          paid_at        TIMESTAMPTZ
+        )
+      `;
+      await sql`CREATE INDEX IF NOT EXISTS orders_teacher_idx ON orders (teacher_id, created_at DESC)`;
+      await sql`CREATE INDEX IF NOT EXISTS orders_created_idx ON orders (created_at DESC)`;
+      // Exam papers a teacher can generate (see entitlements.ts): free ones
+      // counted per month, and bought credits that never expire.
+      await sql`
+        CREATE TABLE IF NOT EXISTS paper_balances (
+          teacher_id TEXT PRIMARY KEY REFERENCES teachers (id),
+          month      TEXT NOT NULL DEFAULT '',
+          free_used  INTEGER NOT NULL DEFAULT 0 CHECK (free_used >= 0),
+          credits    INTEGER NOT NULL DEFAULT 0 CHECK (credits >= 0)
+        )
+      `;
+      await sql`
+        CREATE TABLE IF NOT EXISTS paper_usage (
+          id         TEXT PRIMARY KEY,
+          teacher_id TEXT NOT NULL REFERENCES teachers (id),
+          source     TEXT NOT NULL,
+          subject    TEXT,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        )
+      `;
+      await sql`CREATE INDEX IF NOT EXISTS paper_usage_created_idx ON paper_usage (created_at DESC)`;
+      // Subject packs, one row per subject per school term bought.
+      await sql`
+        CREATE TABLE IF NOT EXISTS subject_access (
+          teacher_id TEXT NOT NULL REFERENCES teachers (id),
+          subject    TEXT NOT NULL,
+          term       TEXT NOT NULL,
+          order_id   TEXT NOT NULL REFERENCES orders (id),
+          PRIMARY KEY (teacher_id, subject, term)
+        )
+      `;
     })().catch((err) => {
       // Let the next request try again rather than caching the failure.
       schemaReady = null;

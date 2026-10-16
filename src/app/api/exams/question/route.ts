@@ -4,6 +4,8 @@ import { complete, providerConfigError, QUESTION_MAX_TOKENS } from "@/lib/aiComp
 import { buildQuestionPrompt, parseReplacementQuestion, questionRegenSchema } from "@/lib/exams";
 import { classifyAiError } from "@/lib/aiErrors";
 import { guardAi } from "@/lib/limits";
+import { sellingEnabled } from "@/lib/entitlements";
+import { sessionTeacherId } from "@/lib/teacherAuth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,6 +40,10 @@ export async function POST(req: NextRequest) {
   const configError = providerConfigError(modelProvider(model));
   if (configError) return NextResponse.json({ error: configError }, { status: 503 });
 
+  // Replacing one question in a paper is free, but only for signed-in teachers.
+  if (sellingEnabled() && !sessionTeacherId(req)) {
+    return NextResponse.json({ error: "Sign in to change questions.", code: "SIGN_IN" }, { status: 401 });
+  }
   const denied = await guardAi(req, "exams", model);
   if (denied) return denied;
 

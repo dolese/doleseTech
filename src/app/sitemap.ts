@@ -3,6 +3,7 @@ import { SERVICES } from "@/lib/services";
 import { SUBJECTS, subjectSlug } from "@/lib/education";
 import { MATERIALS } from "@/lib/materials";
 import { SITE_URL } from "@/lib/site";
+import { sellingEnabled } from "@/lib/entitlements";
 import { LANGUAGES, LEVELS, isAvailable, lessonHref, lessonsInOrder } from "@/lib/programming";
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -21,6 +22,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     page("/exams", 0.8),
     page("/programming", 0.8),
     page("/chat", 0.5),
+    ...(sellingEnabled() ? [page("/pricing", 0.7)] : []),
     page("/privacy", 0.3),
     page("/terms", 0.3),
     page("/security", 0.3),

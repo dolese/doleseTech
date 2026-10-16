@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import Nav from "@/components/Nav";
 import { BrandMark } from "@/components/BrandLogo";
 import Footer from "@/components/Footer";
+import SalesPanel from "@/components/admin/SalesPanel";
 
 const STATUSES = ["new", "contacted", "qualified", "won", "lost"] as const;
 type Status = (typeof STATUSES)[number];
@@ -17,7 +18,7 @@ const STATUS_LABELS: Record<Status, string> = {
 };
 
 /** The three things this page is for: read the business, work the leads, check the systems. */
-type Section = "overview" | "leads" | "systems";
+type Section = "overview" | "leads" | "systems" | "sales";
 
 interface Lead {
   id: string;
@@ -475,6 +476,16 @@ export default function AdminPage() {
               </span>
             </button>
 
+            <button
+              className={`admin-nav-item ${section === "sales" ? "active" : ""}`}
+              onClick={() => goTo("sales")}
+            >
+              <span className="admin-nav-label">
+                <NavIcon d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                Sales
+              </span>
+            </button>
+
             <span className="admin-sidebar-heading">Pipeline</span>
             <button
               className={`admin-nav-item ${section === "leads" && statusFilter === "all" ? "active" : ""}`}
@@ -531,7 +542,7 @@ export default function AdminPage() {
               <div>
                 <div className="tag">Admin</div>
                 <h1 className="admin-title">
-                  {section === "overview" ? "Overview" : section === "leads" ? "Leads" : "Systems"}
+                  {section === "overview" ? "Overview" : section === "leads" ? "Leads" : section === "sales" ? "Sales" : "Systems"}
                 </h1>
               </div>
             </div>
@@ -787,6 +798,8 @@ export default function AdminPage() {
           )}
 
           {/* ── SYSTEMS ──────────────────────────────────── */}
+          {section === "sales" && <SalesPanel />}
+
           {section === "systems" && (
             <>
               <div className="admin-sys-grid">

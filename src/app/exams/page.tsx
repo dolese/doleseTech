@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { formatTzs, getProduct } from "@/lib/catalog";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import MathText from "@/components/MathText";
@@ -83,6 +84,27 @@ export default function ExamsPage() {
   const [libOpen, setLibOpen] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
   const [restored, setRestored] = useState(false);
+
+  // ── Account: who may generate, and how many papers are left ─────
+  const [selling, setSelling] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
+  const [allowance, setAllowance] = useState<{ freeLeft: number; freePerMonth: number; credits: number } | null>(null);
+  const [paywall, setPaywall] = useState<"sign-in" | "buy" | null>(null);
+
+  useEffect(() => {
+    fetch("/api/account/me")
+      .then((r) => r.json())
+      .then((data) => {
+        setSelling(Boolean(data.selling));
+        setSignedIn(Boolean(data.teacher));
+        if (data.selling && data.teacher) {
+          return fetch("/api/account/summary")
+            .then((r) => (r.ok ? r.json() : null))
+            .then((summary) => summary && setAllowance(summary.papers));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // ── Per-question regeneration ────────────────────────────────
   const [regenAt, setRegenAt] = useState<{ si: number; qi: number } | null>(null);
@@ -175,6 +197,7 @@ export default function ExamsPage() {
         }),
       });
       const json = await res.json();
+      if (res.status === 401) setPaywall("sign-in");
       if (!res.ok) throw new Error(json.error ?? `HTTP ${res.status}`);
 
       setExam({
@@ -215,8 +238,13 @@ export default function ExamsPage() {
       setError("Pick at least one question format.");
       return;
     }
+    if (selling && !signedIn) {
+      setPaywall("sign-in");
+      return;
+    }
     setLoading(true);
     setError("");
+    setPaywall(null);
     try {
       const res = await fetch("/api/exams/generate", {
         method: "POST",
@@ -238,7 +266,10 @@ export default function ExamsPage() {
         }),
       });
       const json = await res.json();
+      if (res.status === 401 && json.code === "SIGN_IN") setPaywall("sign-in");
+      if (res.status === 402) setPaywall("buy");
       if (!res.ok) throw new Error(json.error ?? `HTTP ${res.status}`);
+      if (json.allowance) setAllowance(json.allowance);
       setExam(json.exam);
       setIssues(Array.isArray(json.issues) ? json.issues : []);
       setRefine("");
@@ -435,7 +466,41 @@ export default function ExamsPage() {
               </label>
             </div>
 
+            {selling && (
+              <div className="exam-allowance">
+                {!signedIn ? (
+                  <p>
+                    <a href="/account/sign-in?next=/exams">Sign in</a> to generate papers. It&apos;s free, with 2 papers
+                    every month.
+                  </p>
+                ) : allowance ? (
+                  <p>
+                    <strong>{allowance.freeLeft}</strong> of {allowance.freePerMonth} free papers left this month
+                    {allowance.credits > 0 && (
+                      <>
+                        {" · "}
+                        <strong>{allowance.credits}</strong> bought
+                      </>
+                    )}
+                    {" · "}
+                    <a href="/checkout?product=papers-10">Buy more</a>
+                  </p>
+                ) : null}
+              </div>
+            )}
+
+            {paywall === "sign-in" && !error && (
+              <div className="exam-error">Sign in to generate papers.</div>
+            )}
             {error && <div className="exam-error">{error}</div>}
+            {paywall && (
+              <a
+                className="btn-outline exam-paywall-link"
+                href={paywall === "buy" ? "/checkout?product=papers-10" : "/account/sign-in?next=/exams"}
+              >
+                {paywall === "buy" ? `Buy 10 papers for ${formatTzs(getProduct("papers-10")?.price ?? 0)}` : "Sign in, it's free"}
+              </a>
+            )}
 
             <button className="btn-filled exam-generate" onClick={() => generate()} disabled={loading}>
               {loading ? "Generating…" : exam ? "Regenerate" : "Generate exam"}

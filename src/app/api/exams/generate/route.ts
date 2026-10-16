@@ -13,6 +13,8 @@ import {
 } from "@/lib/exams";
 import { classifyAiError } from "@/lib/aiErrors";
 import { guardAi } from "@/lib/limits";
+import { paperAllowance, releasePaper, reservePaper, sellingEnabled, type Reservation } from "@/lib/entitlements";
+import { sessionTeacherId } from "@/lib/teacherAuth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -66,9 +68,34 @@ export async function POST(req: NextRequest) {
   const configError = providerConfigError(modelProvider(model));
   if (configError) return NextResponse.json({ error: configError }, { status: 503 });
 
+  // Each paper comes from the teacher's allowance: free ones each month,
+  // then bought ones. Taken before generating and given back if it fails.
+  let teacherId: string | null = null;
+  if (sellingEnabled()) {
+    teacherId = sessionTeacherId(req);
+    if (!teacherId) {
+      return NextResponse.json(
+        { error: "Sign in to generate papers. It's free, with 2 papers every month.", code: "SIGN_IN" },
+        { status: 401 },
+      );
+    }
+  }
+
   // A paper can take a generation call plus a repair pass, so it is charged as two.
   const denied = await guardAi(req, "exams", model, { calls: 2 });
   if (denied) return denied;
+
+  let reservation: Reservation | null = null;
+  if (teacherId) {
+    reservation = await reservePaper(teacherId, cfg.subject);
+    if (!reservation) {
+      return NextResponse.json(
+        { error: "You've used this month's free papers. Buy more papers to keep going.", code: "NO_PAPERS" },
+        { status: 402 },
+      );
+    }
+  }
+  let delivered = false;
 
   try {
     const { system, user } = buildExamPrompt(cfg, cfg.instruction);
@@ -112,10 +139,17 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ exam: best.exam, model, issues: best.issues });
+    delivered = true;
+    const allowance = teacherId ? await paperAllowance(teacherId) : undefined;
+    return NextResponse.json({ exam: best.exam, model, issues: best.issues, allowance });
   } catch (err) {
     console.error("Exam generation error:", err);
     const { status, message } = classifyAiError(err, "Exam generation");
     return NextResponse.json({ error: message }, { status });
+  } finally {
+    // No paper, no charge.
+    if (!delivered && teacherId && reservation) {
+      await releasePaper(teacherId, reservation).catch((err) => console.error("Could not give back a paper:", err));
+    }
   }
 }
