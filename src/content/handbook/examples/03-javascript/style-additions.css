@@ -1,0 +1,24 @@
+/* Chapter 3: messages and the second button */
+.message {
+  min-height: 1.5em;
+  margin: 12px 0 0;
+  font-weight: 600;
+}
+
+.message.error {
+  color: #9b1c1c;
+}
+
+.message.success {
+  color: #1d5e1a;
+}
+
+button.secondary {
+  background: #ffffff;
+  color: #1b2435;
+  border: 1px solid #b8c1cc;
+}
+
+button.secondary:hover {
+  background: #f4f6f8;
+}
