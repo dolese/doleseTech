@@ -1,3 +1,4 @@
+import computerEssentials from "./01-computer-essentials.md";
 import stayingSafeOnline from "./07-staying-safe-online.md";
 
 /**
@@ -26,7 +27,13 @@ export const HANDBOOK = {
 };
 
 export const CHAPTERS: Chapter[] = [
-  { number: 1, slug: "computer-essentials", title: "Computer essentials", summary: "Shortcuts, files and folders, symbols, and how the internet works.", body: null },
+  {
+    number: 1,
+    slug: "computer-essentials",
+    title: "Computer essentials",
+    summary: "Shortcuts, files and folders, symbols, and how the internet works.",
+    body: computerEssentials,
+  },
   { number: 2, slug: "html-and-css", title: "HTML and CSS", summary: "Build the results page of a small school system.", body: null },
   { number: 3, slug: "javascript", title: "JavaScript", summary: "Check marks as they are entered and work out averages and divisions.", body: null },
   { number: 4, slug: "databases-with-sql", title: "Databases with SQL", summary: "Store students, subjects and marks, and ask questions of them.", body: null },
