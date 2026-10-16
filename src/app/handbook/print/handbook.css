@@ -50,7 +50,8 @@
     background: #fff; box-shadow: 0 1px 4px rgba(27, 36, 53, .12);
     padding: 20mm 18mm; margin-bottom: 24px;
   }
-  .hb-book > .hb-cover { padding: 0; }
+  /* More specific than the white page rule above, so the cover stays navy. */
+  .hb-book > .hb-cover { padding: 0; background: var(--hb-navy); }
 }
 
 @media print {
