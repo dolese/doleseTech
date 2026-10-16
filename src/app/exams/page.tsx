@@ -5,6 +5,12 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import MathText from "@/components/MathText";
 import ExamFigure from "@/components/exams/Figure";
+import PlanEditor from "@/components/exams/PlanEditor";
+import AgentProgress from "@/components/exams/AgentProgress";
+import QualityReport from "@/components/exams/QualityReport";
+import type { ExamPlan } from "@/lib/examAgent/plan";
+import type { AgentReport } from "@/lib/examAgent/assemble";
+import { runExamAgent, type StepProgress } from "@/lib/examAgent/run";
 import { SUBJECTS, SUBJECT_TOPICS, subjectSlug } from "@/lib/education";
 import { CHAT_MODELS } from "@/lib/chatModels";
 import {
@@ -74,6 +80,15 @@ export default function ExamsPage() {
   const [issues, setIssues] = useState<{ level: string; message: string }[]>([]);
   const [showScheme, setShowScheme] = useState(false);
   const [refine, setRefine] = useState("");
+  // ── The examining panel ──────────────────────────────────────
+  const [plan, setPlan] = useState<ExamPlan | null>(null);
+  const [planning, setPlanning] = useState(false);
+  const [view, setView] = useState<"paper" | "plan" | "running">("paper");
+  const [agentSteps, setAgentSteps] = useState<StepProgress[]>([]);
+  const [report, setReport] = useState<AgentReport | null>(null);
+  const [planKey, setPlanKey] = useState("");
+  // What the plan depends on; if any of it changes, the plan is out of date.
+  const settingsKey = JSON.stringify([subjectSlugValue, form, examType, duration, totalMarks, topics, formats, difficulty, language]);
   const [watermark, setWatermark] = useState("");
 
   // ── Library / draft ──────────────────────────────────────────
@@ -128,6 +143,8 @@ export default function ExamsPage() {
     setExam(paper.exam);
     setSavedId(paper.id);
     setIssues([]);
+    setReport(null);
+    setView("paper");
     setError("");
     setRegenAt(null);
     setLibOpen(false);
@@ -210,44 +227,80 @@ export default function ExamsPage() {
     setTopics([]);
   }
 
-  async function generate(instruction?: string) {
+  function paperSettings() {
+    return {
+      subject: subject.name,
+      level: subject.level,
+      form,
+      examType,
+      durationMinutes: duration,
+      totalMarks,
+      topics,
+      formats,
+      difficulty,
+      language,
+      school: school || undefined,
+      model,
+    };
+  }
+
+  /** Step 1: the examiner's plan, for the teacher to check and adjust. */
+  async function requestPlan(): Promise<ExamPlan | null> {
     if (formats.length === 0) {
       setError("Pick at least one question format.");
-      return;
+      return null;
     }
-    setLoading(true);
+    setPlanning(true);
     setError("");
     try {
-      const res = await fetch("/api/exams/generate", {
+      const res = await fetch("/api/exams/plan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          subject: subject.name,
-          level: subject.level,
-          form,
-          examType,
-          durationMinutes: duration,
-          totalMarks,
-          topics,
-          formats,
-          difficulty,
-          language,
-          school: school || undefined,
-          model,
-          instruction,
-        }),
+        body: JSON.stringify(paperSettings()),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? `HTTP ${res.status}`);
-      setExam(json.exam);
-      setIssues(Array.isArray(json.issues) ? json.issues : []);
+      return json.plan as ExamPlan;
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "The plan could not be made.");
+      return null;
+    } finally {
+      setPlanning(false);
+    }
+  }
+
+  async function makePlan() {
+    const next = await requestPlan();
+    if (next) {
+      setPlan(next);
+      setPlanKey(settingsKey);
+      setView("plan");
+    }
+  }
+
+  /** Step 2: the panel writes, answers blind, moderates and revises the paper. */
+  async function writePaper(instruction?: string) {
+    const approved = plan ?? (await requestPlan());
+    if (!approved) return;
+    setPlan(approved);
+    setLoading(true);
+    setError("");
+    setAgentSteps([]);
+    setView("running");
+    try {
+      const result = await runExamAgent({ plan: approved, model, school: school || undefined, instruction, onProgress: setAgentSteps });
+      setExam(result.exam);
+      setIssues(result.issues);
+      setReport(result.report);
       setRefine("");
-      // A freshly generated paper is a new document, not an edit of a saved one.
+      // A freshly written paper is a new document, not an edit of a saved one.
       setSavedId(null);
       setRestored(false);
       setRegenAt(null);
+      setView("paper");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Generation failed.");
+      setError(e instanceof Error ? e.message : "The paper could not be written.");
+      setView(instruction && exam ? "paper" : "plan");
     } finally {
       setLoading(false);
     }
@@ -437,18 +490,40 @@ export default function ExamsPage() {
 
             {error && <div className="exam-error">{error}</div>}
 
-            <button className="btn-filled exam-generate" onClick={() => generate()} disabled={loading}>
-              {loading ? "Generating…" : exam ? "Regenerate" : "Generate exam"}
+            <button className="btn-filled exam-generate" onClick={makePlan} disabled={loading || planning}>
+              {planning ? "Planning…" : loading ? "Writing the paper…" : exam ? "Plan a new paper" : "Plan the paper"}
             </button>
           </aside>
 
           {/* ── Preview panel ── */}
           <div className="exam-preview">
-            {!exam ? (
+            {view === "running" ? (
+              <AgentProgress steps={agentSteps} />
+            ) : view === "plan" && plan ? (
+              <>
+                {planKey !== settingsKey && (
+                  <div className="plan-stale">
+                    Your settings have changed since this plan was made.
+                    <button type="button" className="btn-outline" onClick={makePlan} disabled={planning}>
+                      Plan again
+                    </button>
+                  </div>
+                )}
+                <PlanEditor plan={plan} onChange={setPlan} onApprove={() => writePaper()} busy={loading} />
+                {exam && (
+                  <button type="button" className="account-link plan-back" onClick={() => setView("paper")}>
+                    ← Back to the current paper
+                  </button>
+                )}
+              </>
+            ) : !exam ? (
               <div className="exam-empty">
                 <div className="exam-empty-icon">📝</div>
                 <h3>Your paper will appear here</h3>
-                <p>Set up the paper on the left and click <strong>Generate exam</strong>.</p>
+                <p>
+                  Set up the paper on the left and click <strong>Plan the paper</strong>. You&apos;ll check the
+                  examiner&apos;s plan, then a panel writes, answers, moderates and revises every question.
+                </p>
               </div>
             ) : (
               <>
@@ -559,6 +634,8 @@ export default function ExamsPage() {
                   ))}
                 </article>
 
+                {report && <QualityReport report={report} />}
+
                 {issues.length > 0 && (
                   <div className="exam-quality">
                     <strong>Quality check</strong>
@@ -631,13 +708,13 @@ export default function ExamsPage() {
                 <div className="exam-refine">
                   <input
                     type="text"
-                    placeholder='Refine — e.g. "increase difficulty", "add 2 essay questions", "translate to Kiswahili"'
+                    placeholder='Rewrite to the same plan — e.g. "use farming examples", "simpler English". To change the structure, plan a new paper.'
                     value={refine}
                     onChange={(e) => setRefine(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter" && refine.trim()) generate(refine.trim()); }}
+                    onKeyDown={(e) => { if (e.key === "Enter" && refine.trim()) writePaper(refine.trim()); }}
                     disabled={loading}
                   />
-                  <button className="btn-outline" onClick={() => refine.trim() && generate(refine.trim())} disabled={loading || !refine.trim()}>
+                  <button className="btn-outline" onClick={() => refine.trim() && writePaper(refine.trim())} disabled={loading || !refine.trim()}>
                     Apply
                   </button>
                 </div>

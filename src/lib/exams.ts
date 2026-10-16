@@ -1,10 +1,11 @@
 /**
- * DOLESE AI Exams Composer — Phase 1 core.
- * Types, options, the exam JSON schema, and the prompt builder used by the
- * /api/exams/generate route and the /exams UI. Tanzania (TIE/NECTA) oriented.
+ * DOLESE AI Exams Composer — core.
+ * Types, options, the exam JSON schema, validation, single-question
+ * regeneration and versions. Whole papers are planned, written and moderated
+ * by the examining panel in ./examAgent. Tanzania (TIE/NECTA) oriented.
  */
 import { z } from "zod";
-import { blueprintPromptBlock, examStructureGoverned, blueprintFor } from "./examBlueprints";
+import { blueprintFor } from "./examBlueprints";
 
 export const EXAM_TYPES = [
   "Quiz",
@@ -265,8 +266,7 @@ export const examConfigSchema = z.object({
 
 // ── Prompt builders ─────────────────────────────────────────────
 /**
- * JSON shape of ONE question. Shared by the full-paper prompt and the
- * single-question regeneration prompt so the two can never drift apart.
+ * JSON shape of ONE question, for the single-question regeneration prompt.
  * Note `\\n` is escaped so the rendered prompt shows the literal text "\n".
  */
 const QUESTION_JSON_SHAPE = `{
@@ -288,74 +288,13 @@ const QUESTION_JSON_SHAPE = `{
   "answer": string             // model answer / marking scheme with mark breakdown
 }`;
 
-/** Indent every line after the first, so a shared block nests cleanly. */
-function indentBlock(block: string, pad: string): string {
-  return block.split("\n").map((l, i) => (i === 0 ? l : pad + l)).join("\n");
-}
-
-/** Shared question-writing rules used by both prompts. */
+/** Question-writing rules for the single-question prompt. */
 const QUESTION_RULES = [
   "Multiple Choice items need 4 options (A–D) or 5 options (A–E) — NECTA commonly uses 5 — and the answer states the correct letter.",
   "Every question includes a correct, complete \"answer\" (model answer) with a brief mark breakdown.",
   "Write ALL mathematical expressions in LaTeX: inline as $...$ and display as $$...$$ (e.g. fractions $\\frac{3}{4}$, powers $x^{2}$, roots $\\sqrt{x}$, $\\times$, $\\pm$, $\\leq$). Do not write math as plain ASCII.",
   "Attach a \"figure\" ONLY when the question genuinely needs a diagram — a data table to read, a bar chart, a number line, or points/lines to plot on a coordinate plane. Use one of the four supported figure types with numeric data (never prose). Do not invent figure types. Most questions need no figure.",
 ];
-
-export function buildExamPrompt(config: ExamConfig, refine?: string): { system: string; user: string } {
-  const system = `You are a senior Tanzanian examiner and TIE curriculum expert who writes NECTA-standard, competence-based examination papers. You know the Tanzania 2023 competence-based curriculum, NECTA paper structure (Sections A/B/C with objective, short/structured, and essay items), marks allocation, timing, and Bloom's taxonomy balance.
-
-You output ONLY a single valid JSON object (no markdown, no code fences, no commentary) with this exact shape:
-{
-  "title": string,
-  "subject": string,
-  "level": string,
-  "form": string,
-  "examType": string,
-  "durationMinutes": number,
-  "totalMarks": number,
-  "language": string,
-  "instructions": string[],            // candidate instructions (rubric)
-  "sections": [
-    {
-      "name": string,                  // e.g. "SECTION A"
-      "instructions": string,
-      "marks": number,                 // marks a candidate earns in this section
-      "choose": number,                // OPTIONAL — for an optional section, how many of the printed questions to answer (e.g. 2 when "answer any two of four"); omit for compulsory sections
-      "questions": [
-        ${indentBlock(QUESTION_JSON_SHAPE, "        ")}
-      ]
-    }
-  ]
-}
-
-Rules:
-- The marks a candidate can earn MUST sum exactly to totalMarks. For a COMPULSORY section, its "marks" equals the sum of its question marks. For an OPTIONAL section, set "choose" to the number of questions answered and set the section "marks" to the marks earned by that many questions (NOT the sum of all printed questions), then include extra printed questions to choose from. State the choice in the section "instructions" (e.g. "Answer any two (2) questions from this section.").
-- Keep the whole paper doable within the given duration.
-- Balance Bloom's levels across the paper; do not make every item "Remember".
-- Only use the requested question formats.
-- Cover the requested topics; every question must be answerable from the stated subject/form syllabus.
-${QUESTION_RULES.map((r) => `- ${r}`).join("\n")}
-- Write in the requested language.`;
-
-  const blueprint = blueprintPromptBlock(config.subject, config.level, config.examType, config.totalMarks);
-  const governed = examStructureGoverned(config.subject, config.level, config.examType);
-
-  const parts = [
-    `Create a ${config.examType} for ${config.subject} — ${config.level} ${config.form}.`,
-    `Duration: ${config.durationMinutes} minutes. Total marks: ${config.totalMarks}.`,
-    governed
-      ? `The official paper structure below governs the sections and question types; use the teacher's format preferences (${config.formats.join(", ")}) only where they fit that structure.`
-      : `Question formats to use: ${config.formats.join(", ")}.`,
-    `Overall difficulty: ${config.difficulty}.`,
-    `Language: ${config.language}.`,
-    config.topics.length ? `Focus on these topics: ${config.topics.join("; ")}.` : `Cover the core topics of the form.`,
-    config.school ? `School: ${config.school}.` : "",
-    blueprint ? `\n${blueprint}` : "",
-    refine ? `\nApply this change to the paper: ${refine}` : "",
-    `\nReturn ONLY the JSON object.`,
-  ];
-  return { system, user: parts.filter(Boolean).join(" ") };
-}
 
 // ── Single-question regeneration ────────────────────────────────
 export const questionRegenSchema = z.object({
