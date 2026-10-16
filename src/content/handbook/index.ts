@@ -5,6 +5,7 @@ import databasesWithSql from "./04-databases-with-sql.md";
 import python from "./05-python.md";
 import cppEssentials from "./06-cpp-essentials.md";
 import stayingSafeOnline from "./07-staying-safe-online.md";
+import gitAndGithub from "./08-git-and-github.md";
 
 /**
  * The Dolese Tech IT Handbook: one book that builds a small school results
@@ -81,7 +82,13 @@ export const CHAPTERS: Chapter[] = [
     summary: "Protect your devices, your accounts, your money and your work.",
     body: stayingSafeOnline,
   },
-  { number: 8, slug: "git-and-github", title: "Git and GitHub", summary: "Keep every version of your project safe and share it.", body: null },
+  {
+    number: 8,
+    slug: "git-and-github",
+    title: "Git and GitHub",
+    summary: "Keep every version of your project safe, share it, and publish it.",
+    body: gitAndGithub,
+  },
 ];
 
 export function chapterBySlug(slug: string): Chapter | undefined {
