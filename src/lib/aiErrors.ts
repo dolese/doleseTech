@@ -40,10 +40,18 @@ export function classifyAiError(err: unknown, action = "Generation"): AiErrorRes
     return { status: 502, message: "AI service authentication failed. Please check the API key configuration." };
   }
 
+  // The provider account has run out of credit: nothing the teacher can fix,
+  // but another provider's model may still work. The details are in the logs.
+  if (status === 402 || has(/credit balance|billing|payment required|insufficient.?(funds|credit)/i)) {
+    return { status: 503, message: "This AI model is unavailable right now. Please choose a different model, or try again later." };
+  }
+
   // Provider overloaded / transient.
   if (status === 503 || status === 529 || has(/\b503\b|\b529\b|overloaded|unavailable|timeout/i)) {
     return { status: 503, message: "The AI provider is temporarily unavailable. Please try again in a moment." };
   }
 
-  return { status: 500, message: raw ? `${action} failed: ${raw}` : `${action} failed. Please try again.` };
+  // Anything else: the provider's own message stays in the server log, where
+  // the callers write it; teachers get a plain one.
+  return { status: 500, message: `${action} failed. Please try again.` };
 }

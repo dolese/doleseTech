@@ -44,16 +44,23 @@ const ROUNDS = 2;
 /** Problems that make a question wrong, not just weaker: revised first. */
 const SERIOUS = ["KEY", "SYLLABUS", "CLARITY", "MARKS"];
 
-async function post<T>(url: string, body: unknown, attempts = 2): Promise<T> {
+const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * POST one step. A busy provider (503) or a dropped connection is tried again
+ * after a pause — up to three times; limits and bad requests are not, since
+ * they will not be different a moment later.
+ */
+async function post<T>(url: string, body: unknown, attempts = 3): Promise<T> {
   let lastError: Error = new Error("Request failed.");
   for (let attempt = 1; attempt <= attempts; attempt++) {
+    if (attempt > 1) await pause(attempt === 2 ? 3000 : 8000);
     try {
       const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       const json = await res.json().catch(() => ({}));
       if (res.ok) return json as T;
       lastError = new Error(json.error ?? `HTTP ${res.status}`);
-      // Limits and bad requests will not be different a second later.
-      if (res.status === 429 || res.status === 422 || res.status === 503 || res.status === 400) break;
+      if (res.status === 429 || res.status === 422 || res.status === 400 || res.status === 401) break;
     } catch (err) {
       lastError = err instanceof Error ? err : new Error(String(err));
     }

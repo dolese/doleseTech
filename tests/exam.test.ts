@@ -327,10 +327,19 @@ test("retired-model, auth and overload errors are classified distinctly", () => 
   assert.equal(classifyAiError(new Error("[503] overloaded")).status, 503);
 });
 
-test("an unrecognised error keeps its detail and a 500", () => {
-  const out = classifyAiError(new Error("something odd broke"), "Exam generation");
+test("an unrecognised error is a plain 500: the provider's text stays in the server log", () => {
+  const out = classifyAiError(new Error('400 {"type":"error","error":{"message":"something odd broke"}}'), "Exam generation");
   assert.equal(out.status, 500);
-  assert.match(out.message, /Exam generation failed: something odd broke/);
+  assert.equal(out.message, "Exam generation failed. Please try again.");
+});
+
+test("a provider account out of credit asks for another model, without billing details", () => {
+  const out = classifyAiError(
+    new Error('400 {"type":"error","error":{"type":"invalid_request_error","message":"Your credit balance is too low to access the Anthropic API."}}'),
+  );
+  assert.equal(out.status, 503);
+  assert.match(out.message, /choose a different model/);
+  assert.doesNotMatch(out.message, /credit|billing/i);
 });
 
 // ── figure rasteriser ───────────────────────────────────────────────
