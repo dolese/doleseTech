@@ -2,6 +2,7 @@ import computerEssentials from "./01-computer-essentials.md";
 import htmlAndCss from "./02-html-and-css.md";
 import javascript from "./03-javascript.md";
 import databasesWithSql from "./04-databases-with-sql.md";
+import python from "./05-python.md";
 import stayingSafeOnline from "./07-staying-safe-online.md";
 
 /**
@@ -58,7 +59,13 @@ export const CHAPTERS: Chapter[] = [
     summary: "Store students, subjects and marks, and ask questions of them.",
     body: databasesWithSql,
   },
-  { number: 5, slug: "python", title: "Python", summary: "Import a class list, and calculate grades and divisions automatically.", body: null },
+  {
+    number: 5,
+    slug: "python",
+    title: "Python",
+    summary: "Import a class list, and calculate grades and divisions automatically.",
+    body: python,
+  },
   { number: 6, slug: "cpp-essentials", title: "C++ essentials", summary: "Classes, inheritance and the standard library, for college courses.", body: null },
   {
     number: 7,
