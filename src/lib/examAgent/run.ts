@@ -168,6 +168,12 @@ export async function runExamAgent(opts: {
   set("write", "done", `${total} questions written`);
   log.push(`Wrote ${total} questions to the plan.`);
 
+  // From here on the paper exists. A step that cannot run — a busy provider,
+  // a lost connection — is reported to the teacher, never allowed to throw
+  // the paper away.
+  const incomplete: string[] = [];
+  const failed = (err: unknown) => (err instanceof Error ? err.message : "the AI service did not answer");
+
   // 2. Answer blind.
   set("solve", "running");
   const blind = new Map<string, string>();
@@ -175,56 +181,93 @@ export async function runExamAgent(opts: {
     const { answers } = await post<{ answers: { number: string; answer: string }[] }>("/api/exams/agent/solve", { plan, exam, only, model });
     for (const a of answers) blind.set(a.number, a.answer);
   };
-  await solve();
-  const firstCheck = compareObjective(exam, blind);
-  set("solve", "done", `${blind.size} answered · ${firstCheck.checked - firstCheck.disagreements.length} of ${firstCheck.checked} objective answers agree with the key`);
-  log.push(`An independent examiner answered ${blind.size} questions without the marking scheme.`);
+  let firstCheck = { checked: 0, disagreements: [] as Disagreement[] };
+  try {
+    await solve();
+    firstCheck = compareObjective(exam, blind);
+    set("solve", "done", `${blind.size} answered · ${firstCheck.checked - firstCheck.disagreements.length} of ${firstCheck.checked} objective answers agree with the key`);
+    log.push(`An independent examiner answered ${blind.size} questions without the marking scheme.`);
+  } catch (err) {
+    set("solve", "failed", "Could not run this time");
+    incomplete.push(`The blind answer check could not run (${failed(err)}). Check the multiple-choice key yourself.`);
+  }
 
   // 3. Moderate.
   set("moderate", "running");
-  const moderate = async (only?: string[]) =>
-    post<{ verdicts: Verdict[]; summary: string; unreadable?: boolean }>("/api/exams/agent/moderate", {
+  const moderate = async (only?: string[]) => {
+    let reply = await post<{ verdicts: Verdict[]; summary: string; unreadable?: boolean }>("/api/exams/agent/moderate", {
       plan, exam, blind: Object.fromEntries(blind), only, model,
     });
-  let review = await moderate();
-  if (review.unreadable) review = await moderate();
-  const summary = review.summary;
-  let flagged = merge(keyVerdicts(firstCheck.disagreements), review.verdicts);
-  set("moderate", "done", flagged.length ? `${flagged.length} question${flagged.length === 1 ? "" : "s"} sent back` : "Every question passed");
-  log.push(`The chief examiner moderated ${total} questions${flagged.length ? ` and sent back ${flagged.length}` : "; all passed"}.`);
+    if (reply.unreadable) {
+      reply = await post("/api/exams/agent/moderate", { plan, exam, blind: Object.fromEntries(blind), only, model });
+    }
+    if (reply.unreadable) throw new Error("the review could not be read");
+    return reply;
+  };
+  let summary = "";
+  let flagged: Verdict[] = keyVerdicts(firstCheck.disagreements);
+  let moderated = false;
+  try {
+    const review = await moderate();
+    summary = review.summary;
+    flagged = merge(flagged, review.verdicts);
+    moderated = true;
+    set("moderate", "done", flagged.length ? `${flagged.length} question${flagged.length === 1 ? "" : "s"} sent back` : "Every question passed");
+    log.push(`The chief examiner moderated ${total} questions${flagged.length ? ` and sent back ${flagged.length}` : "; all passed"}.`);
+  } catch (err) {
+    set("moderate", "failed", "Could not run this time");
+    incomplete.push(`Moderation could not run (${failed(err)}). Read every question before printing, or write the paper again later.`);
+  }
 
   // 4. Revise and re-check.
   const revised: Verdict[] = [];
-  if (!flagged.length) set("revise", "skipped", "Nothing to revise");
+  if (!flagged.length) set("revise", "skipped", moderated ? "Nothing to revise" : "Skipped");
   for (let round = 1; round <= ROUNDS && flagged.length; round++) {
     const batch = flagged.slice().sort((a, b) => severity(a) - severity(b)).slice(0, MAX_REVISIONS);
     set("revise", "running", `Round ${round}: rewriting ${batch.length} question${batch.length === 1 ? "" : "s"}`);
-    const result = await post<{ exam: Exam; revised: string[] }>("/api/exams/agent/revise", {
-      plan,
-      exam,
-      instruction,
-      model,
-      requests: batch.map((v) => ({ number: v.number, problems: v.problems, note: v.note, blind: blind.get(v.number) })),
-    });
-    exam = result.exam;
-    revised.push(...batch.filter((v) => result.revised.includes(v.number)));
-    const recheck = result.revised;
+    let recheck: string[] = [];
+    try {
+      const result = await post<{ exam: Exam; revised: string[] }>("/api/exams/agent/revise", {
+        plan,
+        exam,
+        instruction,
+        model,
+        requests: batch.map((v) => ({ number: v.number, problems: v.problems, note: v.note, blind: blind.get(v.number) })),
+      });
+      exam = result.exam;
+      recheck = result.revised;
+      revised.push(...batch.filter((v) => recheck.includes(v.number)));
+    } catch (err) {
+      incomplete.push(`Round ${round} of revisions could not run (${failed(err)}); the questions below are as first written.`);
+      break;
+    }
     if (!recheck.length) break;
 
     set("revise", "running", `Round ${round}: checking ${recheck.length} revised question${recheck.length === 1 ? "" : "s"}`);
-    for (const n of recheck) blind.delete(n);
-    await solve(recheck);
-    const again = compareObjective(
-      { ...exam, sections: exam.sections.map((s) => ({ ...s, questions: s.questions.filter((q) => recheck.includes(q.number)) })) },
-      blind,
-    );
-    const second = await moderate(recheck);
-    // Questions not revised this round keep their earlier verdict.
-    const leftOver = flagged.filter((v) => !batch.includes(v) || !result.revised.includes(v.number));
-    flagged = merge(leftOver, keyVerdicts(again.disagreements), second.verdicts);
-    log.push(`Round ${round}: rewrote ${recheck.length} question${recheck.length === 1 ? "" : "s"}; ${flagged.length} still need attention.`);
+    // Questions not rewritten this round keep their earlier verdict.
+    const leftOver = flagged.filter((v) => !recheck.includes(v.number));
+    try {
+      for (const n of recheck) blind.delete(n);
+      await solve(recheck);
+      const again = compareObjective(
+        { ...exam, sections: exam.sections.map((s) => ({ ...s, questions: s.questions.filter((q) => recheck.includes(q.number)) })) },
+        blind,
+      );
+      const second = await moderate(recheck);
+      flagged = merge(leftOver, keyVerdicts(again.disagreements), second.verdicts);
+      log.push(`Round ${round}: rewrote ${recheck.length} question${recheck.length === 1 ? "" : "s"}; ${flagged.length} still need attention.`);
+    } catch (err) {
+      // Rewritten but not checked again: the teacher looks at them.
+      flagged = merge(
+        leftOver,
+        recheck.map((number) => ({ number, problems: ["CLARITY"], note: "Rewritten after moderation, but the second check could not run. Read it before printing." })),
+      );
+      incomplete.push(`The check after round ${round} could not run (${failed(err)}).`);
+      break;
+    }
   }
   if (revised.length) set("revise", "done", `${revised.length} question${revised.length === 1 ? "" : "s"} improved${flagged.length ? `, ${flagged.length} for you to check` : ""}`);
+  else if (flagged.length && moderated) set("revise", "failed", `${flagged.length} for you to check`);
 
   // 5. Final checks, in code.
   set("check", "running");
@@ -241,7 +284,7 @@ export async function runExamAgent(opts: {
 
   const report: AgentReport = {
     steps: log,
-    reviewed: total,
+    reviewed: moderated ? total : 0,
     revised,
     unresolved: flagged,
     blind: {
@@ -251,6 +294,7 @@ export async function runExamAgent(opts: {
     },
     keyMoved: balanced.moved,
     summary,
+    incomplete,
     checks,
     bloom: examBloomShare(exam),
   };

@@ -10,8 +10,8 @@ export default function QualityReport({ report }: { report: AgentReport }) {
     <details className="quality-report" open>
       <summary>
         Examiner&apos;s report
-        <span className={report.unresolved.length ? "qr-badge is-warn" : "qr-badge"}>
-          {report.unresolved.length ? `${report.unresolved.length} to check` : "Moderated"}
+        <span className={report.unresolved.length || report.incomplete.length ? "qr-badge is-warn" : "qr-badge"}>
+          {report.unresolved.length ? `${report.unresolved.length} to check` : report.incomplete.length ? "Partly checked" : "Moderated"}
         </span>
       </summary>
 
@@ -27,6 +27,17 @@ export default function QualityReport({ report }: { report: AgentReport }) {
       </div>
 
       {report.summary && <blockquote className="qr-summary">{report.summary}</blockquote>}
+
+      {report.incomplete.length > 0 && (
+        <div className="qr-block qr-warn">
+          <h4>Not every check could run</h4>
+          <ul>
+            {report.incomplete.map((m) => (
+              <li key={m}>{m}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {report.unresolved.length > 0 && (
         <div className="qr-block qr-warn">

@@ -346,6 +346,8 @@ export interface AgentReport {
   /** Answer-key letters moved to spread the key. */
   keyMoved: number;
   summary: string;
+  /** Steps that could not run, in words the teacher can act on. */
+  incomplete: string[];
   checks: ExamIssue[];
   bloom: Record<Bloom, number>;
 }
