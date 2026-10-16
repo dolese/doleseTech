@@ -1,4 +1,5 @@
 import computerEssentials from "./01-computer-essentials.md";
+import htmlAndCss from "./02-html-and-css.md";
 import stayingSafeOnline from "./07-staying-safe-online.md";
 
 /**
@@ -34,7 +35,13 @@ export const CHAPTERS: Chapter[] = [
     summary: "Shortcuts, files and folders, symbols, and how the internet works.",
     body: computerEssentials,
   },
-  { number: 2, slug: "html-and-css", title: "HTML and CSS", summary: "Build the results page of a small school system.", body: null },
+  {
+    number: 2,
+    slug: "html-and-css",
+    title: "HTML and CSS",
+    summary: "Build the results page of a small school system.",
+    body: htmlAndCss,
+  },
   { number: 3, slug: "javascript", title: "JavaScript", summary: "Check marks as they are entered and work out averages and divisions.", body: null },
   { number: 4, slug: "databases-with-sql", title: "Databases with SQL", summary: "Store students, subjects and marks, and ask questions of them.", body: null },
   { number: 5, slug: "python", title: "Python", summary: "Import a class list and calculate grades automatically.", body: null },

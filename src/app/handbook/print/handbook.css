@@ -150,6 +150,7 @@
 .hb-prose td { padding: 7px 9px; border-bottom: 1px solid var(--hb-rule); vertical-align: top; }
 .hb-prose tr:nth-child(even) td { background: var(--hb-tint); }
 .hb-prose td code { white-space: nowrap; }
+.hb-prose th code { background: none; border-color: rgba(255, 255, 255, .35); color: inherit; }
 
 /* Callouts */
 .hb-callout {
