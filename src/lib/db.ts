@@ -1,16 +1,43 @@
-import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
+import { neon } from "@neondatabase/serverless";
+import { Pool } from "pg";
 
 /**
- * Postgres (Neon) behind the contact pipeline and the admin inbox.
+ * Postgres behind the contact pipeline, the admin inbox, accounts and
+ * payments.
  *
- * Optional by design: with no DATABASE_URL the app falls back to the JSONL
- * file store, which is what local development uses. On a host with a
- * read-only filesystem — Vercel — the database is the only durable store, so
- * without it leads live only in the notification email.
+ * Production runs on Neon through its HTTP driver. Neon's driver only speaks
+ * to Neon, so any other address — a local Postgres in development or tests —
+ * goes through the standard `pg` driver instead. Both are wrapped in the same
+ * tagged-template shape, so no caller knows or cares which one it has.
+ *
+ * Optional by design: with no DATABASE_URL the contact form falls back to the
+ * JSONL file store. Accounts and payments need a real database.
  */
 
-let client: NeonQueryFunction<false, false> | null | undefined;
+/** A query as a tagged template: sql`SELECT … WHERE id = ${id}` → rows. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Sql = (strings: TemplateStringsArray, ...values: unknown[]) => Promise<any[]>;
+
+let client: Sql | null | undefined;
 let schemaReady: Promise<void> | null = null;
+
+function isNeonUrl(url: string): boolean {
+  try {
+    return new URL(url).hostname.endsWith(".neon.tech");
+  } catch {
+    return false;
+  }
+}
+
+/** Turn a tagged template into a `pg` parameterised query ($1, $2, …). */
+function pgSql(url: string): Sql {
+  const pool = new Pool({ connectionString: url, max: 5 });
+  return async (strings, ...values) => {
+    const text = strings.reduce((acc, part, i) => acc + part + (i < values.length ? `$${i + 1}` : ""), "");
+    const result = await pool.query(text, values);
+    return result.rows;
+  };
+}
 
 /**
  * Vercel's Neon integration injects the connection string under its own
@@ -33,10 +60,17 @@ function connectionString(): string | null {
   return null;
 }
 
-export function db(): NeonQueryFunction<false, false> | null {
+export function db(): Sql | null {
   if (client !== undefined) return client;
   const url = connectionString();
-  client = url ? neon(url) : null;
+  if (!url) {
+    client = null;
+  } else if (isNeonUrl(url)) {
+    const neonSql = neon(url);
+    client = (strings, ...values) => neonSql(strings, ...values) as Promise<Record<string, unknown>[]>;
+  } else {
+    client = pgSql(url);
+  }
   return client;
 }
 
@@ -79,6 +113,23 @@ export function ensureSchema(): Promise<void> {
           PRIMARY KEY (key, window_start)
         )
       `;
+      // Exam papers the examining panel is writing in the background (see examAgent/jobs.ts).
+      await sql`
+        CREATE TABLE IF NOT EXISTS exam_jobs (
+          id           TEXT PRIMARY KEY,
+          status       TEXT NOT NULL DEFAULT 'queued',
+          input        JSONB NOT NULL,
+          state        JSONB NOT NULL,
+          error        TEXT,
+          notify_email TEXT,
+          link_origin  TEXT NOT NULL,
+          slices       INTEGER NOT NULL DEFAULT 0,
+          lease_until  TIMESTAMPTZ,
+          created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+          updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+        )
+      `;
+      await sql`CREATE INDEX IF NOT EXISTS exam_jobs_created_at_idx ON exam_jobs (created_at)`;
     })().catch((err) => {
       // Let the next request try again rather than caching the failure.
       schemaReady = null;

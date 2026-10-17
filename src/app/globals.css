@@ -2951,3 +2951,6 @@ table.sow-table, table.lp-table { width: 100%; border-collapse: collapse; backgr
   .plan-head { flex-direction: column; }
   .plan-total { text-align: left; }
 }
+.plan-email { display: flex; flex-direction: column; gap: 4px; font-size: .82rem; color: var(--text-mid); width: 100%; max-width: 360px; }
+.plan-email input { font: inherit; font-size: .9rem; border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; background: var(--white); color: var(--text); }
+.exam-library-pending .exam-library-meta { color: var(--green); }

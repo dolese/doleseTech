@@ -24,11 +24,15 @@ export default function PlanEditor({
   onChange,
   onApprove,
   busy,
+  email,
+  onEmailChange,
 }: {
   plan: ExamPlan;
   onChange: (plan: ExamPlan) => void;
   onApprove: () => void;
   busy: boolean;
+  email: string;
+  onEmailChange: (email: string) => void;
 }) {
   const warnings = planWarnings(plan);
   const blocking = planTotalMarks(plan) !== plan.totalMarks;
@@ -171,12 +175,24 @@ export default function PlanEditor({
       )}
 
       <div className="plan-actions">
+        <label className="plan-email">
+          <span>Email me when it&apos;s ready (optional)</span>
+          <input
+            type="email"
+            value={email}
+            placeholder="teacher@example.com"
+            autoComplete="email"
+            onChange={(e) => onEmailChange(e.target.value)}
+            disabled={busy}
+          />
+        </label>
         <button className="btn-filled" onClick={onApprove} disabled={busy || blocking}>
           Approve the plan and write the paper
         </button>
         <p>
           The panel writes every question, answers the paper blind, moderates each question and revises any that
-          fall short. It usually takes one to three minutes.
+          fall short. It works in the background, usually for two to five minutes, so you can close the page and
+          come back. The address is used only for this email.
         </p>
       </div>
     </div>
