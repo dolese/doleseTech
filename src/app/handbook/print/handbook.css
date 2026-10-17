@@ -1,0 +1,122 @@
+/* Dolese Tech IT Handbook — print layout.
+   White pages with navy and green accents: this book gets printed, and dark
+   pages cost a lot of ink and toner. Only the cover is navy.
+   Everything is scoped under .hb-* so none of it touches the rest of the site. */
+
+@page {
+  size: A4;
+  margin: 20mm 18mm 22mm;
+  @bottom-left {
+    content: "Dolese Tech IT Handbook";
+    font: 500 8.5pt "Instrument Sans", sans-serif;
+    color: #7a8699;
+  }
+  @bottom-right {
+    content: counter(page);
+    font: 600 9pt "Sora", sans-serif;
+    color: #1b2435;
+  }
+}
+/* The cover is full-bleed and has no footer. */
+@page :first {
+  margin: 0;
+  @bottom-left { content: none; }
+  @bottom-right { content: none; }
+}
+
+.hb-book {
+  --hb-navy: #1b2435;
+  --hb-navy-deep: #0e1826;
+  --hb-green: #2e8b2a;
+  --hb-green-brand: #6fcf6a;
+  --hb-blue: #2f7fc4;
+  --hb-ink: #1b2435;
+  --hb-mid: #4a5568;
+  --hb-muted: #7a8699;
+  --hb-rule: #dde2e8;
+  --hb-tint: #f4f6f8;
+  color: var(--hb-ink);
+  font-family: "Instrument Sans", "Helvetica Neue", sans-serif;
+  font-size: 12pt;
+  line-height: 1.55;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* On screen the page previews as a column of A4 width; in print it flows. */
+@media screen {
+  .hb-book { max-width: 210mm; margin: 0 auto; padding: 24px 0 64px; }
+  .hb-book > section, .hb-book > article {
+    background: #fff; box-shadow: 0 1px 4px rgba(27, 36, 53, .12);
+    padding: 20mm 18mm; margin-bottom: 24px;
+  }
+  /* More specific than the white page rule above, so the cover stays navy. */
+  .hb-book > .hb-cover { padding: 0; background: var(--hb-navy); }
+}
+
+@media print {
+  html, body { background: #fff !important; }
+  /* Only the book prints: no site chrome, chat button or analytics. */
+  body > :not(.hb-book) { display: none !important; }
+}
+
+/* ── Cover ─────────────────────────────────────────────────────────────── */
+.hb-cover {
+  position: relative; overflow: hidden;
+  width: 210mm; height: 297mm;
+  background: var(--hb-navy); color: #f4f6f8;
+  display: flex; flex-direction: column; justify-content: space-between;
+  padding: 26mm 22mm 20mm !important;
+  break-after: page;
+}
+/* Two thin concentric rings: an echo of the logo's circle, no heavier than that. */
+.hb-cover-rings {
+  position: absolute; right: -60mm; top: 40mm; width: 200mm; height: 200mm;
+  border-radius: 50%; border: 1.2px solid rgba(111, 207, 106, .35);
+}
+.hb-cover-rings::after {
+  content: ""; position: absolute; inset: -14mm;
+  border-radius: 50%; border: 1px solid rgba(79, 168, 240, .25);
+}
+.hb-cover-top { display: flex; align-items: center; gap: 14px; position: relative; }
+.hb-cover-brand { font-family: "Sora", sans-serif; font-weight: 700; font-size: 26pt; letter-spacing: -.02em; }
+.hb-cover-brand b { display: block; font-size: 9pt; letter-spacing: .5em; color: var(--hb-green-brand); font-weight: 600; }
+.hb-cover-main { position: relative; }
+.hb-cover h1 {
+  font-family: "Sora", sans-serif; font-weight: 700; font-size: 54pt; line-height: 1;
+  letter-spacing: -.03em; margin: 0;
+}
+.hb-cover h1 em { font-style: normal; color: var(--hb-green-brand); }
+.hb-cover-sub { font-size: 15pt; color: rgba(244, 246, 248, .75); margin: 10px 0 26px; }
+.hb-cover-parts { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; }
+.hb-cover-parts li { font-size: 11pt; color: rgba(244, 246, 248, .88); }
+.hb-cover-parts span { font-family: "Sora", sans-serif; font-weight: 700; color: var(--hb-green-brand); margin-right: 6px; }
+.hb-cover-foot { position: relative; font-size: 10pt; color: rgba(244, 246, 248, .55); margin: 0; }
+
+/* ── Contents ──────────────────────────────────────────────────────────── */
+.hb-contents { break-after: page; }
+.hb-contents h2 { font-family: "Sora", sans-serif; font-size: 24pt; font-weight: 700; margin: 0 0 18px; }
+.hb-contents ol { list-style: none; padding: 0; margin: 0; }
+.hb-contents li {
+  display: grid; grid-template-columns: 34px 1fr auto; gap: 12px; align-items: baseline;
+  padding: 10px 0; border-bottom: 1px solid var(--hb-rule);
+}
+.hb-contents-num { font-family: "Sora", sans-serif; font-weight: 700; font-size: 16pt; color: var(--hb-green); }
+.hb-contents-title { font-weight: 600; font-size: 13pt; }
+.hb-contents-title small { display: block; font-weight: 400; font-size: 10.5pt; color: var(--hb-mid); }
+.hb-contents-soon .hb-contents-title { color: var(--hb-mid); }
+.hb-contents-tag { font-size: 9pt; color: var(--hb-muted); border: 1px solid var(--hb-rule); border-radius: 99px; padding: 1px 8px; }
+.hb-contents-note { margin-top: 18px; font-size: 10.5pt; color: var(--hb-mid); }
+
+/* ── Chapter ───────────────────────────────────────────────────────────── */
+.hb-chapter { break-before: page; }
+.hb-chapter-head { border-bottom: 3px solid var(--hb-navy); padding-bottom: 12px; margin-bottom: 18px; }
+.hb-chapter-num {
+  display: inline-block; font-family: "Sora", sans-serif; font-weight: 600; font-size: 10pt;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--hb-green);
+}
+.hb-chapter-head h1 { font-family: "Sora", sans-serif; font-weight: 700; font-size: 30pt; line-height: 1.1; letter-spacing: -.02em; margin: 4px 0 6px; }
+.hb-chapter-head p { color: var(--hb-mid); font-size: 13pt; margin: 0; }
+
+/* The chapter text itself (.hb-prose, callouts, tables, code) is styled in
+   src/components/handbook/content.css, shared with the web reading pages. */

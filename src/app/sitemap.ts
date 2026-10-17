@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { SERVICES } from "@/lib/services";
 import { SUBJECTS, subjectSlug } from "@/lib/education";
 import { MATERIALS } from "@/lib/materials";
+import { CHAPTERS } from "@/content/handbook";
 import { SITE_URL } from "@/lib/site";
 import { sellingEnabled } from "@/lib/entitlements";
 import { LANGUAGES, LEVELS, isAvailable, lessonHref, lessonsInOrder } from "@/lib/programming";
@@ -21,6 +22,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     page("/education", 0.8),
     page("/exams", 0.8),
     page("/programming", 0.8),
+    page("/handbook", 0.8),
+    page("/handbook/glossary", 0.5),
+    ...CHAPTERS.filter((c) => c.body).map((c) => page(`/handbook/${c.slug}`, 0.7)),
     page("/chat", 0.5),
     ...(sellingEnabled() ? [page("/pricing", 0.7)] : []),
     page("/privacy", 0.3),

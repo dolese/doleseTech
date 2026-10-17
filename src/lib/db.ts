@@ -196,6 +196,27 @@ export function ensureSchema(): Promise<void> {
           PRIMARY KEY (teacher_id, subject, term)
         )
       `;
+      // Exam papers the examining panel is writing in the background (see examAgent/jobs.ts).
+      await sql`
+        CREATE TABLE IF NOT EXISTS exam_jobs (
+          id           TEXT PRIMARY KEY,
+          status       TEXT NOT NULL DEFAULT 'queued',
+          input        JSONB NOT NULL,
+          state        JSONB NOT NULL,
+          error        TEXT,
+          notify_email TEXT,
+          link_origin  TEXT NOT NULL,
+          slices       INTEGER NOT NULL DEFAULT 0,
+          lease_until  TIMESTAMPTZ,
+          created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+          updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+        )
+      `;
+      await sql`CREATE INDEX IF NOT EXISTS exam_jobs_created_at_idx ON exam_jobs (created_at)`;
+      // Who a paper belongs to and which allowance paid for it, once papers are sold.
+      // Added separately: the table was first created without them.
+      await sql`ALTER TABLE exam_jobs ADD COLUMN IF NOT EXISTS teacher_id TEXT`;
+      await sql`ALTER TABLE exam_jobs ADD COLUMN IF NOT EXISTS reservation JSONB`;
     })().catch((err) => {
       // Let the next request try again rather than caching the failure.
       schemaReady = null;

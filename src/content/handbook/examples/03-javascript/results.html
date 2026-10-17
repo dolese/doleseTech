@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Form 4 Results, Term 1 2026 - Mwangaza Secondary School</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="results.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <img src="logo.png" alt="Mwangaza Secondary School badge" width="56" height="56">
+    <div>
+      <h1>Mwangaza Secondary School</h1>
+      <p>P.O. Box 1234, Dodoma</p>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <h2>Form 4 - Term 1 examination, 2026</h2>
+      <p>Class teacher: <strong>Mwl. Grace Mushi</strong></p>
+      <ul class="stats">
+        <li><span id="count">-</span> students</li>
+        <li><span id="class-average">-</span> class average</li>
+        <li><span id="top-student">-</span> top student</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Results</h2>
+      <div class="table-wrap">
+        <table>
+          <caption>Marks out of 100. Grades: A 75-100, B 65-74, C 45-64, D 30-44, F 0-29.</caption>
+          <thead>
+            <tr>
+              <th scope="col">No.</th>
+              <th scope="col">Student</th>
+              <th scope="col">Sex</th>
+              <th scope="col" class="num">Mathematics</th>
+              <th scope="col" class="num">English</th>
+              <th scope="col" class="num">Biology</th>
+              <th scope="col" class="num">Average</th>
+              <th scope="col">Grade</th>
+              <th scope="col" class="num">Position</th>
+            </tr>
+          </thead>
+          <tbody id="results-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="entry">
+      <h2>Enter a mark</h2>
+      <form id="mark-form" novalidate>
+        <label for="student">Student</label>
+        <select id="student" name="student"></select>
+
+        <label for="subject">Subject</label>
+        <select id="subject" name="subject"></select>
+
+        <label for="mark">Mark (0 to 100)</label>
+        <input id="mark" name="mark" type="number" min="0" max="100" required>
+
+        <button type="submit">Save mark</button>
+        <button type="button" id="reset" class="secondary">Restore original marks</button>
+      </form>
+      <p id="message" class="message" role="status"></p>
+    </section>
+  </main>
+
+  <footer>
+    <p>Mwangaza Secondary School results system. National results: <a href="https://www.necta.go.tz">necta.go.tz</a></p>
+  </footer>
+</body>
+</html>

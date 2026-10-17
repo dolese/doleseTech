@@ -35,3 +35,6 @@ next-env.d.ts
 
 # in-browser code runtimes, copied from node_modules at build time
 /public/vendor
+
+# built handbook PDFs (product files: kept out of git, stored privately)
+/dist/

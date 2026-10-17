@@ -6,6 +6,8 @@
 export interface AiErrorResult {
   status: number;
   message: string;
+  /** Worth trying again shortly: a busy provider or a dropped connection, not a limit or a bad key. */
+  retryable: boolean;
 }
 
 function statusOf(err: unknown): number | undefined {
@@ -27,23 +29,32 @@ export function classifyAiError(err: unknown, action = "Generation"): AiErrorRes
       status: 429,
       message:
         "The AI provider's quota or rate limit was reached for this model. Try a faster model (Gemini Flash or Claude Haiku), switch provider, or check the API plan and billing — Gemini Pro often has no free-tier quota.",
+      retryable: false,
     };
   }
 
   // Model missing / retired.
   if (status === 404 || has(/\b404\b|not found|no longer available/i)) {
-    return { status: 502, message: "The selected AI model is unavailable. Please choose a different model and try again." };
+    return { status: 502, message: "The selected AI model is unavailable. Please choose a different model and try again.", retryable: false };
   }
 
   // Auth / key problems.
-  if (status === 401 || status === 403 || has(/\b401\b|\b403\b|api key|permission denied|unauthenticated|invalid.*key/i)) {
-    return { status: 502, message: "AI service authentication failed. Please check the API key configuration." };
+  if (status === 401 || status === 403 || has(/\b401\b|\b403\b|api.?key|not configured|permission denied|unauthenticated|invalid.*key/i)) {
+    return { status: 502, message: "AI service authentication failed. Please check the API key configuration.", retryable: false };
+  }
+
+  // The provider account has run out of credit: nothing the teacher can fix,
+  // but another provider's model may still work. The details are in the logs.
+  if (status === 402 || has(/credit balance|billing|payment required|insufficient.?(funds|credit)/i)) {
+    return { status: 503, message: "This AI model is unavailable right now. Please choose a different model, or try again later.", retryable: false };
   }
 
   // Provider overloaded / transient.
-  if (status === 503 || status === 529 || has(/\b503\b|\b529\b|overloaded|unavailable|timeout/i)) {
-    return { status: 503, message: "The AI provider is temporarily unavailable. Please try again in a moment." };
+  if (status === 503 || status === 529 || has(/\b503\b|\b529\b|overloaded|unavailable|high demand|timeout|timed out|ECONNRESET|fetch failed|socket hang up/i)) {
+    return { status: 503, message: "The AI provider is temporarily unavailable. Please try again in a moment.", retryable: true };
   }
 
-  return { status: 500, message: raw ? `${action} failed: ${raw}` : `${action} failed. Please try again.` };
+  // Anything else: the provider's own message stays in the server log, where
+  // the callers write it; teachers get a plain one.
+  return { status: 500, message: `${action} failed. Please try again.`, retryable: true };
 }

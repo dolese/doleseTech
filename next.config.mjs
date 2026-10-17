@@ -71,6 +71,12 @@ const nextConfig = {
       { source: "/runners/:path*", headers: [{ key: "Content-Security-Policy", value: runnerCsp }] },
     ];
   },
+  // Handbook chapters are Markdown files imported as plain strings, so they
+  // are bundled with the code that renders them — on the site and in the PDF.
+  webpack(config) {
+    config.module.rules.push({ test: /\.md$/, type: "asset/source" });
+    return config;
+  },
 };
 
 export default nextConfig;

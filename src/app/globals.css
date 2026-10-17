@@ -3057,3 +3057,78 @@ table.sow-table, table.lp-table { width: 100%; border-collapse: collapse; backgr
   font: inherit; font-size: .8rem; color: var(--blue-ink); background: none; border: 1px solid var(--border);
   border-radius: 100px; padding: 3px 10px; cursor: pointer; white-space: nowrap;
 }
+/* ── EXAMS COMPOSER: the examining panel (plan, progress, report) ── */
+.plan, .agent-progress, .quality-report {
+  background: var(--white); border: 1px solid var(--border); border-radius: 18px; padding: 22px 24px; box-shadow: var(--shadow);
+}
+.plan { display: flex; flex-direction: column; gap: 16px; }
+.plan-kicker { font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--green); }
+.plan-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
+.plan-head h3, .agent-progress h3 { font-family: var(--font-display); font-size: 1.25rem; font-weight: 600; margin: 4px 0 6px; }
+.plan-head p { font-size: .9rem; color: var(--text-mid); max-width: 560px; }
+.plan-total { text-align: right; flex-shrink: 0; }
+.plan-total strong { display: block; font-family: var(--font-display); font-size: 1.8rem; font-weight: 700; color: var(--navy); line-height: 1.1; }
+.plan-total span { font-size: .78rem; color: var(--text-muted); }
+.plan-section-head { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: baseline; margin-bottom: 8px; }
+.plan-section-head span { font-size: .82rem; color: var(--text-muted); }
+.plan-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+.plan-table th { text-align: left; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+.plan-table td { padding: 6px 10px; border-bottom: 1px solid var(--border-lt); vertical-align: middle; }
+.plan-table td small { color: var(--text-muted); }
+.plan-table .num { text-align: right; }
+.plan-table select, .plan-table input {
+  font: inherit; font-size: .82rem; border: 1px solid var(--border); border-radius: 8px; padding: 5px 8px; background: var(--white); color: var(--text); max-width: 220px;
+}
+.plan-table input { width: 64px; text-align: right; }
+.plan-topics { font-size: .8rem; color: var(--text-mid); }
+.plan-balance { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: .82rem; color: var(--text-mid); }
+.plan-chip { background: var(--green-lt); color: var(--green); border-radius: 100px; padding: 2px 10px; font-weight: 600; font-size: .78rem; }
+.plan-warnings { list-style: none; background: #FFFBEB; border: 1px solid #FDE68A; color: #92400E; border-radius: 10px; padding: 10px 14px; font-size: .85rem; display: flex; flex-direction: column; gap: 4px; }
+.plan-actions { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.plan-actions p { font-size: .82rem; color: var(--text-muted); max-width: 560px; }
+.plan-actions .btn-filled:disabled { opacity: .5; cursor: not-allowed; }
+.plan-stale {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 12px; padding: 10px 14px;
+  background: #FFFBEB; border: 1px solid #FDE68A; color: #92400E; border-radius: 12px; font-size: .88rem;
+}
+.plan-stale .btn-outline { padding: 6px 14px; font-size: .82rem; }
+.plan-back { margin-top: 12px; }
+
+.agent-progress ol { list-style: none; display: flex; flex-direction: column; gap: 4px; margin: 14px 0; }
+.agent-step { display: flex; gap: 12px; align-items: flex-start; padding: 10px 12px; border-radius: 12px; }
+.agent-step strong { display: block; font-size: .95rem; font-weight: 600; }
+.agent-step small { display: block; font-size: .82rem; color: var(--text-muted); }
+.agent-step.is-running { background: var(--green-lt); }
+.agent-step.is-waiting { opacity: .5; }
+.agent-step.is-skipped { opacity: .6; }
+.agent-step-icon {
+  width: 24px; height: 24px; flex-shrink: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--border); font-size: .8rem; font-weight: 700; color: var(--text-muted);
+}
+.agent-step.is-done .agent-step-icon { background: var(--green); border-color: var(--green); color: #fff; }
+.agent-step.is-failed .agent-step-icon { background: #B42318; border-color: #B42318; color: #fff; }
+.agent-step.is-running .agent-step-icon { border-color: transparent; }
+.agent-spinner { width: 20px; height: 20px; border-radius: 50%; border: 3px solid var(--green-mid); border-top-color: var(--green); animation: checkout-spin 1s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .agent-spinner { animation-duration: 3s; } }
+.agent-note { font-size: .82rem; color: var(--text-muted); }
+
+.quality-report { margin: 16px 0; }
+.quality-report summary { cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+.qr-badge { font-size: .72rem; font-weight: 600; padding: 2px 10px; border-radius: 100px; background: var(--green-lt); color: var(--green); }
+.qr-badge.is-warn { background: #FFFBEB; color: #92400E; }
+.qr-stats { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 14px 0; font-size: .88rem; color: var(--text-mid); }
+.qr-stats strong { color: var(--navy); }
+.qr-summary { border-left: 3px solid var(--green); padding: 4px 0 4px 12px; color: var(--text-mid); font-size: .9rem; margin-bottom: 12px; }
+.qr-block { margin-top: 12px; }
+.qr-block h4 { font-size: .85rem; font-weight: 600; margin-bottom: 6px; }
+.qr-block ul, .qr-steps { padding-left: 18px; font-size: .85rem; color: var(--text-mid); display: flex; flex-direction: column; gap: 3px; }
+.qr-warn { background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 10px; padding: 10px 14px; }
+.qr-warn h4, .qr-warn li { color: #92400E; }
+@media (max-width: 640px) {
+  .plan, .agent-progress, .quality-report { padding: 18px 16px; }
+  .plan-head { flex-direction: column; }
+  .plan-total { text-align: left; }
+}
+.plan-email { display: flex; flex-direction: column; gap: 4px; font-size: .82rem; color: var(--text-mid); width: 100%; max-width: 360px; }
+.plan-email input { font: inherit; font-size: .9rem; border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; background: var(--white); color: var(--text); }
+.exam-library-pending .exam-library-meta { color: var(--green); }

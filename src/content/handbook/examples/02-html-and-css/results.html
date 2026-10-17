@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Form 4 Results, Term 1 2026 - Mwangaza Secondary School</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <img src="logo.png" alt="Mwangaza Secondary School badge" width="56" height="56">
+    <div>
+      <h1>Mwangaza Secondary School</h1>
+      <p>P.O. Box 1234, Dodoma</p>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <h2>Form 4 - Term 1 examination, 2026</h2>
+      <p>Class teacher: <strong>Mwl. Grace Mushi</strong></p>
+      <ul class="stats">
+        <li><span>5</span> students</li>
+        <li><span>66.3</span> class average</li>
+        <li><span>Neema Kileo</span> top student</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Results</h2>
+      <div class="table-wrap">
+        <table>
+          <caption>Marks out of 100. Grades: A 75-100, B 65-74, C 45-64, D 30-44, F 0-29.</caption>
+          <thead>
+            <tr>
+              <th scope="col">No.</th>
+              <th scope="col">Student</th>
+              <th scope="col">Sex</th>
+              <th scope="col" class="num">Mathematics</th>
+              <th scope="col" class="num">English</th>
+              <th scope="col" class="num">Biology</th>
+              <th scope="col" class="num">Average</th>
+              <th scope="col">Grade</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>Amina Juma</td>
+              <td>F</td>
+              <td class="num">78</td>
+              <td class="num">85</td>
+              <td class="num">81</td>
+              <td class="num">81.3</td>
+              <td><span class="grade grade-a">A</span></td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>Baraka Mushi</td>
+              <td>M</td>
+              <td class="num">52</td>
+              <td class="num">61</td>
+              <td class="num">47</td>
+              <td class="num">53.3</td>
+              <td><span class="grade grade-c">C</span></td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>Neema Kileo</td>
+              <td>F</td>
+              <td class="num">91</td>
+              <td class="num">88</td>
+              <td class="num">94</td>
+              <td class="num">91.0</td>
+              <td><span class="grade grade-a">A</span></td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td>Juma Hassan</td>
+              <td>M</td>
+              <td class="num">34</td>
+              <td class="num">49</td>
+              <td class="num">38</td>
+              <td class="num">40.3</td>
+              <td><span class="grade grade-d">D</span></td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td>Rehema Mollel</td>
+              <td>F</td>
+              <td class="num">66</td>
+              <td class="num">72</td>
+              <td class="num">59</td>
+              <td class="num">65.7</td>
+              <td><span class="grade grade-b">B</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="entry">
+      <h2>Enter a mark</h2>
+      <form>
+        <label for="student">Student</label>
+        <select id="student" name="student">
+          <option>Amina Juma</option>
+          <option>Baraka Mushi</option>
+          <option>Neema Kileo</option>
+          <option>Juma Hassan</option>
+          <option>Rehema Mollel</option>
+        </select>
+
+        <label for="subject">Subject</label>
+        <select id="subject" name="subject">
+          <option>Mathematics</option>
+          <option>English</option>
+          <option>Biology</option>
+        </select>
+
+        <label for="mark">Mark (0 to 100)</label>
+        <input id="mark" name="mark" type="number" min="0" max="100" required>
+
+        <button type="submit">Save mark</button>
+      </form>
+      <p class="note">The form checks the mark is between 0 and 100. Chapter 3 makes Save work.</p>
+    </section>
+  </main>
+
+  <footer>
+    <p>Mwangaza Secondary School results system. National results: <a href="https://www.necta.go.tz">necta.go.tz</a></p>
+  </footer>
+</body>
+</html>

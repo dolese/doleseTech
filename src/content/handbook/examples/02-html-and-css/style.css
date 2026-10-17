@@ -1,0 +1,215 @@
+/* Mwangaza Secondary School - results page */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #1b2435;
+  background: #f4f6f8;
+}
+
+/* Header */
+.site-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  background: #1b2435;
+  color: #ffffff;
+}
+
+.site-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.site-header p {
+  margin: 0;
+  color: #c9d1dc;
+}
+
+/* Page content */
+main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+section {
+  background: #ffffff;
+  border: 1px solid #dde2e8;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+h2 {
+  margin-top: 0;
+  font-size: 1.25rem;
+}
+
+/* The three numbers at the top */
+.stats {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.stats li {
+  flex: 1 1 160px;
+  padding: 12px;
+  background: #eef8ee;
+  border-radius: 6px;
+}
+
+.stats span {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #2e8b2a;
+}
+
+/* Results table */
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+caption {
+  text-align: left;
+  color: #4a5568;
+  padding-bottom: 8px;
+}
+
+th,
+td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid #dde2e8;
+}
+
+thead th {
+  background: #1b2435;
+  color: #ffffff;
+}
+
+tbody tr:nth-child(even) {
+  background: #f4f6f8;
+}
+
+.num {
+  text-align: right;
+}
+
+.grade {
+  display: inline-block;
+  min-width: 2em;
+  text-align: center;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.grade-a { background: #d4f0d2; color: #1d5e1a; }
+.grade-b { background: #dbeafe; color: #1e4f8a; }
+.grade-c { background: #fef3c7; color: #7a5200; }
+.grade-d { background: #fde2cf; color: #8a3b12; }
+.grade-f { background: #fde0e0; color: #9b1c1c; }
+
+/* Mark entry form */
+form {
+  display: grid;
+  gap: 8px;
+  max-width: 320px;
+}
+
+label {
+  font-weight: 600;
+}
+
+input,
+select,
+button {
+  font: inherit;
+  padding: 8px;
+  border: 1px solid #b8c1cc;
+  border-radius: 6px;
+}
+
+button {
+  background: #2e8b2a;
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #246f21;
+}
+
+.note {
+  color: #4a5568;
+  font-size: 0.9rem;
+}
+
+footer {
+  text-align: center;
+  padding: 16px;
+  color: #4a5568;
+  font-size: 0.9rem;
+}
+
+/* Phones */
+@media (max-width: 600px) {
+  .site-header {
+    padding: 12px 16px;
+  }
+
+  main {
+    padding: 16px;
+  }
+
+  section {
+    padding: 16px;
+  }
+}
+
+/* Paper */
+@media print {
+  body,
+  .site-header {
+    background: #ffffff;
+    color: #000000;
+  }
+
+  .site-header p {
+    color: #000000;
+  }
+
+  .entry,
+  footer {
+    display: none;
+  }
+
+  section {
+    border: none;
+    padding: 0;
+  }
+
+  thead th {
+    background: #ffffff;
+    color: #000000;
+    border-bottom: 2px solid #000000;
+  }
+}

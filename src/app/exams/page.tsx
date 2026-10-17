@@ -1,11 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { formatTzs, getProduct } from "@/lib/catalog";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import MathText from "@/components/MathText";
 import ExamFigure from "@/components/exams/Figure";
+import PlanEditor from "@/components/exams/PlanEditor";
+import AgentProgress from "@/components/exams/AgentProgress";
+import QualityReport from "@/components/exams/QualityReport";
+import type { ExamPlan } from "@/lib/examAgent/plan";
+import type { AgentReport } from "@/lib/examAgent/assemble";
+import type { StepProgress } from "@/lib/examAgent/run";
+import type { JobView } from "@/lib/examAgent/jobs";
+import { addJob, listJobs, removeJob, type PendingJob } from "@/lib/examJobs";
 import { SUBJECTS, SUBJECT_TOPICS, subjectSlug } from "@/lib/education";
 import { CHAT_MODELS } from "@/lib/chatModels";
 import {
@@ -75,6 +83,22 @@ export default function ExamsPage() {
   const [issues, setIssues] = useState<{ level: string; message: string }[]>([]);
   const [showScheme, setShowScheme] = useState(false);
   const [refine, setRefine] = useState("");
+  // ── The examining panel ──────────────────────────────────────
+  const [plan, setPlan] = useState<ExamPlan | null>(null);
+  const [planning, setPlanning] = useState(false);
+  const [view, setView] = useState<"paper" | "plan" | "running">("paper");
+  const [agentSteps, setAgentSteps] = useState<StepProgress[]>([]);
+  const [report, setReport] = useState<AgentReport | null>(null);
+  const [planKey, setPlanKey] = useState("");
+  // ── Papers being written in the background ───────────────────
+  const [activeJob, setActiveJob] = useState<string | null>(null);
+  const [pending, setPending] = useState<PendingJob[]>([]);
+  const [notifyEmail, setNotifyEmail] = useState("");
+  const [notice, setNotice] = useState("");
+  const viewRef = useRef(view);
+  viewRef.current = view;
+  // What the plan depends on; if any of it changes, the plan is out of date.
+  const settingsKey = JSON.stringify([subjectSlugValue, form, examType, duration, totalMarks, topics, formats, difficulty, language]);
   const [watermark, setWatermark] = useState("");
 
   // ── Library / draft ──────────────────────────────────────────
@@ -85,7 +109,7 @@ export default function ExamsPage() {
   const [saveMsg, setSaveMsg] = useState("");
   const [restored, setRestored] = useState(false);
 
-  // ── Account: who may generate, and how many papers are left ─────
+  // ── Account: who may write papers, and how many are left ─────
   const [selling, setSelling] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
   const [allowance, setAllowance] = useState<{ freeLeft: number; freePerMonth: number; credits: number } | null>(null);
@@ -111,7 +135,29 @@ export default function ExamsPage() {
   const [regenText, setRegenText] = useState("");
   const [regenBusy, setRegenBusy] = useState<string | null>(null);
 
-  // Restore the last working paper so a refresh never loses work.
+  /** A finished paper joins the library at once, so it is never only on the server. */
+  const receive = useCallback((job: JobView, show: boolean) => {
+    removeJob(job.id);
+    setPending(listJobs());
+    if (!job.result) return;
+    const paper = savePaper(job.result.exam);
+    setPapers(listPapers());
+    if (!show) {
+      setNotice(`“${job.title}” is ready. Open it from My papers.`);
+      return;
+    }
+    setExam(job.result.exam);
+    setIssues(job.result.issues);
+    setReport(job.result.report);
+    setSavedId(paper?.id ?? null);
+    setRefine("");
+    setRestored(false);
+    setRegenAt(null);
+    setView("paper");
+  }, []);
+
+  // Restore the last working paper so a refresh never loses work, and pick
+  // up any paper the panel was writing — from this device, or an email link.
   useEffect(() => {
     setPapers(listPapers());
     const draft = readDraft();
@@ -121,7 +167,100 @@ export default function ExamsPage() {
       setRestored(true);
     }
     setHydrated(true);
+
+    const linked = new URLSearchParams(window.location.search).get("job");
+    if (linked) {
+      addJob({ id: linked, title: "Exam paper", createdAt: new Date().toISOString() });
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+    const jobs = listJobs();
+    setPending(jobs);
+    const resume = linked ?? jobs[0]?.id;
+    if (resume) {
+      setActiveJob(resume);
+      setView("running");
+    }
   }, []);
+
+  // Follow the paper being written. The server does the work; this only asks
+  // how it is going — closing the page stops nothing.
+  useEffect(() => {
+    if (!activeJob) return;
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const tick = async () => {
+      try {
+        const res = await fetch(`/api/exams/jobs/${activeJob}`, { cache: "no-store" });
+        const json = await res.json();
+        if (stopped) return;
+        if (res.status === 404) {
+          removeJob(activeJob);
+          setPending(listJobs());
+          setActiveJob(null);
+          setError(json.error ?? "That paper could not be found.");
+          setView("paper");
+          return;
+        }
+        if (res.ok) {
+          const job = json as JobView;
+          setAgentSteps(job.steps);
+          // A paper opened from an email link learns its real title here.
+          if (listJobs().some((j) => j.id === job.id && j.title !== job.title)) {
+            addJob({ id: job.id, title: job.title, createdAt: job.createdAt });
+            setPending(listJobs());
+          }
+          if (job.status === "done") {
+            receive(job, viewRef.current === "running");
+            setActiveJob(null);
+            return;
+          }
+          if (job.status === "failed") {
+            removeJob(job.id);
+            setPending(listJobs());
+            setActiveJob(null);
+            setError(job.error ?? "The paper could not be written.");
+            if (viewRef.current === "running") {
+              setPlan(job.plan);
+              setView("plan");
+            }
+            return;
+          }
+        }
+      } catch {
+        /* offline for a moment: keep asking */
+      }
+      if (!stopped) timer = setTimeout(tick, document.hidden ? 15000 : 3000);
+    };
+    tick();
+    return () => {
+      stopped = true;
+      clearTimeout(timer);
+    };
+  }, [activeJob, receive]);
+
+  // Other papers this device started: any that finished while away go into the library.
+  useEffect(() => {
+    if (!hydrated) return;
+    for (const job of pending) {
+      if (job.id === activeJob) continue;
+      fetch(`/api/exams/jobs/${job.id}`, { cache: "no-store" })
+        .then(async (res) => {
+          if (res.status === 404) {
+            removeJob(job.id);
+            setPending(listJobs());
+            return;
+          }
+          const view = (await res.json()) as JobView;
+          if (view.status === "done") receive(view, false);
+          else if (view.status === "failed") {
+            removeJob(job.id);
+            setPending(listJobs());
+          }
+        })
+        .catch(() => {});
+    }
+    // Checked on arrival and when the library is opened, not on every change.
+  }, [hydrated, libOpen]);
 
   // Keep the draft in step with whatever is on screen.
   useEffect(() => {
@@ -150,6 +289,8 @@ export default function ExamsPage() {
     setExam(paper.exam);
     setSavedId(paper.id);
     setIssues([]);
+    setReport(null);
+    setView("paper");
     setError("");
     setRegenAt(null);
     setLibOpen(false);
@@ -233,55 +374,104 @@ export default function ExamsPage() {
     setTopics([]);
   }
 
-  async function generate(instruction?: string) {
+  function paperSettings() {
+    return {
+      subject: subject.name,
+      level: subject.level,
+      form,
+      examType,
+      durationMinutes: duration,
+      totalMarks,
+      topics,
+      formats,
+      difficulty,
+      language,
+      school: school || undefined,
+      model,
+    };
+  }
+
+  /** Step 1: the examiner's plan, for the teacher to check and adjust. */
+  async function requestPlan(): Promise<ExamPlan | null> {
     if (formats.length === 0) {
       setError("Pick at least one question format.");
-      return;
+      return null;
     }
+    setPlanning(true);
+    setError("");
+    try {
+      const res = await fetch("/api/exams/plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(paperSettings()),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? `HTTP ${res.status}`);
+      return json.plan as ExamPlan;
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "The plan could not be made.");
+      return null;
+    } finally {
+      setPlanning(false);
+    }
+  }
+
+  async function makePlan() {
+    const next = await requestPlan();
+    if (next) {
+      setPlan(next);
+      setPlanKey(settingsKey);
+      setView("plan");
+    }
+  }
+
+  /** Step 2: the panel writes, answers blind, moderates and revises the paper. */
+  async function writePaper(instruction?: string) {
+    // Planning is free for anyone; writing a paper takes one from the allowance.
     if (selling && !signedIn) {
       setPaywall("sign-in");
       return;
     }
+    const approved = plan ?? (await requestPlan());
+    if (!approved) return;
+    setPlan(approved);
     setLoading(true);
     setError("");
+    setNotice("");
     setPaywall(null);
     try {
-      const res = await fetch("/api/exams/generate", {
+      const res = await fetch("/api/exams/jobs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          subject: subject.name,
-          level: subject.level,
-          form,
-          examType,
-          durationMinutes: duration,
-          totalMarks,
-          topics,
-          formats,
-          difficulty,
-          language,
-          school: school || undefined,
-          model,
-          instruction,
-        }),
+        body: JSON.stringify({ plan: approved, model, school: school || undefined, instruction, email: notifyEmail.trim() || undefined }),
       });
       const json = await res.json();
       if (res.status === 401 && json.code === "SIGN_IN") setPaywall("sign-in");
       if (res.status === 402) setPaywall("buy");
       if (!res.ok) throw new Error(json.error ?? `HTTP ${res.status}`);
       if (json.allowance) setAllowance(json.allowance);
-      setExam(json.exam);
-      setIssues(Array.isArray(json.issues) ? json.issues : []);
-      setRefine("");
-      // A freshly generated paper is a new document, not an edit of a saved one.
-      setSavedId(null);
-      setRestored(false);
-      setRegenAt(null);
+      addJob({
+        id: json.id,
+        title: [school, `${approved.form} ${approved.subject} ${approved.examType}`].filter(Boolean).join(" — "),
+        createdAt: new Date().toISOString(),
+      });
+      setPending(listJobs());
+      setAgentSteps([]);
+      setView("running");
+      setActiveJob(json.id);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Generation failed.");
+      setError(e instanceof Error ? e.message : "The paper could not be started.");
     } finally {
       setLoading(false);
     }
+  }
+
+  function openJob(id: string) {
+    setAgentSteps([]);
+    setError("");
+    setView("running");
+    setActiveJob(id);
+    setLibOpen(false);
   }
 
   async function download(version?: string) {
@@ -328,8 +518,21 @@ export default function ExamsPage() {
                 aria-expanded={libOpen}
               >
                 <span>📚 My papers</span>
-                <span className="exam-library-count">{papers.length}</span>
+                <span className="exam-library-count">{papers.length + pending.length}</span>
               </button>
+
+              {libOpen && pending.length > 0 && (
+                <ul className="exam-library-list exam-library-pending">
+                  {pending.map((j) => (
+                    <li key={j.id} className={j.id === activeJob ? "on" : ""}>
+                      <button type="button" className="exam-library-open" onClick={() => openJob(j.id)}>
+                        <span className="exam-library-name">{j.title}</span>
+                        <span className="exam-library-meta">Being written by the panel · see progress</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
 
               {libOpen && (
                 papers.length === 0 ? (
@@ -470,7 +673,7 @@ export default function ExamsPage() {
               <div className="exam-allowance">
                 {!signedIn ? (
                   <p>
-                    <a href="/account/sign-in?next=/exams">Sign in</a> to generate papers. It&apos;s free, with 2 papers
+                    <a href="/account/sign-in?next=/exams">Sign in</a> to write papers. It&apos;s free, with 2 papers
                     every month.
                   </p>
                 ) : allowance ? (
@@ -489,9 +692,7 @@ export default function ExamsPage() {
               </div>
             )}
 
-            {paywall === "sign-in" && !error && (
-              <div className="exam-error">Sign in to generate papers.</div>
-            )}
+            {paywall === "sign-in" && !error && <div className="exam-error">Sign in to write papers.</div>}
             {error && <div className="exam-error">{error}</div>}
             {paywall && (
               <a
@@ -502,18 +703,73 @@ export default function ExamsPage() {
               </a>
             )}
 
-            <button className="btn-filled exam-generate" onClick={() => generate()} disabled={loading}>
-              {loading ? "Generating…" : exam ? "Regenerate" : "Generate exam"}
+            <button className="btn-filled exam-generate" onClick={makePlan} disabled={loading || planning}>
+              {planning ? "Planning…" : loading ? "Starting the panel…" : exam ? "Plan a new paper" : "Plan the paper"}
             </button>
           </aside>
 
           {/* ── Preview panel ── */}
           <div className="exam-preview">
-            {!exam ? (
+            {notice && (
+              <div className="exam-restored">
+                {notice}
+                <button type="button" onClick={() => setNotice("")} aria-label="Dismiss">×</button>
+              </div>
+            )}
+            {view === "running" ? (
+              <>
+                <AgentProgress steps={agentSteps} emailed={Boolean(notifyEmail.trim())} />
+                {exam && (
+                  <button type="button" className="account-link plan-back" onClick={() => setView("paper")}>
+                    ← Back to the current paper
+                  </button>
+                )}
+              </>
+            ) : view === "plan" && plan ? (
+              <>
+                {planKey !== settingsKey && (
+                  <div className="plan-stale">
+                    Your settings have changed since this plan was made.
+                    <button type="button" className="btn-outline" onClick={makePlan} disabled={planning}>
+                      Plan again
+                    </button>
+                  </div>
+                )}
+                {(paywall || error) && (
+                  <div className="plan-stale">
+                    {error || "Sign in to write papers. It's free, with 2 papers every month."}
+                    {paywall && (
+                      <a
+                        className="btn-outline"
+                        href={paywall === "buy" ? "/checkout?product=papers-10" : "/account/sign-in?next=/exams"}
+                      >
+                        {paywall === "buy" ? "Buy more papers" : "Sign in"}
+                      </a>
+                    )}
+                  </div>
+                )}
+                <PlanEditor
+                  plan={plan}
+                  onChange={setPlan}
+                  onApprove={() => writePaper()}
+                  busy={loading}
+                  email={notifyEmail}
+                  onEmailChange={setNotifyEmail}
+                />
+                {exam && (
+                  <button type="button" className="account-link plan-back" onClick={() => setView("paper")}>
+                    ← Back to the current paper
+                  </button>
+                )}
+              </>
+            ) : !exam ? (
               <div className="exam-empty">
                 <div className="exam-empty-icon">📝</div>
                 <h3>Your paper will appear here</h3>
-                <p>Set up the paper on the left and click <strong>Generate exam</strong>.</p>
+                <p>
+                  Set up the paper on the left and click <strong>Plan the paper</strong>. You&apos;ll check the
+                  examiner&apos;s plan, then a panel writes, answers, moderates and revises every question.
+                </p>
               </div>
             ) : (
               <>
@@ -624,6 +880,8 @@ export default function ExamsPage() {
                   ))}
                 </article>
 
+                {report && <QualityReport report={report} />}
+
                 {issues.length > 0 && (
                   <div className="exam-quality">
                     <strong>Quality check</strong>
@@ -696,13 +954,13 @@ export default function ExamsPage() {
                 <div className="exam-refine">
                   <input
                     type="text"
-                    placeholder='Refine — e.g. "increase difficulty", "add 2 essay questions", "translate to Kiswahili"'
+                    placeholder='Rewrite to the same plan — e.g. "use farming examples", "simpler English". To change the structure, plan a new paper.'
                     value={refine}
                     onChange={(e) => setRefine(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter" && refine.trim()) generate(refine.trim()); }}
+                    onKeyDown={(e) => { if (e.key === "Enter" && refine.trim()) writePaper(refine.trim()); }}
                     disabled={loading}
                   />
-                  <button className="btn-outline" onClick={() => refine.trim() && generate(refine.trim())} disabled={loading || !refine.trim()}>
+                  <button className="btn-outline" onClick={() => refine.trim() && writePaper(refine.trim())} disabled={loading || !refine.trim()}>
                     Apply
                   </button>
                 </div>

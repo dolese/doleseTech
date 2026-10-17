@@ -120,7 +120,7 @@ export async function guardAi(
   const cost = modelWeight(model) * calls;
 
   const perVisitor = await hit(`ai:${feature}:${clientIp(req)}`, {
-    limit: feature === "chat" ? envInt("AI_CHAT_HOURLY_UNITS", 60) : envInt("AI_EXAMS_HOURLY_UNITS", 30),
+    limit: feature === "chat" ? envInt("AI_CHAT_HOURLY_UNITS", 60) : envInt("AI_EXAMS_HOURLY_UNITS", 150),
     windowMs: HOUR,
     cost,
   });
