@@ -138,7 +138,7 @@ function Checkout() {
   const next =
     product.kind === "pack"
       ? { href: `/education/${product.subject}`, label: `Open ${subject?.name ?? "the pack"}` }
-      : { href: "/exams", label: "Open the Exams Composer" };
+      : { href: "/exams/write", label: "Open the Exams Composer" };
 
   return (
     <div className="admin-login-card account-card checkout-card">

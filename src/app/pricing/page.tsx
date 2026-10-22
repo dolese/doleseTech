@@ -52,7 +52,7 @@ export default function PricingPage() {
               <li>A preview of each subject pack</li>
               <li>Programming lessons and quizzes</li>
             </ul>
-            <a className="btn-outline price-cta" href="/account/sign-in?next=/exams">
+            <a className="btn-outline price-cta" href="/account/sign-in?next=/exams/write">
               Create a free account
             </a>
           </article>

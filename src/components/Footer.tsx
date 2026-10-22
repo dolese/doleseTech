@@ -5,7 +5,7 @@ export default function Footer() {
   return (
     <footer>
       <div className="footer-top">
-        <div>
+        <div className="footer-col footer-brand">
           <a href="/" className="footer-wordmark">
             <BrandLogo tone="dark" markSize={40} />
           </a>
@@ -15,48 +15,44 @@ export default function Footer() {
             Building reliable, scalable technology for organizations that
             can&apos;t afford to get it wrong.
           </p>
-        </div>
-        <div className="footer-col">
-          <h4>Services</h4>
-          <a href="/services/custom-software">Custom Software</a>
-          <a href="/services/cloud-infrastructure">Cloud &amp; Infra</a>
-          <a href="/services/cybersecurity">Cybersecurity</a>
-          <a href="/services/data-analytics">Data &amp; Analytics</a>
-          <a href="/services/ai-automation">AI &amp; Automation</a>
+          <a href="mailto:support@dolese.tech" className="footer-mail">support@dolese.tech</a>
+          <SocialLinks />
         </div>
         <div className="footer-col">
           <h4>Products</h4>
+          <a href="/exams">Exams Composer</a>
           <a href="/products/resultsportal">ResultsPortal</a>
           <a href="https://sokoplus.co.tz">SokoPlus Marketplace</a>
-          <a href="/exams">Exams Composer</a>
+          <a href="/#services">Services</a>
         </div>
         <div className="footer-col">
-          <h4>Education</h4>
-          <a href="/education">Browse subjects</a>
-          <a href="/education">Schemes of Work</a>
-          <a href="/education">Lesson Plans</a>
-          <a href="/education">Lesson Notes</a>
+          <h4>Resources</h4>
+          <a href="/education">Teaching materials</a>
           <a href="/handbook">IT Handbook</a>
+          <a href="/programming">Programming</a>
+          <a href="/chat">AI Chat</a>
+          <a href="/faq">FAQs</a>
         </div>
         <div className="footer-col">
           <h4>Company</h4>
-          <a href="/about">About</a>
+          <a href="/about">About us</a>
           <a href="/about#team">Team</a>
+          <a href="/#cta">Contact us</a>
           <a href="/#cta">Careers</a>
         </div>
         <div className="footer-col">
-          <h4>Connect</h4>
-          <a href="mailto:support@dolese.tech">support@dolese.tech</a>
-          <SocialLinks />
-        </div>
-      </div>
-      <div className="footer-bottom">
-        <p>© {new Date().getFullYear()} Dolese Tech. All rights reserved.</p>
-        <div className="f-nav">
-          <a href="/privacy">Privacy</a>
-          <a href="/terms">Terms</a>
+          <h4>Legal</h4>
+          <a href="/privacy">Privacy policy</a>
+          <a href="/terms">Terms of service</a>
           <a href="/security">Security</a>
         </div>
+      </div>
+      <p className="footer-note">
+        Dolese Tech is an independent technology company in Tanzania. It is not part of NECTA or TIE. Exam papers
+        from the Exams Composer are written and checked by AI; read every paper before you use it.
+      </p>
+      <div className="footer-bottom">
+        <p>© {new Date().getFullYear()} Dolese Tech. All rights reserved.</p>
       </div>
     </footer>
   );

@@ -93,7 +93,7 @@ export default function AccountPage() {
                     </div>
                   </div>
                   <div className="account-actions">
-                    <a className="btn-filled" href="/exams">Make a paper</a>
+                    <a className="btn-filled" href="/exams/write">Make a paper</a>
                     <a className="btn-outline" href="/checkout?product=papers-10">Buy 10 papers</a>
                   </div>
                 </>

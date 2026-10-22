@@ -265,7 +265,7 @@ async function finish(job: Job, state: AgentState, status: "done" | "failed", er
     await sendPaperNotice({
       to: job.notifyEmail,
       title: jobTitle(job.input),
-      link: `${job.linkOrigin}/exams?job=${job.id}`,
+      link: `${job.linkOrigin}/exams/write?job=${job.id}`,
       ok: status === "done",
       error,
     });

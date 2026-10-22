@@ -21,6 +21,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     page("/products/resultsportal", 0.9),
     page("/education", 0.8),
     page("/exams", 0.8),
+    page("/exams/write", 0.6),
+    page("/faq", 0.6),
     page("/programming", 0.8),
     page("/handbook", 0.8),
     page("/handbook/glossary", 0.5),

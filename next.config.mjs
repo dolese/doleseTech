@@ -71,6 +71,13 @@ const nextConfig = {
       { source: "/runners/:path*", headers: [{ key: "Content-Security-Policy", value: runnerCsp }] },
     ];
   },
+  async redirects() {
+    return [
+      // The composer moved to /exams/write; "paper is ready" links sent
+      // before the move still open the paper (the query string is kept).
+      { source: "/exams", has: [{ type: "query", key: "job" }], destination: "/exams/write", permanent: false },
+    ];
+  },
   // Handbook chapters are Markdown files imported as plain strings, so they
   // are bundled with the code that renders them — on the site and in the PDF.
   webpack(config) {

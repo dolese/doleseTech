@@ -607,8 +607,8 @@ footer {
   padding: 72px max(64px, calc((100% - 1200px) / 2)) 40px;
 }
 .footer-top {
-  display: grid; grid-template-columns: 1.5fr 1fr 1.1fr 1fr 0.8fr 1.65fr;
-  gap: 48px; margin-bottom: 56px;
+  display: grid; grid-template-columns: 1.7fr 1fr 1fr 1fr 1fr;
+  gap: 48px; margin-bottom: 40px;
 }
 /* Footer logo — dark-tone wordmark so it stays legible on the navy panel */
 .footer-wordmark { display: inline-flex; text-decoration: none; }
@@ -638,6 +638,11 @@ footer {
   margin-bottom: 11px; transition: color .15s;
 }
 .footer-col a:hover { color: rgba(255,255,255,.85); }
+.footer-col .footer-mail { margin: 18px 0 10px; color: rgba(255,255,255,.62); }
+.footer-note {
+  font-size: .78rem; line-height: 1.7; color: rgba(255,255,255,.32);
+  max-width: 760px; margin-bottom: 24px;
+}
 .footer-bottom {
   border-top: 1px solid rgba(255,255,255,.07);
   padding-top: 24px;
@@ -662,10 +667,11 @@ footer {
 }
 .f-nav a:hover { color: rgba(255,255,255,.7); }
 
-/* Between phone and full desktop, six footer columns are too narrow: text
-   wraps mid-link and the icon row breaks. Three columns by two rows instead. */
+/* Between phone and full desktop, five columns are too narrow: the brand
+   takes the first row and the four link columns share the second. */
 @media (max-width: 1200px) and (min-width: 901px) {
-  .footer-top { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 40px; }
+  .footer-top { grid-template-columns: repeat(4, minmax(0, 1fr)); row-gap: 40px; }
+  .footer-top > .footer-brand { grid-column: 1 / -1; }
 }
 
 /* ── SCROLL REVEAL ─────────────────────────── */
@@ -711,8 +717,7 @@ footer {
   .pp-bars { gap: 8px; height: 150px; }
   .team-grid { grid-template-columns: 1fr 1fr; }
   .footer-top { grid-template-columns: 1fr 1fr; gap: 32px; }
-  /* Connect is last: give its icon row the full width so it stays on one line. */
-  .footer-top > .footer-col:last-child { grid-column: 1 / -1; }
+  .footer-top > .footer-brand { grid-column: 1 / -1; }
   footer { padding: 48px 24px 28px; }
   .footer-bottom { flex-direction: column; gap: 12px; }
   .process-row { grid-template-columns: 40px 1fr; }
